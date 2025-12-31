@@ -71,37 +71,48 @@ export function JSONPreview({ className, height = '400px' }: JSONPreviewProps) {
   }, [state.query]);
 
   /**
+   * Sync editedJson when query updates (when not editing)
+   */
+  React.useEffect(() => {
+    if (!isEditing) {
+      const formatted = formatDevTools(jsonBody, currentIndex);
+      setEditedJson(formatted);
+    }
+  }, [jsonBody, currentIndex, isEditing]);
+
+  /**
    * Full Dev Tools format: GET {index}/_search followed by JSON body
    */
   const devToolsContent = useMemo(() => {
-    if (isEditing) {
-      return editedJson;
-    }
-    const formatted = formatDevTools(jsonBody, currentIndex);
-    setEditedJson(formatted);
-    return formatted;
-  }, [currentIndex, jsonBody, isEditing, editedJson]);
+    return editedJson || formatDevTools(jsonBody, currentIndex);
+  }, [editedJson, jsonBody, currentIndex]);
 
   /**
-   * Debounced function to parse and deserialize JSON updates
+   * Create and initialize debounced update function
    */
-  const createDebouncedUpdate = useCallback(() => {
-    return debounce((value: string) => {
+  React.useEffect(() => {
+    const debouncedFn = debounce((value: string) => {
       try {
+        console.log('Parsing JSON:', value.substring(0, 100)); // Debug log
+
         // Strip Dev Tools format
         const jsonOnly = extractJsonFromDevTools(value);
+        console.log('JSON only:', jsonOnly.substring(0, 100)); // Debug log
 
         // Parse JSON
         const parsed = JSON.parse(jsonOnly);
+        console.log('Parsed:', parsed); // Debug log
 
         // Deserialize to QueryState
         const newState = deserializeQueryState(parsed);
+        console.log('Deserialized state:', newState); // Debug log
 
         // Update QueryContext with new query
         setQuery(newState.query);
 
         // Update pagination if provided
         if (newState.size !== undefined || newState.from !== undefined) {
+          console.log('Setting pagination:', { size: newState.size, from: newState.from });
           setPagination({ size: newState.size, from: newState.from });
         }
 
@@ -110,19 +121,19 @@ export function JSONPreview({ className, height = '400px' }: JSONPreviewProps) {
         setIsEditing(false);
       } catch (error) {
         // Set error message but keep isEditing true so user can fix it
-        setParseError(error instanceof Error ? error.message : 'Invalid JSON');
+        const errorMsg = error instanceof Error ? error.message : 'Invalid JSON';
+        console.error('JSON parse error:', errorMsg);
+        setParseError(errorMsg);
       }
     }, 500);
-  }, [setQuery, setPagination]);
 
-  /**
-   * Initialize debounced update function (only once)
-   */
-  useMemo(() => {
-    if (!debouncedUpdateRef.current) {
-      debouncedUpdateRef.current = createDebouncedUpdate();
-    }
-  }, [createDebouncedUpdate]);
+    debouncedUpdateRef.current = debouncedFn;
+
+    // Cleanup debounce on unmount
+    return () => {
+      debouncedFn.cancel?.();
+    };
+  }, [setQuery, setPagination]);
 
   /**
    * Handle editor changes with debouncing
@@ -196,7 +207,10 @@ export function JSONPreview({ className, height = '400px' }: JSONPreviewProps) {
           height={height}
           defaultLanguage="json"
           value={devToolsContent}
-          onChange={handleJsonChange}
+          onChange={(value) => {
+            console.log('Editor changed, value:', value?.substring(0, 100));
+            handleJsonChange(value);
+          }}
           options={{
             readOnly: false,
             minimap: { enabled: false },
