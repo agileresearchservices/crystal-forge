@@ -32,6 +32,19 @@ import type {
   SortClause,
   HighlightConfig,
   InnerHitsConfig,
+  Aggregation,
+  TermsAggregation,
+  StatsAggregation,
+  ExtendedStatsAggregation,
+  DateHistogramAggregation,
+  HistogramAggregation,
+  RangeAggregation,
+  CardinalityAggregation,
+  AvgAggregation,
+  SumAggregation,
+  MinAggregation,
+  MaxAggregation,
+  ValueCountAggregation,
 } from './types';
 
 // =============================================================================
@@ -702,4 +715,208 @@ export function serializeToJson(
 ): string {
   const body = serializeQueryState(state);
   return pretty ? JSON.stringify(body, null, 2) : JSON.stringify(body);
+}
+
+// =============================================================================
+// Aggregation Serializers
+// =============================================================================
+
+/**
+ * Serialize a terms aggregation
+ */
+function serializeTermsAggregation(agg: TermsAggregation): Record<string, unknown> {
+  const body: Record<string, unknown> = {
+    field: agg.field,
+  };
+
+  if (agg.size !== undefined) body.size = agg.size;
+  if (agg.order) body.order = agg.order;
+  if (agg.min_doc_count !== undefined) body.min_doc_count = agg.min_doc_count;
+  if (agg.include !== undefined) body.include = agg.include;
+  if (agg.exclude !== undefined) body.exclude = agg.exclude;
+  if (agg.missing !== undefined) body.missing = agg.missing;
+
+  return { [agg.name]: { terms: body } };
+}
+
+/**
+ * Serialize a stats aggregation
+ */
+function serializeStatsAggregation(agg: StatsAggregation): Record<string, unknown> {
+  const body: Record<string, unknown> = {
+    field: agg.field,
+  };
+
+  if (agg.missing !== undefined) body.missing = agg.missing;
+
+  return { [agg.name]: { stats: body } };
+}
+
+/**
+ * Serialize an extended stats aggregation
+ */
+function serializeExtendedStatsAggregation(agg: ExtendedStatsAggregation): Record<string, unknown> {
+  const body: Record<string, unknown> = {
+    field: agg.field,
+  };
+
+  if (agg.missing !== undefined) body.missing = agg.missing;
+  if (agg.sigma !== undefined) body.sigma = agg.sigma;
+
+  return { [agg.name]: { extended_stats: body } };
+}
+
+/**
+ * Serialize a date histogram aggregation
+ */
+function serializeDateHistogramAggregation(agg: DateHistogramAggregation): Record<string, unknown> {
+  const body: Record<string, unknown> = {
+    field: agg.field,
+  };
+
+  if (agg.calendar_interval) body.calendar_interval = agg.calendar_interval;
+  if (agg.fixed_interval) body.fixed_interval = agg.fixed_interval;
+  if (agg.format) body.format = agg.format;
+  if (agg.time_zone) body.time_zone = agg.time_zone;
+  if (agg.offset) body.offset = agg.offset;
+  if (agg.min_doc_count !== undefined) body.min_doc_count = agg.min_doc_count;
+  if (agg.extended_bounds) body.extended_bounds = agg.extended_bounds;
+  if (agg.missing !== undefined) body.missing = agg.missing;
+
+  return { [agg.name]: { date_histogram: body } };
+}
+
+/**
+ * Serialize a histogram aggregation
+ */
+function serializeHistogramAggregation(agg: HistogramAggregation): Record<string, unknown> {
+  const body: Record<string, unknown> = {
+    field: agg.field,
+    interval: agg.interval,
+  };
+
+  if (agg.offset !== undefined) body.offset = agg.offset;
+  if (agg.min_doc_count !== undefined) body.min_doc_count = agg.min_doc_count;
+  if (agg.extended_bounds) body.extended_bounds = agg.extended_bounds;
+  if (agg.missing !== undefined) body.missing = agg.missing;
+
+  return { [agg.name]: { histogram: body } };
+}
+
+/**
+ * Serialize a range aggregation
+ */
+function serializeRangeAggregation(agg: RangeAggregation): Record<string, unknown> {
+  const body: Record<string, unknown> = {
+    field: agg.field,
+    ranges: agg.ranges,
+  };
+
+  if (agg.keyed !== undefined) body.keyed = agg.keyed;
+
+  return { [agg.name]: { range: body } };
+}
+
+/**
+ * Serialize a cardinality aggregation
+ */
+function serializeCardinalityAggregation(agg: CardinalityAggregation): Record<string, unknown> {
+  const body: Record<string, unknown> = {
+    field: agg.field,
+  };
+
+  if (agg.precision_threshold !== undefined) body.precision_threshold = agg.precision_threshold;
+  if (agg.missing !== undefined) body.missing = agg.missing;
+
+  return { [agg.name]: { cardinality: body } };
+}
+
+/**
+ * Serialize a single-value metric aggregation (avg, sum, min, max)
+ */
+function serializeSingleValueAggregation(
+  agg: AvgAggregation | SumAggregation | MinAggregation | MaxAggregation
+): Record<string, unknown> {
+  const body: Record<string, unknown> = {
+    field: agg.field,
+  };
+
+  if (agg.missing !== undefined) body.missing = agg.missing;
+
+  return { [agg.name]: { [agg.type]: body } };
+}
+
+/**
+ * Serialize a value_count aggregation
+ */
+function serializeValueCountAggregation(agg: ValueCountAggregation): Record<string, unknown> {
+  return {
+    [agg.name]: {
+      value_count: {
+        field: agg.field,
+      },
+    },
+  };
+}
+
+/**
+ * Serialize a single aggregation to OpenSearch format
+ *
+ * @param agg - The aggregation to serialize
+ * @returns OpenSearch-compatible aggregation object
+ */
+export function serializeAggregation(agg: Aggregation): Record<string, unknown> {
+  switch (agg.type) {
+    case 'terms':
+      return serializeTermsAggregation(agg);
+    case 'stats':
+      return serializeStatsAggregation(agg);
+    case 'extended_stats':
+      return serializeExtendedStatsAggregation(agg);
+    case 'date_histogram':
+      return serializeDateHistogramAggregation(agg);
+    case 'histogram':
+      return serializeHistogramAggregation(agg);
+    case 'range':
+      return serializeRangeAggregation(agg);
+    case 'cardinality':
+      return serializeCardinalityAggregation(agg);
+    case 'avg':
+    case 'sum':
+    case 'min':
+    case 'max':
+      return serializeSingleValueAggregation(agg);
+    case 'value_count':
+      return serializeValueCountAggregation(agg);
+    default:
+      const _exhaustiveCheck: never = agg;
+      throw new Error(`Unknown aggregation type: ${(_exhaustiveCheck as Aggregation).type}`);
+  }
+}
+
+/**
+ * Serialize multiple aggregations to OpenSearch format
+ *
+ * @param aggs - Array of aggregations to serialize
+ * @returns OpenSearch-compatible aggregations object
+ *
+ * @example
+ * ```typescript
+ * const aggs: Aggregation[] = [
+ *   { name: 'categories', type: 'terms', field: 'category.keyword', size: 10 },
+ *   { name: 'price_stats', type: 'stats', field: 'price' }
+ * ];
+ *
+ * const serialized = serializeAggregations(aggs);
+ * // {
+ * //   categories: { terms: { field: 'category.keyword', size: 10 } },
+ * //   price_stats: { stats: { field: 'price' } }
+ * // }
+ * ```
+ */
+export function serializeAggregations(aggs: Aggregation[]): Record<string, unknown> {
+  return aggs.reduce((acc, agg) => ({
+    ...acc,
+    ...serializeAggregation(agg),
+  }), {});
 }

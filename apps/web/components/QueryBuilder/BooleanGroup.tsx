@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import { useQuery, generateNodeId } from '@/context/QueryContext';
+import { useActiveClause, type BoolClause } from '@/context/ActiveClauseContext';
 import { QueryNodeComponent } from './QueryNode';
 import type {
   BoolQueryNode,
@@ -9,11 +10,6 @@ import type {
   MatchQueryNode,
 } from '@crystal-forge/query-dsl';
 import { cn } from '@/lib/utils';
-
-/**
- * Bool clause types
- */
-type BoolClause = 'must' | 'should' | 'must_not' | 'filter';
 
 /**
  * Clause metadata for display
@@ -55,7 +51,7 @@ interface BooleanGroupProps {
  */
 export function BooleanGroup({ node, path }: BooleanGroupProps) {
   const { addNode, removeNode } = useQuery();
-  const [activeTab, setActiveTab] = useState<BoolClause>('must');
+  const { activeClause: activeTab, setActiveClause: setActiveTab } = useActiveClause();
 
   /**
    * Add a new clause to a specific bool section

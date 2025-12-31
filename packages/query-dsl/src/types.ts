@@ -639,3 +639,321 @@ export interface OpenSearchRequestBody {
   search_after?: (string | number)[];
   aggs?: Record<string, unknown>;
 }
+
+// =============================================================================
+// Aggregation Types
+// =============================================================================
+
+/**
+ * Supported aggregation types for field exploration
+ */
+export type AggregationType =
+  | 'terms'
+  | 'stats'
+  | 'extended_stats'
+  | 'date_histogram'
+  | 'histogram'
+  | 'range'
+  | 'cardinality'
+  | 'avg'
+  | 'sum'
+  | 'min'
+  | 'max'
+  | 'value_count';
+
+/**
+ * Base interface for all aggregation definitions
+ */
+export interface AggregationBase {
+  /** Unique name for this aggregation */
+  name: string;
+  /** The type of aggregation */
+  type: AggregationType;
+  /** The field to aggregate on */
+  field: string;
+}
+
+/**
+ * Terms aggregation - bucket aggregation for categorical values
+ */
+export interface TermsAggregation extends AggregationBase {
+  type: 'terms';
+  /** Maximum number of buckets to return */
+  size?: number;
+  /** Bucket ordering */
+  order?: { _count: 'asc' | 'desc' } | { _key: 'asc' | 'desc' };
+  /** Minimum document count for a bucket */
+  min_doc_count?: number;
+  /** Include pattern for term filtering */
+  include?: string | string[];
+  /** Exclude pattern for term filtering */
+  exclude?: string | string[];
+  /** Missing value bucket */
+  missing?: string;
+}
+
+/**
+ * Stats aggregation - basic statistical metrics
+ */
+export interface StatsAggregation extends AggregationBase {
+  type: 'stats';
+  /** Missing value handling */
+  missing?: number;
+}
+
+/**
+ * Extended stats aggregation - comprehensive statistical metrics
+ */
+export interface ExtendedStatsAggregation extends AggregationBase {
+  type: 'extended_stats';
+  /** Missing value handling */
+  missing?: number;
+  /** Standard deviation bounds sigma */
+  sigma?: number;
+}
+
+/**
+ * Date histogram aggregation - time-based bucketing
+ */
+export interface DateHistogramAggregation extends AggregationBase {
+  type: 'date_histogram';
+  /** Calendar-based interval (e.g., '1M', '1w', '1d') */
+  calendar_interval?: string;
+  /** Fixed interval (e.g., '30m', '1h', '1d') */
+  fixed_interval?: string;
+  /** Date format for bucket keys */
+  format?: string;
+  /** Timezone for date calculations */
+  time_zone?: string;
+  /** Offset for interval calculation */
+  offset?: string;
+  /** Minimum document count for a bucket */
+  min_doc_count?: number;
+  /** Extended bounds for empty buckets */
+  extended_bounds?: {
+    min?: string | number;
+    max?: string | number;
+  };
+  /** Missing value handling */
+  missing?: string;
+}
+
+/**
+ * Histogram aggregation - numeric interval bucketing
+ */
+export interface HistogramAggregation extends AggregationBase {
+  type: 'histogram';
+  /** Bucket interval */
+  interval: number;
+  /** Offset for bucket boundaries */
+  offset?: number;
+  /** Minimum document count for a bucket */
+  min_doc_count?: number;
+  /** Extended bounds for empty buckets */
+  extended_bounds?: {
+    min?: number;
+    max?: number;
+  };
+  /** Missing value handling */
+  missing?: number;
+}
+
+/**
+ * Range aggregation - custom range bucketing
+ */
+export interface RangeAggregation extends AggregationBase {
+  type: 'range';
+  /** Range definitions */
+  ranges: Array<{
+    key?: string;
+    from?: number;
+    to?: number;
+  }>;
+  /** Whether ranges are keyed */
+  keyed?: boolean;
+}
+
+/**
+ * Cardinality aggregation - unique value count
+ */
+export interface CardinalityAggregation extends AggregationBase {
+  type: 'cardinality';
+  /** Precision threshold for approximate counting */
+  precision_threshold?: number;
+  /** Missing value handling */
+  missing?: string;
+}
+
+/**
+ * Single-value metric aggregations
+ */
+export interface AvgAggregation extends AggregationBase {
+  type: 'avg';
+  missing?: number;
+}
+
+export interface SumAggregation extends AggregationBase {
+  type: 'sum';
+  missing?: number;
+}
+
+export interface MinAggregation extends AggregationBase {
+  type: 'min';
+  missing?: number;
+}
+
+export interface MaxAggregation extends AggregationBase {
+  type: 'max';
+  missing?: number;
+}
+
+export interface ValueCountAggregation extends AggregationBase {
+  type: 'value_count';
+}
+
+/**
+ * Union of all aggregation types
+ */
+export type Aggregation =
+  | TermsAggregation
+  | StatsAggregation
+  | ExtendedStatsAggregation
+  | DateHistogramAggregation
+  | HistogramAggregation
+  | RangeAggregation
+  | CardinalityAggregation
+  | AvgAggregation
+  | SumAggregation
+  | MinAggregation
+  | MaxAggregation
+  | ValueCountAggregation;
+
+// =============================================================================
+// Aggregation Result Types
+// =============================================================================
+
+/**
+ * Terms aggregation bucket result
+ */
+export interface TermsBucket {
+  key: string | number;
+  key_as_string?: string;
+  doc_count: number;
+}
+
+/**
+ * Terms aggregation result
+ */
+export interface TermsAggregationResult {
+  doc_count_error_upper_bound: number;
+  sum_other_doc_count: number;
+  buckets: TermsBucket[];
+}
+
+/**
+ * Stats aggregation result
+ */
+export interface StatsAggregationResult {
+  count: number;
+  min: number | null;
+  max: number | null;
+  avg: number | null;
+  sum: number;
+}
+
+/**
+ * Extended stats aggregation result
+ */
+export interface ExtendedStatsAggregationResult extends StatsAggregationResult {
+  sum_of_squares: number | null;
+  variance: number | null;
+  variance_population: number | null;
+  variance_sampling: number | null;
+  std_deviation: number | null;
+  std_deviation_population: number | null;
+  std_deviation_sampling: number | null;
+  std_deviation_bounds: {
+    upper: number | null;
+    lower: number | null;
+    upper_population: number | null;
+    lower_population: number | null;
+    upper_sampling: number | null;
+    lower_sampling: number | null;
+  };
+}
+
+/**
+ * Date histogram bucket result
+ */
+export interface DateHistogramBucket {
+  key: number;
+  key_as_string: string;
+  doc_count: number;
+}
+
+/**
+ * Date histogram aggregation result
+ */
+export interface DateHistogramAggregationResult {
+  buckets: DateHistogramBucket[];
+}
+
+/**
+ * Histogram bucket result
+ */
+export interface HistogramBucket {
+  key: number;
+  doc_count: number;
+}
+
+/**
+ * Histogram aggregation result
+ */
+export interface HistogramAggregationResult {
+  buckets: HistogramBucket[];
+}
+
+/**
+ * Range bucket result
+ */
+export interface RangeBucket {
+  key?: string;
+  from?: number;
+  to?: number;
+  doc_count: number;
+}
+
+/**
+ * Range aggregation result
+ */
+export interface RangeAggregationResult {
+  buckets: RangeBucket[] | Record<string, RangeBucket>;
+}
+
+/**
+ * Cardinality aggregation result
+ */
+export interface CardinalityAggregationResult {
+  value: number;
+}
+
+/**
+ * Single value metric result
+ */
+export interface SingleValueAggregationResult {
+  value: number | null;
+  value_as_string?: string;
+}
+
+/**
+ * Union of all aggregation result types
+ */
+export type AggregationResult =
+  | TermsAggregationResult
+  | StatsAggregationResult
+  | ExtendedStatsAggregationResult
+  | DateHistogramAggregationResult
+  | HistogramAggregationResult
+  | RangeAggregationResult
+  | CardinalityAggregationResult
+  | SingleValueAggregationResult;

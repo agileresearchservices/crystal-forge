@@ -23,3 +23,9 @@ export type {
   QueryBuilderState,
   NodePath,
 } from './QueryContext';
+
+export {
+  ActiveClauseProvider,
+  useActiveClause,
+} from './ActiveClauseContext';
+export type { BoolClause } from './ActiveClauseContext';

@@ -1,11 +1,14 @@
 'use client';
 
 import React, { useState, useMemo, useCallback } from 'react';
+import { useDraggable } from '@dnd-kit/core';
+import { CSS } from '@dnd-kit/utilities';
 import { useConnection } from '@/context/ConnectionContext';
-import { useQuery, generateNodeId } from '@/context/QueryContext';
+import { useQuery, generateNodeId, createEmptyBoolQuery } from '@/context/QueryContext';
+import { useActiveClause } from '@/context/ActiveClauseContext';
 import { useFieldSelector } from '@/hooks/useFieldSelector';
+import { createQueryNodeFromField } from '@/utils/createQueryNodeFromField';
 import type { FieldInfo } from '@crystal-forge/opensearch-client';
-import type { MatchQueryNode } from '@crystal-forge/query-dsl';
 import { cn } from '@/lib/utils';
 
 /**
@@ -20,7 +23,8 @@ interface FieldListProps {
  */
 export function FieldList({ className }: FieldListProps) {
   const { state: connectionState } = useConnection();
-  const { addNode } = useQuery();
+  const { state: queryState, addNode, setQuery } = useQuery();
+  const { activeClause } = useActiveClause();
   const {
     filteredFields,
     groupedFields,
@@ -48,19 +52,29 @@ export function FieldList({ className }: FieldListProps) {
   }, []);
 
   /**
-   * Add field to query
+   * Add field to query using smart node creation and active clause
    */
   const handleAddToQuery = useCallback(
     (field: FieldInfo) => {
-      const newNode: MatchQueryNode = {
-        id: generateNodeId(),
-        type: 'match',
-        field: field.path,
-        value: '',
-      };
-      addNode(['must'], newNode);
+      const newNode = createQueryNodeFromField(field);
+
+      // If no query exists, create a bool query first
+      if (!queryState.query.query) {
+        const boolQuery = createEmptyBoolQuery();
+        boolQuery[activeClause].push(newNode);
+        setQuery(boolQuery);
+      } else if (queryState.query.query.type === 'bool') {
+        // Add to the active clause
+        addNode([activeClause], newNode);
+      } else {
+        // Non-bool query exists, wrap it in a bool query
+        const boolQuery = createEmptyBoolQuery();
+        boolQuery.must.push(queryState.query.query);
+        boolQuery[activeClause].push(newNode);
+        setQuery(boolQuery);
+      }
     },
-    [addNode]
+    [addNode, setQuery, queryState.query.query, activeClause]
   );
 
   /**
@@ -295,16 +309,35 @@ interface FieldItemProps {
 function FieldItem({ field, onAdd, typeBadgeColor }: FieldItemProps) {
   const [isHovered, setIsHovered] = useState(false);
 
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+    id: `field-${field.path}`,
+    data: {
+      type: 'field',
+      field,
+    },
+  });
+
+  const style = transform
+    ? {
+        transform: CSS.Transform.toString(transform),
+      }
+    : undefined;
+
   return (
     <div
+      ref={setNodeRef}
+      style={style}
       className={cn(
         'flex items-center gap-2 px-3 py-1.5',
-        'hover:bg-gray-50 transition-colors cursor-pointer'
+        'hover:bg-gray-50 transition-colors cursor-grab',
+        isDragging && 'opacity-50 cursor-grabbing'
       )}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onClick={onAdd}
-      title={`Click to add ${field.path} to query`}
+      title={`Drag to a clause tab or click to add ${field.path} to query`}
+      {...attributes}
+      {...listeners}
     >
       {/* Field name */}
       <span className="flex-1 text-sm text-gray-700 truncate">

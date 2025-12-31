@@ -66,6 +66,38 @@ export type {
   // OpenSearch DSL types
   OpenSearchQuery,
   OpenSearchRequestBody,
+
+  // Aggregation types
+  AggregationType,
+  AggregationBase,
+  TermsAggregation,
+  StatsAggregation,
+  ExtendedStatsAggregation,
+  DateHistogramAggregation,
+  HistogramAggregation,
+  RangeAggregation,
+  CardinalityAggregation,
+  AvgAggregation,
+  SumAggregation,
+  MinAggregation,
+  MaxAggregation,
+  ValueCountAggregation,
+  Aggregation,
+
+  // Aggregation result types
+  TermsBucket,
+  TermsAggregationResult,
+  StatsAggregationResult,
+  ExtendedStatsAggregationResult,
+  DateHistogramBucket,
+  DateHistogramAggregationResult,
+  HistogramBucket,
+  HistogramAggregationResult,
+  RangeBucket,
+  RangeAggregationResult,
+  CardinalityAggregationResult,
+  SingleValueAggregationResult,
+  AggregationResult,
 } from './types';
 
 // =============================================================================
@@ -90,6 +122,8 @@ export {
   serializeQuery,
   serializeQueryState,
   serializeToJson,
+  serializeAggregation,
+  serializeAggregations,
 } from './serializer';
 
 // =============================================================================
