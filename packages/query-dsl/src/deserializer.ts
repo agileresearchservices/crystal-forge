@@ -12,20 +12,27 @@ import type {
   OpenSearchRequestBody,
   BoolQueryNode,
   MatchQueryNode,
+  MatchPhraseQueryNode,
+  MatchPhrasePrefixQueryNode,
   TermQueryNode,
+  TermsQueryNode,
   RangeQueryNode,
   PrefixQueryNode,
   WildcardQueryNode,
+  RegexpQueryNode,
   ExistsQueryNode,
   NestedQueryNode,
   MatchAllQueryNode,
+  MatchNoneQueryNode,
   MultiMatchQueryNode,
   QueryStringQueryNode,
+  SimpleQueryStringQueryNode,
   FuzzyQueryNode,
   IdsQueryNode,
   SortClause,
   HighlightConfig,
   HighlightFieldConfig,
+  InnerHitsConfig,
   SortOrder,
   SortMode,
 } from './types';
@@ -100,8 +107,77 @@ function deserializeMatchQuery(
       node.minimum_should_match = matchBody.minimum_should_match as
         | string
         | number;
+    if (matchBody.fuzzy_transpositions !== undefined)
+      node.fuzzy_transpositions = matchBody.fuzzy_transpositions as boolean;
+    if (matchBody.auto_generate_synonyms_phrase_query !== undefined)
+      node.auto_generate_synonyms_phrase_query =
+        matchBody.auto_generate_synonyms_phrase_query as boolean;
     if (matchBody.boost !== undefined) node.boost = matchBody.boost as number;
     if (matchBody._name) node._name = matchBody._name as string;
+  }
+
+  return node;
+}
+
+/**
+ * Deserialize a match_phrase query
+ */
+function deserializeMatchPhraseQuery(
+  field: string,
+  body: unknown
+): MatchPhraseQueryNode {
+  const node: MatchPhraseQueryNode = {
+    id: generateNodeId('match_phrase'),
+    type: 'match_phrase',
+    field,
+    value: '',
+  };
+
+  if (typeof body === 'string') {
+    node.value = body;
+  } else if (typeof body === 'object' && body !== null) {
+    const phraseBody = body as Record<string, unknown>;
+    node.value = String(phraseBody.query ?? '');
+
+    if (phraseBody.slop !== undefined) node.slop = phraseBody.slop as number;
+    if (phraseBody.analyzer) node.analyzer = phraseBody.analyzer as string;
+    if (phraseBody.zero_terms_query)
+      node.zero_terms_query = phraseBody.zero_terms_query as 'none' | 'all';
+    if (phraseBody.boost !== undefined) node.boost = phraseBody.boost as number;
+    if (phraseBody._name) node._name = phraseBody._name as string;
+  }
+
+  return node;
+}
+
+/**
+ * Deserialize a match_phrase_prefix query
+ */
+function deserializeMatchPhrasePrefixQuery(
+  field: string,
+  body: unknown
+): MatchPhrasePrefixQueryNode {
+  const node: MatchPhrasePrefixQueryNode = {
+    id: generateNodeId('match_phrase_prefix'),
+    type: 'match_phrase_prefix',
+    field,
+    value: '',
+  };
+
+  if (typeof body === 'string') {
+    node.value = body;
+  } else if (typeof body === 'object' && body !== null) {
+    const prefixBody = body as Record<string, unknown>;
+    node.value = String(prefixBody.query ?? '');
+
+    if (prefixBody.slop !== undefined) node.slop = prefixBody.slop as number;
+    if (prefixBody.max_expansions !== undefined)
+      node.max_expansions = prefixBody.max_expansions as number;
+    if (prefixBody.analyzer) node.analyzer = prefixBody.analyzer as string;
+    if (prefixBody.zero_terms_query)
+      node.zero_terms_query = prefixBody.zero_terms_query as 'none' | 'all';
+    if (prefixBody.boost !== undefined) node.boost = prefixBody.boost as number;
+    if (prefixBody._name) node._name = prefixBody._name as string;
   }
 
   return node;
@@ -132,6 +208,28 @@ function deserializeTermQuery(
     if (termBody.boost !== undefined) node.boost = termBody.boost as number;
     if (termBody._name) node._name = termBody._name as string;
   }
+
+  return node;
+}
+
+/**
+ * Deserialize a terms query
+ */
+function deserializeTermsQuery(
+  field: string,
+  values: unknown,
+  boost?: number,
+  _name?: string
+): TermsQueryNode {
+  const node: TermsQueryNode = {
+    id: generateNodeId('terms'),
+    type: 'terms',
+    field,
+    values: Array.isArray(values) ? (values as (string | number | boolean)[]) : [],
+  };
+
+  if (boost !== undefined) node.boost = boost;
+  if (_name) node._name = _name;
 
   return node;
 }
@@ -226,6 +324,40 @@ function deserializeWildcardQuery(
 }
 
 /**
+ * Deserialize a regexp query
+ */
+function deserializeRegexpQuery(
+  field: string,
+  body: unknown
+): RegexpQueryNode {
+  const node: RegexpQueryNode = {
+    id: generateNodeId('regexp'),
+    type: 'regexp',
+    field,
+    value: '',
+  };
+
+  if (typeof body === 'string') {
+    node.value = body;
+  } else if (typeof body === 'object' && body !== null) {
+    const regexpBody = body as Record<string, unknown>;
+    node.value = String(regexpBody.value ?? '');
+
+    if (regexpBody.flags) node.flags = regexpBody.flags as string;
+    if (regexpBody.case_insensitive !== undefined)
+      node.case_insensitive = regexpBody.case_insensitive as boolean;
+    if (regexpBody.max_determinized_states !== undefined)
+      node.max_determinized_states = regexpBody.max_determinized_states as number;
+    if (regexpBody.rewrite) node.rewrite = regexpBody.rewrite as string;
+    if (regexpBody.boost !== undefined)
+      node.boost = regexpBody.boost as number;
+    if (regexpBody._name) node._name = regexpBody._name as string;
+  }
+
+  return node;
+}
+
+/**
  * Deserialize an exists query
  */
 function deserializeExistsQuery(
@@ -293,6 +425,37 @@ function deserializeBoolQuery(
 }
 
 /**
+ * Deserialize inner hits configuration from OpenSearch format
+ */
+function deserializeInnerHits(
+  innerHits: Record<string, unknown>
+): InnerHitsConfig {
+  const result: InnerHitsConfig = {};
+
+  if (innerHits.name) result.name = innerHits.name as string;
+  if (innerHits.from !== undefined) result.from = innerHits.from as number;
+  if (innerHits.size !== undefined) result.size = innerHits.size as number;
+  if (innerHits._source !== undefined)
+    result._source = innerHits._source as InnerHitsConfig['_source'];
+
+  // Deserialize sort clauses
+  if (innerHits.sort && Array.isArray(innerHits.sort)) {
+    result.sort = innerHits.sort.map((clause) =>
+      deserializeSortClause(clause as Record<string, unknown> | string)
+    );
+  }
+
+  // Deserialize highlight
+  if (innerHits.highlight) {
+    result.highlight = deserializeHighlight(
+      innerHits.highlight as Record<string, unknown>
+    );
+  }
+
+  return result;
+}
+
+/**
  * Deserialize a nested query
  */
 function deserializeNestedQuery(
@@ -309,7 +472,11 @@ function deserializeNestedQuery(
     node.score_mode = body.score_mode as 'avg' | 'max' | 'min' | 'none' | 'sum';
   if (body.ignore_unmapped !== undefined)
     node.ignore_unmapped = body.ignore_unmapped as boolean;
-  if (body.inner_hits) node.inner_hits = body.inner_hits as NestedQueryNode['inner_hits'];
+  if (body.inner_hits) {
+    node.inner_hits = deserializeInnerHits(
+      body.inner_hits as Record<string, unknown>
+    );
+  }
   if (body.boost !== undefined) node.boost = body.boost as number;
   if (body._name) node._name = body._name as string;
 
@@ -325,6 +492,23 @@ function deserializeMatchAllQuery(
   const node: MatchAllQueryNode = {
     id: generateNodeId('match_all'),
     type: 'match_all',
+  };
+
+  if (body.boost !== undefined) node.boost = body.boost as number;
+  if (body._name) node._name = body._name as string;
+
+  return node;
+}
+
+/**
+ * Deserialize a match_none query
+ */
+function deserializeMatchNoneQuery(
+  body: Record<string, unknown>
+): MatchNoneQueryNode {
+  const node: MatchNoneQueryNode = {
+    id: generateNodeId('match_none'),
+    type: 'match_none',
   };
 
   if (body.boost !== undefined) node.boost = body.boost as number;
@@ -404,6 +588,46 @@ function deserializeQueryStringQuery(
   if (body.lenient !== undefined) node.lenient = body.lenient as boolean;
   if (body.minimum_should_match !== undefined)
     node.minimum_should_match = body.minimum_should_match as string | number;
+  if (body.time_zone) node.time_zone = body.time_zone as string;
+  if (body.boost !== undefined) node.boost = body.boost as number;
+  if (body._name) node._name = body._name as string;
+
+  return node;
+}
+
+/**
+ * Deserialize a simple_query_string query
+ */
+function deserializeSimpleQueryStringQuery(
+  body: Record<string, unknown>
+): SimpleQueryStringQueryNode {
+  const node: SimpleQueryStringQueryNode = {
+    id: generateNodeId('simple_query_string'),
+    type: 'simple_query_string',
+    query: body.query as string,
+  };
+
+  if (body.fields) node.fields = body.fields as string[];
+  if (body.default_operator)
+    node.default_operator = body.default_operator as 'AND' | 'OR';
+  if (body.analyzer) node.analyzer = body.analyzer as string;
+  if (body.flags) node.flags = body.flags as string;
+  if (body.lenient !== undefined) node.lenient = body.lenient as boolean;
+  if (body.minimum_should_match !== undefined)
+    node.minimum_should_match = body.minimum_should_match as string | number;
+  if (body.analyze_wildcard !== undefined)
+    node.analyze_wildcard = body.analyze_wildcard as boolean;
+  if (body.auto_generate_synonyms_phrase_query !== undefined)
+    node.auto_generate_synonyms_phrase_query =
+      body.auto_generate_synonyms_phrase_query as boolean;
+  if (body.quote_field_suffix)
+    node.quote_field_suffix = body.quote_field_suffix as string;
+  if (body.fuzzy_prefix_length !== undefined)
+    node.fuzzy_prefix_length = body.fuzzy_prefix_length as number;
+  if (body.fuzzy_max_expansions !== undefined)
+    node.fuzzy_max_expansions = body.fuzzy_max_expansions as number;
+  if (body.fuzzy_transpositions !== undefined)
+    node.fuzzy_transpositions = body.fuzzy_transpositions as boolean;
   if (body.boost !== undefined) node.boost = body.boost as number;
   if (body._name) node._name = body._name as string;
 
@@ -554,14 +778,64 @@ export function deserializeQuery(query: OpenSearchQuery): QueryNode {
     case 'nested':
       return deserializeNestedQuery(body as Record<string, unknown>);
 
+    case 'match_phrase': {
+      const fields = Object.keys(body as Record<string, unknown>);
+      const field = fields[0];
+      return deserializeMatchPhraseQuery(
+        field,
+        (body as Record<string, unknown>)[field]
+      );
+    }
+
+    case 'match_phrase_prefix': {
+      const fields = Object.keys(body as Record<string, unknown>);
+      const field = fields[0];
+      return deserializeMatchPhrasePrefixQuery(
+        field,
+        (body as Record<string, unknown>)[field]
+      );
+    }
+
+    case 'terms': {
+      const termsBody = body as Record<string, unknown>;
+      // Find the field name (it's the key that's not 'boost' or '_name')
+      const field = Object.keys(termsBody).find(
+        (k) => k !== 'boost' && k !== '_name'
+      );
+      if (!field) {
+        return deserializeMatchAllQuery({});
+      }
+      return deserializeTermsQuery(
+        field,
+        termsBody[field],
+        termsBody.boost as number | undefined,
+        termsBody._name as string | undefined
+      );
+    }
+
+    case 'regexp': {
+      const fields = Object.keys(body as Record<string, unknown>);
+      const field = fields[0];
+      return deserializeRegexpQuery(
+        field,
+        (body as Record<string, unknown>)[field]
+      );
+    }
+
     case 'match_all':
       return deserializeMatchAllQuery((body as Record<string, unknown>) ?? {});
+
+    case 'match_none':
+      return deserializeMatchNoneQuery((body as Record<string, unknown>) ?? {});
 
     case 'multi_match':
       return deserializeMultiMatchQuery(body as Record<string, unknown>);
 
     case 'query_string':
       return deserializeQueryStringQuery(body as Record<string, unknown>);
+
+    case 'simple_query_string':
+      return deserializeSimpleQueryStringQuery(body as Record<string, unknown>);
 
     case 'fuzzy': {
       const fields = Object.keys(body as Record<string, unknown>);
@@ -663,6 +937,9 @@ function deserializeHighlight(
   }
   if (highlight.type) {
     result.type = highlight.type as 'unified' | 'plain' | 'fvh';
+  }
+  if (highlight.order) {
+    result.order = highlight.order as 'score';
   }
 
   return result;

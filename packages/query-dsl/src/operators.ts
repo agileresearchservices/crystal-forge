@@ -27,6 +27,10 @@ export interface OperatorDefinition {
   rangeOperator?: 'gt' | 'gte' | 'lt' | 'lte';
   /** Whether the operator is for range queries */
   isRange?: boolean;
+  /** Additional query parameters to set when this operator is selected */
+  queryParams?: Record<string, unknown>;
+  /** Unique identifier for the operator (for operators with same queryType) */
+  operatorId?: string;
 }
 
 /**
@@ -50,42 +54,63 @@ const TEXT_OPERATORS: OperatorDefinition[] = [
     label: 'matches',
     description: 'Full-text search with analysis',
     requiresValue: true,
+    operatorId: 'match',
   },
   {
-    queryType: 'match',
+    queryType: 'match_phrase',
     label: 'matches phrase',
     description: 'Exact phrase match',
     requiresValue: true,
+    operatorId: 'match_phrase',
+  },
+  {
+    queryType: 'match_phrase_prefix',
+    label: 'matches phrase prefix',
+    description: 'Phrase prefix for autocomplete',
+    requiresValue: true,
+    operatorId: 'match_phrase_prefix',
   },
   {
     queryType: 'multi_match',
     label: 'matches across fields',
     description: 'Search across multiple fields',
     requiresValue: true,
+    operatorId: 'multi_match',
   },
   {
     queryType: 'query_string',
     label: 'query string',
     description: 'Lucene query syntax',
     requiresValue: true,
+    operatorId: 'query_string',
+  },
+  {
+    queryType: 'simple_query_string',
+    label: 'simple query',
+    description: 'Simple query syntax (safer)',
+    requiresValue: true,
+    operatorId: 'simple_query_string',
   },
   {
     queryType: 'fuzzy',
     label: 'fuzzy matches',
     description: 'Fuzzy matching for typo tolerance',
     requiresValue: true,
+    operatorId: 'fuzzy',
   },
   {
     queryType: 'wildcard',
     label: 'wildcard',
     description: 'Pattern matching with * and ?',
     requiresValue: true,
+    operatorId: 'wildcard',
   },
   {
     queryType: 'prefix',
     label: 'starts with',
     description: 'Prefix matching',
     requiresValue: true,
+    operatorId: 'prefix',
   },
   ...COMMON_OPERATORS,
 ];
@@ -99,30 +124,50 @@ const KEYWORD_OPERATORS: OperatorDefinition[] = [
     label: 'equals',
     description: 'Exact match (case-sensitive)',
     requiresValue: true,
+    operatorId: 'term',
   },
   {
     queryType: 'term',
     label: 'equals (case-insensitive)',
     description: 'Exact match ignoring case',
     requiresValue: true,
+    operatorId: 'term_case_insensitive',
+    queryParams: { case_insensitive: true },
+  },
+  {
+    queryType: 'terms',
+    label: 'is one of',
+    description: 'Match any of multiple values',
+    requiresValue: true,
+    operatorId: 'terms',
   },
   {
     queryType: 'prefix',
     label: 'starts with',
     description: 'Prefix matching',
     requiresValue: true,
+    operatorId: 'prefix',
   },
   {
     queryType: 'wildcard',
     label: 'wildcard',
     description: 'Pattern matching with * and ?',
     requiresValue: true,
+    operatorId: 'wildcard',
+  },
+  {
+    queryType: 'regexp',
+    label: 'regexp',
+    description: 'Regular expression matching',
+    requiresValue: true,
+    operatorId: 'regexp',
   },
   {
     queryType: 'fuzzy',
     label: 'fuzzy equals',
     description: 'Fuzzy matching for typo tolerance',
     requiresValue: true,
+    operatorId: 'fuzzy',
   },
   ...COMMON_OPERATORS,
 ];

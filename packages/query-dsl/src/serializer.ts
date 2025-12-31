@@ -12,19 +12,26 @@ import type {
   OpenSearchRequestBody,
   BoolQueryNode,
   MatchQueryNode,
+  MatchPhraseQueryNode,
+  MatchPhrasePrefixQueryNode,
   TermQueryNode,
+  TermsQueryNode,
   RangeQueryNode,
   PrefixQueryNode,
   WildcardQueryNode,
+  RegexpQueryNode,
   ExistsQueryNode,
   NestedQueryNode,
   MatchAllQueryNode,
+  MatchNoneQueryNode,
   MultiMatchQueryNode,
   QueryStringQueryNode,
+  SimpleQueryStringQueryNode,
   FuzzyQueryNode,
   IdsQueryNode,
   SortClause,
   HighlightConfig,
+  InnerHitsConfig,
 } from './types';
 
 // =============================================================================
@@ -50,12 +57,62 @@ function serializeMatchQuery(node: MatchQueryNode): OpenSearchQuery {
   if (node.analyzer) matchBody.analyzer = node.analyzer;
   if (node.minimum_should_match !== undefined)
     matchBody.minimum_should_match = node.minimum_should_match;
+  if (node.fuzzy_transpositions !== undefined)
+    matchBody.fuzzy_transpositions = node.fuzzy_transpositions;
+  if (node.auto_generate_synonyms_phrase_query !== undefined)
+    matchBody.auto_generate_synonyms_phrase_query =
+      node.auto_generate_synonyms_phrase_query;
   if (node.boost !== undefined) matchBody.boost = node.boost;
   if (node._name) matchBody._name = node._name;
 
   return {
     match: {
       [node.field]: matchBody,
+    },
+  };
+}
+
+/**
+ * Serialize a match_phrase query node
+ */
+function serializeMatchPhraseQuery(node: MatchPhraseQueryNode): OpenSearchQuery {
+  const body: Record<string, unknown> = {
+    query: node.value,
+  };
+
+  if (node.slop !== undefined) body.slop = node.slop;
+  if (node.analyzer) body.analyzer = node.analyzer;
+  if (node.zero_terms_query) body.zero_terms_query = node.zero_terms_query;
+  if (node.boost !== undefined) body.boost = node.boost;
+  if (node._name) body._name = node._name;
+
+  return {
+    match_phrase: {
+      [node.field]: body,
+    },
+  };
+}
+
+/**
+ * Serialize a match_phrase_prefix query node
+ */
+function serializeMatchPhrasePrefixQuery(
+  node: MatchPhrasePrefixQueryNode
+): OpenSearchQuery {
+  const body: Record<string, unknown> = {
+    query: node.value,
+  };
+
+  if (node.slop !== undefined) body.slop = node.slop;
+  if (node.max_expansions !== undefined) body.max_expansions = node.max_expansions;
+  if (node.analyzer) body.analyzer = node.analyzer;
+  if (node.zero_terms_query) body.zero_terms_query = node.zero_terms_query;
+  if (node.boost !== undefined) body.boost = node.boost;
+  if (node._name) body._name = node._name;
+
+  return {
+    match_phrase_prefix: {
+      [node.field]: body,
     },
   };
 }
@@ -78,6 +135,26 @@ function serializeTermQuery(node: TermQueryNode): OpenSearchQuery {
       [node.field]: termBody,
     },
   };
+}
+
+/**
+ * Serialize a terms query node
+ */
+function serializeTermsQuery(node: TermsQueryNode): OpenSearchQuery {
+  const result: OpenSearchQuery = {
+    terms: {
+      [node.field]: node.values,
+    },
+  };
+
+  if (node.boost !== undefined) {
+    (result.terms as Record<string, unknown>).boost = node.boost;
+  }
+  if (node._name) {
+    (result.terms as Record<string, unknown>)._name = node._name;
+  }
+
+  return result;
 }
 
 /**
@@ -146,6 +223,30 @@ function serializeWildcardQuery(node: WildcardQueryNode): OpenSearchQuery {
 }
 
 /**
+ * Serialize a regexp query node
+ */
+function serializeRegexpQuery(node: RegexpQueryNode): OpenSearchQuery {
+  const body: Record<string, unknown> = {
+    value: node.value,
+  };
+
+  if (node.flags) body.flags = node.flags;
+  if (node.case_insensitive !== undefined)
+    body.case_insensitive = node.case_insensitive;
+  if (node.max_determinized_states !== undefined)
+    body.max_determinized_states = node.max_determinized_states;
+  if (node.rewrite) body.rewrite = node.rewrite;
+  if (node.boost !== undefined) body.boost = node.boost;
+  if (node._name) body._name = node._name;
+
+  return {
+    regexp: {
+      [node.field]: body,
+    },
+  };
+}
+
+/**
  * Serialize an exists query node
  */
 function serializeExistsQuery(node: ExistsQueryNode): OpenSearchQuery {
@@ -189,7 +290,33 @@ function serializeBoolQuery(node: BoolQueryNode): OpenSearchQuery {
   if (node.boost !== undefined) boolBody.boost = node.boost;
   if (node._name) boolBody._name = node._name;
 
+  // If bool body is empty (no clauses), return match_all instead
+  if (Object.keys(boolBody).length === 0) {
+    return { match_all: {} };
+  }
+
   return { bool: boolBody };
+}
+
+/**
+ * Serialize inner hits configuration to OpenSearch format
+ */
+function serializeInnerHits(config: InnerHitsConfig): Record<string, unknown> {
+  const result: Record<string, unknown> = {};
+
+  if (config.name) result.name = config.name;
+  if (config.from !== undefined) result.from = config.from;
+  if (config.size !== undefined) result.size = config.size;
+  if (config._source !== undefined) result._source = config._source;
+
+  // Serialize sort clauses with nested filters properly
+  if (config.sort && config.sort.length > 0) {
+    result.sort = config.sort.map((clause) => serializeSortClause(clause));
+  }
+
+  if (config.highlight) result.highlight = serializeHighlight(config.highlight);
+
+  return result;
 }
 
 /**
@@ -204,7 +331,7 @@ function serializeNestedQuery(node: NestedQueryNode): OpenSearchQuery {
   if (node.score_mode) nestedBody.score_mode = node.score_mode;
   if (node.ignore_unmapped !== undefined)
     nestedBody.ignore_unmapped = node.ignore_unmapped;
-  if (node.inner_hits) nestedBody.inner_hits = node.inner_hits;
+  if (node.inner_hits) nestedBody.inner_hits = serializeInnerHits(node.inner_hits);
   if (node.boost !== undefined) nestedBody.boost = node.boost;
   if (node._name) nestedBody._name = node._name;
 
@@ -221,6 +348,18 @@ function serializeMatchAllQuery(node: MatchAllQueryNode): OpenSearchQuery {
   if (node._name) matchAllBody._name = node._name;
 
   return { match_all: matchAllBody };
+}
+
+/**
+ * Serialize a match_none query node
+ */
+function serializeMatchNoneQuery(node: MatchNoneQueryNode): OpenSearchQuery {
+  const body: Record<string, unknown> = {};
+
+  if (node.boost !== undefined) body.boost = node.boost;
+  if (node._name) body._name = node._name;
+
+  return { match_none: body };
 }
 
 /**
@@ -287,10 +426,46 @@ function serializeQueryStringQuery(
   if (node.lenient !== undefined) queryStringBody.lenient = node.lenient;
   if (node.minimum_should_match !== undefined)
     queryStringBody.minimum_should_match = node.minimum_should_match;
+  if (node.time_zone) queryStringBody.time_zone = node.time_zone;
   if (node.boost !== undefined) queryStringBody.boost = node.boost;
   if (node._name) queryStringBody._name = node._name;
 
   return { query_string: queryStringBody };
+}
+
+/**
+ * Serialize a simple_query_string query node
+ */
+function serializeSimpleQueryStringQuery(
+  node: SimpleQueryStringQueryNode
+): OpenSearchQuery {
+  const body: Record<string, unknown> = {
+    query: node.query,
+  };
+
+  if (node.fields) body.fields = node.fields;
+  if (node.default_operator) body.default_operator = node.default_operator;
+  if (node.analyzer) body.analyzer = node.analyzer;
+  if (node.flags) body.flags = node.flags;
+  if (node.lenient !== undefined) body.lenient = node.lenient;
+  if (node.minimum_should_match !== undefined)
+    body.minimum_should_match = node.minimum_should_match;
+  if (node.analyze_wildcard !== undefined)
+    body.analyze_wildcard = node.analyze_wildcard;
+  if (node.auto_generate_synonyms_phrase_query !== undefined)
+    body.auto_generate_synonyms_phrase_query =
+      node.auto_generate_synonyms_phrase_query;
+  if (node.quote_field_suffix) body.quote_field_suffix = node.quote_field_suffix;
+  if (node.fuzzy_prefix_length !== undefined)
+    body.fuzzy_prefix_length = node.fuzzy_prefix_length;
+  if (node.fuzzy_max_expansions !== undefined)
+    body.fuzzy_max_expansions = node.fuzzy_max_expansions;
+  if (node.fuzzy_transpositions !== undefined)
+    body.fuzzy_transpositions = node.fuzzy_transpositions;
+  if (node.boost !== undefined) body.boost = node.boost;
+  if (node._name) body._name = node._name;
+
+  return { simple_query_string: body };
 }
 
 /**
@@ -360,14 +535,22 @@ export function serializeQuery(node: QueryNode): OpenSearchQuery {
   switch (node.type) {
     case 'match':
       return serializeMatchQuery(node);
+    case 'match_phrase':
+      return serializeMatchPhraseQuery(node);
+    case 'match_phrase_prefix':
+      return serializeMatchPhrasePrefixQuery(node);
     case 'term':
       return serializeTermQuery(node);
+    case 'terms':
+      return serializeTermsQuery(node);
     case 'range':
       return serializeRangeQuery(node);
     case 'prefix':
       return serializePrefixQuery(node);
     case 'wildcard':
       return serializeWildcardQuery(node);
+    case 'regexp':
+      return serializeRegexpQuery(node);
     case 'exists':
       return serializeExistsQuery(node);
     case 'bool':
@@ -376,10 +559,14 @@ export function serializeQuery(node: QueryNode): OpenSearchQuery {
       return serializeNestedQuery(node);
     case 'match_all':
       return serializeMatchAllQuery(node);
+    case 'match_none':
+      return serializeMatchNoneQuery(node);
     case 'multi_match':
       return serializeMultiMatchQuery(node);
     case 'query_string':
       return serializeQueryStringQuery(node);
+    case 'simple_query_string':
+      return serializeSimpleQueryStringQuery(node);
     case 'fuzzy':
       return serializeFuzzyQuery(node);
     case 'ids':

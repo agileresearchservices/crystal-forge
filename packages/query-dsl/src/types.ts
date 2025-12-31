@@ -14,16 +14,22 @@
  */
 export type QueryType =
   | 'match'
+  | 'match_phrase'
+  | 'match_phrase_prefix'
   | 'term'
+  | 'terms'
   | 'bool'
   | 'range'
   | 'prefix'
   | 'wildcard'
+  | 'regexp'
   | 'exists'
   | 'nested'
   | 'match_all'
+  | 'match_none'
   | 'multi_match'
   | 'query_string'
+  | 'simple_query_string'
   | 'fuzzy'
   | 'ids';
 
@@ -121,6 +127,10 @@ export interface MatchQueryNode extends FieldQueryNode {
   analyzer?: string;
   /** Minimum should match */
   minimum_should_match?: string | number;
+  /** Whether transpositions are allowed in fuzzy matching */
+  fuzzy_transpositions?: boolean;
+  /** Auto generate synonyms phrase query */
+  auto_generate_synonyms_phrase_query?: boolean;
 }
 
 /**
@@ -294,6 +304,8 @@ export interface QueryStringQueryNode extends QueryNodeBase {
   lenient?: boolean;
   /** Minimum should match */
   minimum_should_match?: string | number;
+  /** Timezone for date parsing in query string */
+  time_zone?: string;
 }
 
 /**
@@ -324,20 +336,123 @@ export interface IdsQueryNode extends QueryNodeBase {
 }
 
 /**
+ * Match phrase query node - exact phrase matching
+ */
+export interface MatchPhraseQueryNode extends FieldQueryNode {
+  type: 'match_phrase';
+  value: string;
+  /** Slop for phrase matching (how many positions terms can be apart) */
+  slop?: number;
+  /** Analyzer to use */
+  analyzer?: string;
+  /** Zero terms query behavior */
+  zero_terms_query?: 'none' | 'all';
+}
+
+/**
+ * Match phrase prefix query node - phrase prefix matching for autocomplete
+ */
+export interface MatchPhrasePrefixQueryNode extends FieldQueryNode {
+  type: 'match_phrase_prefix';
+  value: string;
+  /** Slop for phrase matching */
+  slop?: number;
+  /** Maximum expansions for the last term */
+  max_expansions?: number;
+  /** Analyzer to use */
+  analyzer?: string;
+  /** Zero terms query behavior */
+  zero_terms_query?: 'none' | 'all';
+}
+
+/**
+ * Terms query node - exact match for multiple values
+ */
+export interface TermsQueryNode extends QueryNodeBase {
+  type: 'terms';
+  /** The field this query targets */
+  field: string;
+  /** Array of values to match (OR logic) */
+  values: (string | number | boolean)[];
+}
+
+/**
+ * Match none query node - matches no documents
+ */
+export interface MatchNoneQueryNode extends QueryNodeBase {
+  type: 'match_none';
+}
+
+/**
+ * Regexp query node - regular expression matching
+ */
+export interface RegexpQueryNode extends FieldQueryNode {
+  type: 'regexp';
+  value: string;
+  /** Flags for the regex (e.g., 'ALL', 'COMPLEMENT', etc.) */
+  flags?: string;
+  /** Case insensitive matching */
+  case_insensitive?: boolean;
+  /** Maximum determinized states for the automaton */
+  max_determinized_states?: number;
+  /** Rewrite method */
+  rewrite?: string;
+}
+
+/**
+ * Simple query string query node - simplified query syntax that never throws
+ */
+export interface SimpleQueryStringQueryNode extends QueryNodeBase {
+  type: 'simple_query_string';
+  /** The query string */
+  query: string;
+  /** Fields to search */
+  fields?: string[];
+  /** Default operator */
+  default_operator?: 'AND' | 'OR';
+  /** Analyzer to use */
+  analyzer?: string;
+  /** Flags to enable/disable features */
+  flags?: string;
+  /** Lenient parsing */
+  lenient?: boolean;
+  /** Minimum should match */
+  minimum_should_match?: string | number;
+  /** Analyze wildcard terms */
+  analyze_wildcard?: boolean;
+  /** Auto generate synonyms phrase query */
+  auto_generate_synonyms_phrase_query?: boolean;
+  /** Quote field suffix */
+  quote_field_suffix?: string;
+  /** Fuzzy prefix length */
+  fuzzy_prefix_length?: number;
+  /** Fuzzy max expansions */
+  fuzzy_max_expansions?: number;
+  /** Fuzzy transpositions */
+  fuzzy_transpositions?: boolean;
+}
+
+/**
  * Union type of all query node types
  */
 export type QueryNode =
   | MatchQueryNode
+  | MatchPhraseQueryNode
+  | MatchPhrasePrefixQueryNode
   | TermQueryNode
+  | TermsQueryNode
   | RangeQueryNode
   | PrefixQueryNode
   | WildcardQueryNode
+  | RegexpQueryNode
   | ExistsQueryNode
   | BoolQueryNode
   | NestedQueryNode
   | MatchAllQueryNode
+  | MatchNoneQueryNode
   | MultiMatchQueryNode
   | QueryStringQueryNode
+  | SimpleQueryStringQueryNode
   | FuzzyQueryNode
   | IdsQueryNode;
 
