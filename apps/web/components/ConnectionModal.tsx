@@ -3,6 +3,13 @@
 import React, { useState, useCallback } from 'react';
 import { useConnection } from '@/context/ConnectionContext';
 import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
 import type { ConnectionConfig, AuthConfig } from '@crystal-forge/opensearch-client';
 import { cn } from '@/lib/utils';
 
@@ -98,40 +105,17 @@ export function ConnectionModal({ isOpen, onClose }: ConnectionModalProps) {
     }
   }, [isLoading, onClose]);
 
-  if (!isOpen) {
-    return null;
-  }
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-black/50"
-        onClick={handleClose}
-      />
-
-      {/* Modal */}
-      <div className="relative w-full max-w-lg bg-white rounded-lg shadow-xl">
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b">
-          <h2 className="text-lg font-semibold">
+    <Dialog open={isOpen} onOpenChange={handleClose}>
+      <DialogContent className="w-full max-w-lg">
+        <DialogHeader>
+          <DialogTitle>
             {connection.isConnected ? 'Connection Settings' : 'Connect to OpenSearch'}
-          </h2>
-          <Button
-            onClick={handleClose}
-            disabled={isLoading}
-            variant="ghost"
-            size="icon"
-            aria-label="Close dialog"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </Button>
-        </div>
+          </DialogTitle>
+        </DialogHeader>
 
         {/* Content */}
-        <div className="p-4 space-y-4">
+        <div className="space-y-4">
           {/* Error display */}
           {error && (
             <div className="p-3 text-sm text-red-600 bg-red-50 rounded-md border border-red-200">
@@ -304,8 +288,7 @@ export function ConnectionModal({ isOpen, onClose }: ConnectionModalProps) {
           )}
         </div>
 
-        {/* Footer */}
-        <div className="flex items-center justify-end gap-3 p-4 border-t bg-gray-50 rounded-b-lg">
+        <DialogFooter>
           {connection.isConnected ? (
             <>
               <Button
@@ -353,9 +336,9 @@ export function ConnectionModal({ isOpen, onClose }: ConnectionModalProps) {
               </Button>
             </>
           )}
-        </div>
-      </div>
-    </div>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
