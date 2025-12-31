@@ -178,3 +178,29 @@ The DSL Expert has deep knowledge of:
 - Query vs filter context implications
 - Field type compatibility rules
 - Performance considerations
+
+### Web Designer Expert
+
+Specialized expert for UI design, accessibility, responsive design, and performance optimization.
+
+```bash
+# Get design help for Crystal Forge components
+/web-designer
+
+# Ask for specific design assistance:
+# - Component design and layout
+# - Accessibility audits (WCAG 2.1)
+# - Responsive design patterns
+# - Performance optimization
+# - Next.js integration
+# - Design system improvements
+```
+
+The Web Designer Expert has expertise in:
+- UI/Component design and layout patterns
+- Accessibility standards (WCAG 2.1 Levels A, AA, AAA)
+- Responsive design (mobile-first, Grid, Flexbox, Container Queries)
+- Core Web Vitals optimization
+- Next.js 15+ App Router and Server Components
+- Design systems and Tailwind CSS
+- shadcn/ui component patterns
