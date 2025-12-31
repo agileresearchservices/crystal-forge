@@ -19,9 +19,12 @@ const DEFAULT_SIZES: PanelSizes = {
  * Stores and retrieves panel dimensions for vertical (top/bottom) and horizontal (builder/rightPanel) splits.
  */
 export function useResizablePanels() {
-  const [sizes, setSizes] = useState<PanelSizes>(() => {
-    if (typeof window === 'undefined') return DEFAULT_SIZES
+  // Initialize with DEFAULT_SIZES on both server and client to prevent hydration mismatch
+  const [sizes, setSizes] = useState<PanelSizes>(DEFAULT_SIZES)
+  const [isHydrated, setIsHydrated] = useState(false)
 
+  // Load from localStorage only after hydration
+  useEffect(() => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY)
       if (stored) {
@@ -36,24 +39,26 @@ export function useResizablePanels() {
           parsed.vertical.every((v) => typeof v === 'number' && v > 0 && v < 100) &&
           parsed.horizontal.every((h) => typeof h === 'number' && h > 0 && h < 100)
         ) {
-          return parsed
+          setSizes(parsed)
         }
       }
     } catch (error) {
       console.warn('Failed to load panel sizes from localStorage:', error)
     }
 
-    return DEFAULT_SIZES
-  })
+    setIsHydrated(true)
+  }, [])
 
-  // Persist sizes to localStorage whenever they change
+  // Persist sizes to localStorage whenever they change (only after hydration)
   useEffect(() => {
+    if (!isHydrated) return
+
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(sizes))
     } catch (error) {
       console.warn('Failed to save panel sizes to localStorage:', error)
     }
-  }, [sizes])
+  }, [sizes, isHydrated])
 
   const handleLayoutChange = useCallback(
     (direction: 'vertical' | 'horizontal', newSizes: number[]) => {
