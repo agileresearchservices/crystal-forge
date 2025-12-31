@@ -110,18 +110,22 @@ export function FieldList({ className }: FieldListProps) {
   const showGrouped = Object.keys(groupedFields).length > 1;
 
   return (
-    <div className={cn('flex flex-col h-full', className)}>
+    <div className={cn('flex flex-col h-full bg-white dark:bg-gray-900', className)}>
       {/* Header */}
-      <div className="p-3 border-b">
-        <h3 className="text-sm font-medium text-gray-700 mb-2">Fields</h3>
+      <div className="p-3 border-b border-gray-200 dark:border-gray-800">
+        <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">Fields</h3>
 
         {/* Search input */}
         <div className="relative">
+          <label htmlFor="field-search" className="sr-only">
+            Search fields
+          </label>
           <svg
-            className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"
+            className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 dark:text-gray-400 pointer-events-none"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
+            aria-hidden="true"
           >
             <path
               strokeLinecap="round"
@@ -131,20 +135,23 @@ export function FieldList({ className }: FieldListProps) {
             />
           </svg>
           <input
+            id="field-search"
             type="text"
             value={fieldSearch}
             onChange={(e) => setFieldSearch(e.target.value)}
             placeholder="Search fields..."
+            aria-label="Search fields by name or type"
             className={cn(
-              'w-full pl-8 pr-3 py-1.5 text-sm rounded-md',
-              'border border-gray-300 bg-white',
-              'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent'
+              'w-full pl-8 pr-8 py-1.5 text-sm rounded-md',
+              'border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white',
+              'focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent dark:focus:ring-indigo-400'
             )}
           />
           {fieldSearch && (
             <button
               onClick={() => setFieldSearch('')}
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              aria-label="Clear field search"
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded p-0.5"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
@@ -159,7 +166,7 @@ export function FieldList({ className }: FieldListProps) {
         </div>
 
         {/* Field count */}
-        <div className="mt-2 text-xs text-gray-500">
+        <div className="mt-2 text-xs text-gray-600 dark:text-gray-400" aria-live="polite" aria-atomic="true">
           {filteredFields.length} field{filteredFields.length !== 1 ? 's' : ''}
           {fieldSearch && ` matching "${fieldSearch}"`}
         </div>
@@ -168,7 +175,7 @@ export function FieldList({ className }: FieldListProps) {
       {/* Field list */}
       <div className="flex-1 overflow-auto">
         {connectionState.fields.length === 0 ? (
-          <div className="p-4 text-center text-sm text-gray-500">
+          <div className="p-4 text-center text-sm text-gray-600 dark:text-gray-400">
             {connectionState.connection.isConnected
               ? connectionState.connection.index
                 ? 'Loading fields...'
@@ -176,7 +183,7 @@ export function FieldList({ className }: FieldListProps) {
               : 'Connect to OpenSearch to view fields'}
           </div>
         ) : filteredFields.length === 0 ? (
-          <div className="p-4 text-center text-sm text-gray-500">
+          <div className="p-4 text-center text-sm text-gray-600 dark:text-gray-400" role="status">
             No fields match your search
           </div>
         ) : showGrouped ? (
@@ -218,26 +225,29 @@ function GroupedFieldList({
   getTypeBadgeColor,
 }: GroupedFieldListProps) {
   return (
-    <div className="divide-y">
+    <div className="divide-y divide-gray-200 dark:divide-gray-800">
       {Object.entries(groupedFields).map(([group, fields]) => (
         <div key={group}>
           {/* Group header */}
           <button
             onClick={() => onToggleGroup(group)}
+            aria-expanded={expandedGroups.has(group)}
             className={cn(
               'w-full flex items-center gap-2 px-3 py-2',
-              'text-sm font-medium text-gray-700',
-              'hover:bg-gray-50 transition-colors'
+              'text-sm font-medium text-gray-700 dark:text-gray-300',
+              'hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors',
+              'focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500'
             )}
           >
             <svg
               className={cn(
-                'w-4 h-4 text-gray-400 transition-transform',
+                'w-4 h-4 text-gray-500 dark:text-gray-400 transition-transform flex-shrink-0',
                 expandedGroups.has(group) && 'rotate-90'
               )}
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
+              aria-hidden="true"
             >
               <path
                 strokeLinecap="round"
@@ -247,12 +257,14 @@ function GroupedFieldList({
               />
             </svg>
             <span className="flex-1 text-left truncate">{group}</span>
-            <span className="text-xs text-gray-400">{fields.length}</span>
+            <span className="text-xs text-gray-500 dark:text-gray-400" aria-label={`${fields.length} fields`}>
+              {fields.length}
+            </span>
           </button>
 
           {/* Group content */}
           {expandedGroups.has(group) && (
-            <div className="pl-6 pb-2">
+            <div className="pl-6 pb-2" role="region" aria-label={`${group} fields`}>
               {fields.map((field) => (
                 <FieldItem
                   key={field.path}
@@ -323,33 +335,44 @@ function FieldItem({ field, onAdd, typeBadgeColor }: FieldItemProps) {
       }
     : undefined;
 
+  const fieldDescription = [
+    field.type,
+    field.isNested && 'nested field',
+    field.isMultiField && 'multi-field',
+  ]
+    .filter(Boolean)
+    .join(', ');
+
   return (
     <div
       ref={setNodeRef}
       style={style}
       className={cn(
         'flex items-center gap-2 px-3 py-1.5',
-        'hover:bg-gray-50 transition-colors cursor-grab',
+        'hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-grab',
+        'focus-within:ring-2 focus-within:ring-inset focus-within:ring-indigo-500 rounded',
         isDragging && 'opacity-50 cursor-grabbing'
       )}
+      aria-label={`${field.path} - ${fieldDescription}`}
+      aria-description="Drag to add to a clause or click to add to active clause"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onClick={onAdd}
-      title={`Drag to a clause tab or click to add ${field.path} to query`}
       {...attributes}
       {...listeners}
     >
       {/* Field name */}
-      <span className="flex-1 text-sm text-gray-700 truncate">
+      <span className="flex-1 text-sm text-gray-700 dark:text-gray-300 truncate">
         {field.path}
       </span>
 
       {/* Type badge */}
       <span
         className={cn(
-          'px-1.5 py-0.5 text-xs rounded',
+          'px-1.5 py-0.5 text-xs rounded font-medium flex-shrink-0',
           typeBadgeColor
         )}
+        aria-label={`Field type: ${field.type}`}
       >
         {field.type}
       </span>
@@ -361,10 +384,10 @@ function FieldItem({ field, onAdd, typeBadgeColor }: FieldItemProps) {
             e.stopPropagation();
             onAdd();
           }}
-          className="p-1 text-gray-400 hover:text-blue-600"
-          title="Add to query"
+          aria-label={`Add ${field.path} to query`}
+          className="p-1 text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors flex-shrink-0 focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded"
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -377,12 +400,20 @@ function FieldItem({ field, onAdd, typeBadgeColor }: FieldItemProps) {
 
       {/* Indicators */}
       {field.isNested && (
-        <span className="text-xs text-gray-400" title="Nested field">
+        <span
+          className="text-xs text-gray-500 dark:text-gray-400 font-medium flex-shrink-0"
+          aria-label="Nested field"
+          title="Nested field"
+        >
           N
         </span>
       )}
       {field.isMultiField && (
-        <span className="text-xs text-gray-400" title="Multi-field">
+        <span
+          className="text-xs text-gray-500 dark:text-gray-400 font-medium flex-shrink-0"
+          aria-label="Multi-field"
+          title="Multi-field"
+        >
           M
         </span>
       )}

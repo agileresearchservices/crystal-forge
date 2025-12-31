@@ -109,21 +109,45 @@ function HomeContent() {
       onDragEnd={handleDragEnd}
       onDragCancel={handleDragCancel}
     >
-      <main className="h-screen flex flex-col overflow-hidden">
+      <main className="h-screen flex flex-col overflow-hidden bg-gradient-to-b from-gray-50 to-white dark:from-gray-950 dark:to-gray-900">
         {/* Header */}
-        <header className="flex-shrink-0 border-b px-6 py-3 flex items-center justify-between bg-white">
-          <h1 className="text-xl font-semibold">Crystal Forge</h1>
-          <div className="flex items-center gap-4">
+        <header
+          className="flex-shrink-0 border-b border-gray-200 dark:border-gray-800 px-4 sm:px-6 py-4 flex items-center justify-between bg-white dark:bg-gray-900 shadow-sm"
+          role="banner"
+        >
+          <div className="flex items-center gap-3 min-w-0">
+            <div
+              className="flex items-center justify-center w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 shadow-md flex-shrink-0"
+              aria-label="Crystal Forge logo"
+            >
+              <span className="text-white font-bold text-lg">⚔️</span>
+            </div>
+            <div className="flex flex-col min-w-0">
+              <h1 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400 bg-clip-text text-transparent truncate">
+                Crystal Forge
+              </h1>
+              <p className="text-xs text-gray-600 dark:text-gray-400">OpenSearch Query Builder</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0 ml-4">
             {state.connection.isConnected && (
-              <span className="text-sm text-muted-foreground">
-                Connected to {state.connection.host}
-              </span>
+              <div
+                className="flex items-center gap-2 px-2 sm:px-3 py-2 rounded-lg bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border border-green-200 dark:border-green-800"
+                aria-live="polite"
+                aria-label={`Connected to ${state.connection.index || 'OpenSearch'}`}
+              >
+                <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse flex-shrink-0" aria-hidden="true"></div>
+                <span className="text-xs sm:text-sm font-medium text-green-700 dark:text-green-400 truncate">
+                  {state.connection.index || 'Connected'}
+                </span>
+              </div>
             )}
             <button
               onClick={() => setIsModalOpen(true)}
-              className="px-4 py-2 text-sm font-medium rounded-md bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+              aria-label={state.connection.isConnected ? 'Reconnect to OpenSearch' : 'Connect to OpenSearch'}
+              className="px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-900 active:scale-95 shadow-lg hover:shadow-xl transition-all duration-200"
             >
-              {state.connection.isConnected ? 'Connection' : 'Connect'}
+              {state.connection.isConnected ? 'Reconnect' : 'Connect'}
             </button>
             <ConnectionModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
           </div>
@@ -132,37 +156,50 @@ function HomeContent() {
         {/* Main Content */}
         <div className="flex-1 flex min-h-0">
           {/* Sidebar - Field List */}
-          <aside className="w-64 flex-shrink-0 border-r overflow-hidden flex flex-col">
+          <aside
+            className="w-52 sm:w-64 flex-shrink-0 border-r border-gray-200 dark:border-gray-800 overflow-hidden flex flex-col bg-white dark:bg-gray-900"
+            aria-label="Available fields"
+          >
             <FieldList />
           </aside>
 
           {/* Center - Query Builder + Results */}
           <div className="flex-1 flex flex-col min-w-0">
             {/* Top: Query Builder + JSON Preview / Explore */}
-            <div className="flex-1 flex min-h-0">
+            <div className="flex-1 flex min-h-0 flex-col md:flex-row gap-0">
               {/* Visual Query Builder */}
               <DroppableQueryBuilder />
 
               {/* Right Panel with Tabs */}
-              <div className="w-80 flex-shrink-0 overflow-hidden border-l bg-gray-50 flex flex-col">
+              <div className="w-full md:w-80 md:flex-shrink-0 overflow-hidden border-t md:border-t-0 md:border-l border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-950 flex flex-col">
                 {/* Tab Bar */}
-                <div className="flex border-b bg-white">
+                <div
+                  className="flex border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900"
+                  role="tablist"
+                  aria-label="Query preview options"
+                >
                   <button
                     onClick={() => setRightPanel('json')}
-                    className={`flex-1 px-4 py-2 text-sm font-medium transition-colors ${
+                    role="tab"
+                    aria-selected={rightPanel === 'json'}
+                    aria-controls="json-panel"
+                    className={`flex-1 px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500 ${
                       rightPanel === 'json'
-                        ? 'text-blue-600 border-b-2 border-blue-600 bg-white'
-                        : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                        ? 'text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-600 dark:border-indigo-400 bg-white dark:bg-gray-900'
+                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
                     }`}
                   >
                     JSON
                   </button>
                   <button
                     onClick={() => setRightPanel('explore')}
-                    className={`flex-1 px-4 py-2 text-sm font-medium transition-colors ${
+                    role="tab"
+                    aria-selected={rightPanel === 'explore'}
+                    aria-controls="explore-panel"
+                    className={`flex-1 px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500 ${
                       rightPanel === 'explore'
-                        ? 'text-blue-600 border-b-2 border-blue-600 bg-white'
-                        : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                        ? 'text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-600 dark:border-indigo-400 bg-white dark:bg-gray-900'
+                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
                     }`}
                   >
                     Explore
@@ -172,16 +209,20 @@ function HomeContent() {
                 {/* Panel Content */}
                 <div className="flex-1 overflow-auto p-4">
                   {rightPanel === 'json' ? (
-                    <JSONPreview />
+                    <div id="json-panel" role="tabpanel">
+                      <JSONPreview />
+                    </div>
                   ) : (
-                    <AggregationsPanel />
+                    <div id="explore-panel" role="tabpanel">
+                      <AggregationsPanel />
+                    </div>
                   )}
                 </div>
               </div>
             </div>
 
             {/* Bottom: Results Panel */}
-            <div className="h-72 flex-shrink-0 border-t overflow-hidden">
+            <div className="h-48 sm:h-56 md:h-64 flex-shrink-0 border-t border-gray-200 dark:border-gray-800 overflow-hidden bg-white dark:bg-gray-900">
               <ResultsPanel />
             </div>
           </div>
@@ -191,9 +232,13 @@ function HomeContent() {
       {/* Drag Overlay - shows field being dragged */}
       <DragOverlay>
         {activeField && (
-          <div className="px-3 py-2 bg-white rounded-md shadow-lg border-2 border-blue-500 text-sm font-medium">
+          <div
+            className="px-3 py-2 bg-white dark:bg-gray-800 rounded-md shadow-lg border-2 border-indigo-500 text-sm font-medium text-gray-900 dark:text-white"
+            aria-live="polite"
+            aria-label={`Dragging field: ${activeField.name}`}
+          >
             {activeField.name}
-            <span className="ml-2 text-xs text-gray-400">{activeField.type}</span>
+            <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">{activeField.type}</span>
           </div>
         )}
       </DragOverlay>

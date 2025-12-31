@@ -63,18 +63,20 @@ export function QueryBuilder() {
   }, [executeQuery]);
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full bg-white dark:bg-gray-900">
       {/* Toolbar */}
-      <div className="flex items-center justify-between p-4 border-b">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border-b border-gray-200 dark:border-gray-800 gap-3 sm:gap-2">
         <div className="flex items-center gap-2">
-          <h2 className="text-lg font-semibold">Query Builder</h2>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Query Builder</h2>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 w-full sm:w-auto">
           <button
             onClick={handleReset}
+            aria-label="Reset query to empty state"
             className={cn(
-              'px-3 py-1.5 text-sm rounded-md',
-              'border border-gray-300 hover:bg-gray-50',
+              'flex-1 sm:flex-none px-3 py-1.5 text-sm rounded-md',
+              'border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800',
+              'focus:outline-none focus:ring-2 focus:ring-indigo-500',
               'transition-colors'
             )}
           >
@@ -83,9 +85,12 @@ export function QueryBuilder() {
           <button
             onClick={handleExecute}
             disabled={!canExecute || isLoading}
+            aria-label={isLoading ? 'Executing query' : 'Execute query against OpenSearch'}
+            aria-busy={isLoading}
             className={cn(
-              'px-4 py-1.5 text-sm rounded-md',
-              'bg-blue-600 text-white hover:bg-blue-700',
+              'flex-1 sm:flex-none px-4 py-1.5 text-sm font-medium rounded-md',
+              'bg-indigo-600 text-white hover:bg-indigo-700 dark:hover:bg-indigo-700',
+              'focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900',
               'disabled:opacity-50 disabled:cursor-not-allowed',
               'transition-colors'
             )}
@@ -96,7 +101,7 @@ export function QueryBuilder() {
       </div>
 
       {/* Query Tree */}
-      <div className="flex-1 overflow-auto p-4">
+      <div className="flex-1 overflow-auto p-4" role="main" aria-label="Query builder interface">
         {rootNode ? (
           <div className="space-y-4">
             {rootNode.type === 'bool' ? (
@@ -130,13 +135,14 @@ interface EmptyStateProps {
 
 function EmptyState({ onAddBoolQuery, onAddSimpleQuery }: EmptyStateProps) {
   return (
-    <div className="flex flex-col items-center justify-center h-64 text-center">
-      <div className="text-gray-500 mb-4">
+    <div className="flex flex-col items-center justify-center h-64 text-center" role="status" aria-live="polite">
+      <div className="text-gray-600 dark:text-gray-400 mb-4">
         <svg
-          className="w-16 h-16 mx-auto mb-2"
+          className="w-16 h-16 mx-auto mb-2 text-gray-400 dark:text-gray-600"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
+          aria-hidden="true"
         >
           <path
             strokeLinecap="round"
@@ -145,15 +151,17 @@ function EmptyState({ onAddBoolQuery, onAddSimpleQuery }: EmptyStateProps) {
             d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
           />
         </svg>
-        <p className="text-lg font-medium">No query defined</p>
-        <p className="text-sm">Start building your query by adding a clause</p>
+        <p className="text-lg font-semibold text-gray-900 dark:text-white">No query defined</p>
+        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Start building your query by adding a clause</p>
       </div>
-      <div className="flex gap-3">
+      <div className="flex flex-col sm:flex-row gap-3 w-full max-w-sm">
         <button
           onClick={onAddBoolQuery}
+          aria-label="Create a new boolean query with multiple clauses"
           className={cn(
-            'px-4 py-2 text-sm rounded-md',
-            'bg-blue-600 text-white hover:bg-blue-700',
+            'flex-1 px-4 py-2 text-sm font-medium rounded-md',
+            'bg-indigo-600 text-white hover:bg-indigo-700 dark:hover:bg-indigo-700',
+            'focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900',
             'transition-colors'
           )}
         >
@@ -161,9 +169,11 @@ function EmptyState({ onAddBoolQuery, onAddSimpleQuery }: EmptyStateProps) {
         </button>
         <button
           onClick={onAddSimpleQuery}
+          aria-label="Create a simple single field query"
           className={cn(
-            'px-4 py-2 text-sm rounded-md',
-            'border border-gray-300 hover:bg-gray-50',
+            'flex-1 px-4 py-2 text-sm font-medium rounded-md',
+            'border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800',
+            'focus:outline-none focus:ring-2 focus:ring-indigo-500',
             'transition-colors'
           )}
         >
