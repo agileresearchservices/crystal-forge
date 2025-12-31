@@ -133,6 +133,23 @@ Key files:
 - `apps/web/app/api/opensearch/aggregate/route.ts` - Aggregation API endpoint
 - `apps/web/components/AggregationsPanel.tsx` - Aggregation UI
 
+### Resizable Panels
+Users can resize the UI panels to customize their workflow:
+- **Horizontal resize** (Desktop only): Drag the divider between Query Builder and JSON/Explore panel to widen either section
+- **Vertical resize** (All devices): Drag the divider between top section and Results panel to expand either section
+- **Persistence**: Panel sizes are saved to localStorage and restored on page reload
+- **Responsive**: Resize handles are hidden on mobile (<768px) to prevent accidental resizing
+
+Technical implementation:
+- Uses `react-resizable-panels` v2.1.9 (via shadcn/ui)
+- Keyboard navigation: Arrow keys adjust panel size by 10%, Shift+Arrow for 25%
+- Accessibility: Full ARIA labels, focus indicators, screen reader support
+
+Key files:
+- `apps/web/hooks/useResizablePanels.ts` - Hook managing panel sizes and localStorage
+- `apps/web/components/ui/resizable.tsx` - Resizable panel components (shadcn/ui)
+- `apps/web/app/page.tsx` - Layout using ResizablePanelGroup and ResizablePanel
+
 ## Environment Setup
 
 Copy `.env.example` to `.env.local` in `apps/web/`:

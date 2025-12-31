@@ -17,9 +17,11 @@ import { ResultsPanel } from '@/components/ResultsPanel';
 import { FieldList } from '@/components/FieldList';
 import { ConnectionModal } from '@/components/ConnectionModal';
 import { AggregationsPanel } from '@/components/AggregationsPanel';
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
 import { useConnection } from '@/context/ConnectionContext';
 import { useQuery, createEmptyBoolQuery } from '@/context/QueryContext';
 import { ActiveClauseProvider, useActiveClause, type BoolClause } from '@/context/ActiveClauseContext';
+import { useResizablePanels } from '@/hooks/useResizablePanels';
 import { createQueryNodeFromField } from '@/utils/createQueryNodeFromField';
 import type { FieldInfo } from '@crystal-forge/opensearch-client';
 
@@ -45,6 +47,7 @@ function HomeContent() {
   const { state } = useConnection();
   const { state: queryState, addNode, setQuery } = useQuery();
   const { activeClause } = useActiveClause();
+  const { sizes, handleLayoutChange } = useResizablePanels();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [rightPanel, setRightPanel] = useState<'json' | 'explore'>('json');
   const [activeField, setActiveField] = useState<FieldInfo | null>(null);
@@ -164,66 +167,166 @@ function HomeContent() {
           </aside>
 
           {/* Center - Query Builder + Results */}
-          <div className="flex-1 flex flex-col min-w-0">
-            {/* Top: Query Builder + JSON Preview / Explore */}
-            <div className="flex-1 flex min-h-0 flex-col md:flex-row gap-0">
-              {/* Visual Query Builder */}
-              <DroppableQueryBuilder />
-
-              {/* Right Panel with Tabs */}
-              <div className="w-full md:w-80 md:flex-shrink-0 overflow-hidden border-t md:border-t-0 md:border-l border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-950 flex flex-col">
-                {/* Tab Bar */}
-                <div
-                  className="flex border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900"
-                  role="tablist"
-                  aria-label="Query preview options"
+          <ResizablePanelGroup
+            direction="vertical"
+            className="flex-1 min-h-0"
+            onLayout={(newSizes) => handleLayoutChange('vertical', newSizes)}
+          >
+            {/* Top Section - Query Builder + Right Panel */}
+            <ResizablePanel
+              defaultSize={sizes.vertical[0]}
+              minSize={40}
+              id="top-section"
+            >
+              <ResizablePanelGroup
+                direction="horizontal"
+                className="h-full"
+                onLayout={(newSizes) => handleLayoutChange('horizontal', newSizes)}
+              >
+                {/* Visual Query Builder */}
+                <ResizablePanel
+                  defaultSize={sizes.horizontal[0]}
+                  minSize={30}
+                  id="query-builder"
                 >
-                  <button
-                    onClick={() => setRightPanel('json')}
-                    role="tab"
-                    aria-selected={rightPanel === 'json'}
-                    aria-controls="json-panel"
-                    className={`flex-1 px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500 ${
-                      rightPanel === 'json'
-                        ? 'text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-600 dark:border-indigo-400 bg-white dark:bg-gray-900'
-                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
-                    }`}
-                  >
-                    JSON
-                  </button>
-                  <button
-                    onClick={() => setRightPanel('explore')}
-                    role="tab"
-                    aria-selected={rightPanel === 'explore'}
-                    aria-controls="explore-panel"
-                    className={`flex-1 px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500 ${
-                      rightPanel === 'explore'
-                        ? 'text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-600 dark:border-indigo-400 bg-white dark:bg-gray-900'
-                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
-                    }`}
-                  >
-                    Explore
-                  </button>
-                </div>
+                  <DroppableQueryBuilder />
+                </ResizablePanel>
 
-                {/* Panel Content */}
-                <div className="flex-1 overflow-auto p-4">
-                  {rightPanel === 'json' ? (
-                    <div id="json-panel" role="tabpanel">
-                      <JSONPreview />
+                {/* Horizontal Resize Handle - Hidden on Mobile */}
+                <ResizableHandle
+                  withHandle
+                  className="hidden md:flex bg-gray-200 dark:bg-gray-800 hover:bg-indigo-400 dark:hover:bg-indigo-600 transition-colors"
+                  aria-label="Resize query builder and preview panel"
+                />
+
+                {/* Right Panel - Hidden on Mobile (Desktop Only) */}
+                <ResizablePanel
+                  defaultSize={sizes.horizontal[1]}
+                  minSize={25}
+                  maxSize={50}
+                  id="right-panel"
+                  className="hidden md:block overflow-hidden"
+                >
+                  <div className="h-full overflow-hidden border-l border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-950 flex flex-col">
+                    {/* Tab Bar */}
+                    <div
+                      className="flex border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900"
+                      role="tablist"
+                      aria-label="Query preview options"
+                    >
+                      <button
+                        onClick={() => setRightPanel('json')}
+                        role="tab"
+                        aria-selected={rightPanel === 'json'}
+                        aria-controls="json-panel"
+                        className={`flex-1 px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500 ${
+                          rightPanel === 'json'
+                            ? 'text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-600 dark:border-indigo-400 bg-white dark:bg-gray-900'
+                            : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
+                        }`}
+                      >
+                        JSON
+                      </button>
+                      <button
+                        onClick={() => setRightPanel('explore')}
+                        role="tab"
+                        aria-selected={rightPanel === 'explore'}
+                        aria-controls="explore-panel"
+                        className={`flex-1 px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500 ${
+                          rightPanel === 'explore'
+                            ? 'text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-600 dark:border-indigo-400 bg-white dark:bg-gray-900'
+                            : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
+                        }`}
+                      >
+                        Explore
+                      </button>
                     </div>
-                  ) : (
-                    <div id="explore-panel" role="tabpanel">
-                      <AggregationsPanel />
+
+                    {/* Panel Content */}
+                    <div className="flex-1 overflow-auto p-4">
+                      {rightPanel === 'json' ? (
+                        <div id="json-panel" role="tabpanel">
+                          <JSONPreview />
+                        </div>
+                      ) : (
+                        <div id="explore-panel" role="tabpanel">
+                          <AggregationsPanel />
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
+                  </div>
+                </ResizablePanel>
+              </ResizablePanelGroup>
+            </ResizablePanel>
+
+            {/* Vertical Resize Handle */}
+            <ResizableHandle
+              withHandle
+              className="bg-gray-200 dark:bg-gray-800 hover:bg-indigo-400 dark:hover:bg-indigo-600 transition-colors"
+              aria-label="Resize query builder and results panel"
+            />
+
+            {/* Bottom Section - Results Panel */}
+            <ResizablePanel
+              defaultSize={sizes.vertical[1]}
+              minSize={15}
+              maxSize={60}
+              id="results-panel"
+              className="overflow-hidden"
+            >
+              <div className="h-full overflow-hidden border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
+                <ResultsPanel />
               </div>
+            </ResizablePanel>
+          </ResizablePanelGroup>
+
+          {/* Mobile: Right Panel Stacked Below (No Resize) */}
+          <div className="md:hidden w-full border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-950 flex flex-col overflow-hidden">
+            {/* Tab Bar */}
+            <div
+              className="flex border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900"
+              role="tablist"
+              aria-label="Query preview options"
+            >
+              <button
+                onClick={() => setRightPanel('json')}
+                role="tab"
+                aria-selected={rightPanel === 'json'}
+                aria-controls="json-panel-mobile"
+                className={`flex-1 px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500 ${
+                  rightPanel === 'json'
+                    ? 'text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-600 dark:border-indigo-400 bg-white dark:bg-gray-900'
+                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
+                }`}
+              >
+                JSON
+              </button>
+              <button
+                onClick={() => setRightPanel('explore')}
+                role="tab"
+                aria-selected={rightPanel === 'explore'}
+                aria-controls="explore-panel-mobile"
+                className={`flex-1 px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500 ${
+                  rightPanel === 'explore'
+                    ? 'text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-600 dark:border-indigo-400 bg-white dark:bg-gray-900'
+                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
+                }`}
+              >
+                Explore
+              </button>
             </div>
 
-            {/* Bottom: Results Panel */}
-            <div className="h-48 sm:h-56 md:h-64 flex-shrink-0 border-t border-gray-200 dark:border-gray-800 overflow-hidden bg-white dark:bg-gray-900">
-              <ResultsPanel />
+            {/* Panel Content */}
+            <div className="flex-1 overflow-auto p-4">
+              {rightPanel === 'json' ? (
+                <div id="json-panel-mobile" role="tabpanel">
+                  <JSONPreview />
+                </div>
+              ) : (
+                <div id="explore-panel-mobile" role="tabpanel">
+                  <AggregationsPanel />
+                </div>
+              )}
             </div>
           </div>
         </div>
