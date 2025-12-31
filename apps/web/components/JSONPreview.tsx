@@ -222,13 +222,16 @@ export function JSONPreview({ className, height = '400px' }: JSONPreviewProps) {
             automaticLayout: true,
             wordWrap: 'on',
             tabSize: 2,
+            // Disable built-in JSON validation since we handle Dev Tools format
+            // and show our own custom errors below the editor
+            'json.validate.enable': false,
           }}
           theme="vs"
         />
       </div>
 
-      {/* Error message */}
-      {parseError && (
+      {/* Status / Error message */}
+      {parseError ? (
         <div
           role="alert"
           aria-live="polite"
@@ -242,7 +245,11 @@ export function JSONPreview({ className, height = '400px' }: JSONPreviewProps) {
             </div>
           </div>
         </div>
-      )}
+      ) : isEditing ? (
+        <div className="p-3 bg-amber-50 dark:bg-amber-900/20 border-t border-amber-200 dark:border-amber-800">
+          <p className="text-sm text-amber-700 dark:text-amber-400">Parsing JSON... (wait for update)</p>
+        </div>
+      ) : null}
     </div>
   );
 }
