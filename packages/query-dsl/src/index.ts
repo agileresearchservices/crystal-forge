@@ -1,0 +1,99 @@
+/**
+ * @crystal-forge/query-dsl
+ *
+ * OpenSearch Query DSL type definitions and utilities for the Crystal Forge
+ * query builder. This package provides:
+ *
+ * - Complete TypeScript types for OpenSearch queries
+ * - Serialization from QueryNode to OpenSearch JSON
+ * - Deserialization from OpenSearch JSON to QueryNode
+ * - Operator mappings for field types
+ *
+ * @packageDocumentation
+ */
+
+// =============================================================================
+// Type Exports
+// =============================================================================
+
+export type {
+  // Core type unions
+  QueryType,
+  FieldType,
+  RangeOperator,
+  MultiMatchType,
+  SortOrder,
+  SortMode,
+
+  // Base interfaces
+  QueryNodeBase,
+  FieldQueryNode,
+
+  // Query node types
+  MatchQueryNode,
+  TermQueryNode,
+  RangeQueryNode,
+  PrefixQueryNode,
+  WildcardQueryNode,
+  ExistsQueryNode,
+  BoolQueryNode,
+  NestedQueryNode,
+  MatchAllQueryNode,
+  MultiMatchQueryNode,
+  QueryStringQueryNode,
+  FuzzyQueryNode,
+  IdsQueryNode,
+  QueryNode,
+
+  // Query state types
+  SortClause,
+  HighlightFieldConfig,
+  HighlightConfig,
+  InnerHitsConfig,
+  SourceFilter,
+  QueryState,
+
+  // Validation types
+  QueryValidationError,
+  QueryValidationResult,
+
+  // OpenSearch DSL types
+  OpenSearchQuery,
+  OpenSearchRequestBody,
+} from './types';
+
+// =============================================================================
+// Operator Exports
+// =============================================================================
+
+export type { OperatorDefinition } from './operators';
+
+export {
+  FIELD_TYPE_OPERATORS,
+  getOperatorsForFieldType,
+  getOperatorsByQueryType,
+  isQueryTypeValidForField,
+  getDefaultOperator,
+} from './operators';
+
+// =============================================================================
+// Serializer Exports
+// =============================================================================
+
+export {
+  serializeQuery,
+  serializeQueryState,
+  serializeToJson,
+} from './serializer';
+
+// =============================================================================
+// Deserializer Exports
+// =============================================================================
+
+export {
+  generateNodeId,
+  resetNodeIdCounter,
+  deserializeQuery,
+  deserializeQueryState,
+  deserializeFromJson,
+} from './deserializer';
