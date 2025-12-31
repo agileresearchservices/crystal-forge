@@ -5,6 +5,7 @@ import { useQuery, createEmptyBoolQuery, generateNodeId } from '@/context/QueryC
 import { useQueryExecution } from '@/hooks/useQueryExecution';
 import { BooleanGroup } from './BooleanGroup';
 import { QueryNodeComponent } from './QueryNode';
+import { Button } from '@/components/ui/button';
 import type { BoolQueryNode, MatchQueryNode, QueryNode } from '@crystal-forge/query-dsl';
 import { cn } from '@/lib/utils';
 
@@ -70,30 +71,22 @@ export function QueryBuilder() {
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Query Builder</h2>
         </div>
         <div className="flex items-center gap-2 w-full sm:w-auto">
-          <button
+          <Button
             onClick={handleReset}
             aria-label="Reset query to empty state"
-            className={cn(
-              'flex-1 sm:flex-none px-3 py-1.5 text-sm rounded-md',
-              'border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800',
-              'focus:outline-none focus:ring-2 focus:ring-indigo-500',
-              'transition-colors'
-            )}
+            variant="outline"
+            size="default"
+            className="flex-1 sm:flex-none"
           >
             Reset
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={handleExecute}
             disabled={!canExecute || isLoading}
             aria-label={isLoading ? 'Executing query' : 'Execute query against OpenSearch'}
             aria-busy={isLoading}
-            className={cn(
-              'flex-1 sm:flex-none px-4 py-1.5 text-sm font-medium rounded-md',
-              'bg-indigo-600 text-white hover:bg-indigo-700 dark:hover:bg-indigo-700',
-              'focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900',
-              'disabled:opacity-50 disabled:cursor-not-allowed',
-              'transition-colors flex items-center gap-2 justify-center'
-            )}
+            size="default"
+            className="flex-1 sm:flex-none justify-center"
           >
             {isLoading && (
               <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24" aria-hidden="true">
@@ -106,7 +99,7 @@ export function QueryBuilder() {
               </svg>
             )}
             {isLoading ? 'Executing...' : 'Execute Query'}
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -165,30 +158,23 @@ function EmptyState({ onAddBoolQuery, onAddSimpleQuery }: EmptyStateProps) {
         <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Start building your query by adding a clause</p>
       </div>
       <div className="flex flex-col sm:flex-row gap-3 w-full max-w-sm">
-        <button
+        <Button
           onClick={onAddBoolQuery}
           aria-label="Create a new boolean query with multiple clauses"
-          className={cn(
-            'flex-1 px-4 py-2 text-sm font-medium rounded-md',
-            'bg-indigo-600 text-white hover:bg-indigo-700 dark:hover:bg-indigo-700',
-            'focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900',
-            'transition-colors'
-          )}
+          size="default"
+          className="flex-1"
         >
           Add Bool Query
-        </button>
-        <button
+        </Button>
+        <Button
           onClick={onAddSimpleQuery}
           aria-label="Create a simple single field query"
-          className={cn(
-            'flex-1 px-4 py-2 text-sm font-medium rounded-md',
-            'border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800',
-            'focus:outline-none focus:ring-2 focus:ring-indigo-500',
-            'transition-colors'
-          )}
+          variant="outline"
+          size="default"
+          className="flex-1"
         >
           Add Simple Query
-        </button>
+        </Button>
       </div>
     </div>
   );

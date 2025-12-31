@@ -15,7 +15,9 @@
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md}\""
   },
   "devDependencies": {
+    "lighthouse": "^13.0.1",
     "prettier": "^3.4.2",
+    "puppeteer": "^24.34.0",
     "turbo": "^2.3.3",
     "typescript": "^5.7.2"
   },

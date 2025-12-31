@@ -2,6 +2,7 @@
 
 import React, { useState, useCallback } from 'react';
 import { useConnection } from '@/context/ConnectionContext';
+import { Button } from '@/components/ui/button';
 import type { ConnectionConfig, AuthConfig } from '@crystal-forge/opensearch-client';
 import { cn } from '@/lib/utils';
 
@@ -116,15 +117,17 @@ export function ConnectionModal({ isOpen, onClose }: ConnectionModalProps) {
           <h2 className="text-lg font-semibold">
             {connection.isConnected ? 'Connection Settings' : 'Connect to OpenSearch'}
           </h2>
-          <button
+          <Button
             onClick={handleClose}
             disabled={isLoading}
-            className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
+            variant="ghost"
+            size="icon"
+            aria-label="Close dialog"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
-          </button>
+          </Button>
         </div>
 
         {/* Content */}
@@ -305,55 +308,36 @@ export function ConnectionModal({ isOpen, onClose }: ConnectionModalProps) {
         <div className="flex items-center justify-end gap-3 p-4 border-t bg-gray-50 rounded-b-lg">
           {connection.isConnected ? (
             <>
-              <button
+              <Button
                 onClick={handleDisconnect}
                 disabled={isLoading}
-                className={cn(
-                  'px-4 py-2 text-sm font-medium rounded-md',
-                  'border border-gray-300 bg-white',
-                  'hover:bg-gray-50 transition-colors',
-                  'disabled:opacity-50'
-                )}
+                variant="outline"
+                size="default"
               >
                 Disconnect
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={handleClose}
                 disabled={isLoading}
-                className={cn(
-                  'px-4 py-2 text-sm font-medium rounded-md',
-                  'bg-blue-600 text-white',
-                  'hover:bg-blue-700 transition-colors',
-                  'disabled:opacity-50'
-                )}
+                size="default"
               >
                 Done
-              </button>
+              </Button>
             </>
           ) : (
             <>
-              <button
+              <Button
                 onClick={handleClose}
                 disabled={isLoading}
-                className={cn(
-                  'px-4 py-2 text-sm font-medium rounded-md',
-                  'border border-gray-300 bg-white',
-                  'hover:bg-gray-50 transition-colors',
-                  'disabled:opacity-50'
-                )}
+                variant="outline"
+                size="default"
               >
                 Cancel
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={handleConnect}
                 disabled={isLoading || !host.trim()}
-                className={cn(
-                  'px-4 py-2 text-sm font-medium rounded-md',
-                  'bg-blue-600 text-white',
-                  'hover:bg-blue-700 transition-colors',
-                  'disabled:opacity-50 disabled:cursor-not-allowed',
-                  'flex items-center gap-2'
-                )}
+                size="default"
               >
                 {isLoading && (
                   <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24" aria-hidden="true">
@@ -366,7 +350,7 @@ export function ConnectionModal({ isOpen, onClose }: ConnectionModalProps) {
                   </svg>
                 )}
                 {isLoading ? 'Connecting...' : 'Connect'}
-              </button>
+              </Button>
             </>
           )}
         </div>

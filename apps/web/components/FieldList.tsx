@@ -8,6 +8,7 @@ import { useQuery, generateNodeId, createEmptyBoolQuery } from '@/context/QueryC
 import { useActiveClause } from '@/context/ActiveClauseContext';
 import { useFieldSelector } from '@/hooks/useFieldSelector';
 import { createQueryNodeFromField } from '@/utils/createQueryNodeFromField';
+import { Button } from '@/components/ui/button';
 import type { FieldInfo } from '@crystal-forge/opensearch-client';
 import { cn } from '@/lib/utils';
 
@@ -148,10 +149,12 @@ export function FieldList({ className }: FieldListProps) {
             )}
           />
           {fieldSearch && (
-            <button
+            <Button
               onClick={() => setFieldSearch('')}
               aria-label="Clear field search"
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded p-0.5"
+              variant="ghost"
+              size="icon"
+              className="absolute right-2 top-1/2 -translate-y-1/2"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path
@@ -161,7 +164,7 @@ export function FieldList({ className }: FieldListProps) {
                   d="M6 18L18 6M6 6l12 12"
                 />
               </svg>
-            </button>
+            </Button>
           )}
         </div>
 

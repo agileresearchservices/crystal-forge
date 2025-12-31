@@ -6,6 +6,7 @@ import debounce from 'lodash.debounce';
 import { AlertCircle } from 'lucide-react';
 import { useQuery } from '@/context/QueryContext';
 import { useConnection } from '@/context/ConnectionContext';
+import { Button } from '@/components/ui/button';
 import { serializeQueryState, deserializeQueryState } from '@crystal-forge/query-dsl';
 import { cn } from '@/lib/utils';
 
@@ -182,13 +183,11 @@ export function JSONPreview({ className, height = '400px' }: JSONPreviewProps) {
       {/* Header */}
       <div className="flex items-center justify-between p-3 border-b bg-gray-50 dark:bg-gray-900">
         <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">Dev Tools Format</h3>
-        <button
+        <Button
           onClick={handleCopy}
+          variant="outline"
+          size="sm"
           className={cn(
-            'flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-md',
-            'border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800',
-            'hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors',
-            'text-gray-700 dark:text-gray-300',
             copied && 'text-green-600 dark:text-green-400 border-green-300 dark:border-green-600'
           )}
         >
@@ -212,7 +211,7 @@ export function JSONPreview({ className, height = '400px' }: JSONPreviewProps) {
               Copy
             </>
           )}
-        </button>
+        </Button>
       </div>
 
       {/* Editor with error border */}
@@ -303,17 +302,16 @@ export function SimpleJSONPreview({ className }: SimpleJSONPreviewProps) {
     <div className={cn('flex flex-col h-full', className)}>
       <div className="flex items-center justify-between p-3 border-b bg-gray-50">
         <h3 className="text-sm font-medium text-gray-700">Dev Tools Format</h3>
-        <button
+        <Button
           onClick={handleCopy}
+          variant="outline"
+          size="sm"
           className={cn(
-            'flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-md',
-            'border border-gray-300 bg-white',
-            'hover:bg-gray-50 transition-colors',
             copied && 'text-green-600 border-green-300'
           )}
         >
           {copied ? 'Copied!' : 'Copy'}
-        </button>
+        </Button>
       </div>
       <div className="flex-1 overflow-auto p-4 bg-gray-900">
         <pre className="text-sm text-green-400 font-mono whitespace-pre-wrap">

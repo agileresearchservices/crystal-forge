@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useConnection } from '@/context/ConnectionContext';
 import { useQuery, generateNodeId } from '@/context/QueryContext';
 import { useDebounce } from '@/hooks/useDebounce';
+import { Button } from '@/components/ui/button';
 import { serializeQuery } from '@crystal-forge/query-dsl';
 import type { FieldInfo } from '@crystal-forge/opensearch-client';
 import type {
