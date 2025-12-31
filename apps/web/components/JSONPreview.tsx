@@ -83,14 +83,16 @@ export function JSONPreview({ className, height = '400px' }: JSONPreviewProps) {
   }, [jsonBody, currentIndex, isEditing]);
 
   /**
-   * Display content for editor: strip GET line from editedJson, or show formatted JSON
+   * Display content for editor: show full Dev Tools format (GET line + JSON)
+   * The GET line is visible for copy-paste to OpenSearch Dashboards,
+   * but only the JSON part is parsed (validation is disabled)
    */
   const devToolsContent = useMemo(() => {
     if (editedJson) {
-      // If user has edited, show just the JSON part (without GET line for cleaner display)
-      return extractJsonFromDevTools(editedJson).trim();
+      // Keep user's edits as-is (including GET line if present)
+      return editedJson;
     }
-    // When query updates (not editing), show formatted with GET line
+    // When query updates, show formatted with GET line
     return formatDevTools(jsonBody, currentIndex);
   }, [editedJson, jsonBody, currentIndex]);
 
