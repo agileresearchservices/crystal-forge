@@ -264,7 +264,7 @@ export function ConnectionModal({ isOpen, onClose }: ConnectionModalProps) {
           {connection.isConnected && indices.length > 0 && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Select Index
+                Select Index <span className="text-red-500" aria-label="required">*</span>
               </label>
               <select
                 value={connection.index || ''}
@@ -276,6 +276,7 @@ export function ConnectionModal({ isOpen, onClose }: ConnectionModalProps) {
                   'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent',
                   'disabled:opacity-50'
                 )}
+                aria-required="true"
               >
                 <option value="">Select an index...</option>
                 {indices.map((index) => (
@@ -284,6 +285,11 @@ export function ConnectionModal({ isOpen, onClose }: ConnectionModalProps) {
                   </option>
                 ))}
               </select>
+              {!connection.index && (
+                <p className="text-xs text-amber-600 dark:text-amber-400 mt-2">
+                  An index must be selected to continue
+                </p>
+              )}
             </div>
           )}
         </div>
@@ -301,8 +307,9 @@ export function ConnectionModal({ isOpen, onClose }: ConnectionModalProps) {
               </Button>
               <Button
                 onClick={handleClose}
-                disabled={isLoading}
+                disabled={isLoading || !connection.index}
                 size="default"
+                title={!connection.index ? 'Please select an index to continue' : undefined}
               >
                 Done
               </Button>
