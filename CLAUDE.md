@@ -150,6 +150,28 @@ Key files:
 - `apps/web/components/ui/resizable.tsx` - Resizable panel components (shadcn/ui)
 - `apps/web/app/page.tsx` - Layout using ResizablePanelGroup and ResizablePanel
 
+### Bidirectional JSON-Query Builder Sync
+The JSON editor now works both ways - build visually OR paste/edit JSON:
+- **Paste JSON**: Paste any OpenSearch query into the JSON editor and the query builder updates automatically
+- **Edit JSON**: Make manual edits to the JSON and see changes reflected in the builder in real-time
+- **Dev Tools Format**: Supports both plain JSON and OpenSearch Dev Tools format (`GET {index}/_search\n{...}`)
+- **Live Preview**: Changes debounced at 500ms to avoid excessive re-parsing
+- **Error Handling**: Invalid JSON shows clear red border + error message below editor
+- **Sync Strategy**: Uses `isEditing` flag to prevent infinite loops between builder and JSON editor
+
+Technical implementation:
+- Editor is now editable (`readOnly: false`) with `onChange` handler
+- Debounced parsing with `lodash.debounce` (500ms delay)
+- `deserializeQueryState()` converts JSON back to QueryNode
+- Dev Tools format automatically stripped using regex: `^(GET|POST|PUT|DELETE|HEAD)\s+`
+- Error UI with accessibility: `role="alert"`, `aria-live="polite"`
+- Prevents re-serialization during editing by tracking `isEditing` state
+
+Key files:
+- `apps/web/components/JSONPreview.tsx` - Main bidirectional sync implementation
+- Uses `deserializeQueryState()` from `@crystal-forge/query-dsl`
+- `lodash.debounce` for debounced updates
+
 ## Environment Setup
 
 Copy `.env.example` to `.env.local` in `apps/web/`:
