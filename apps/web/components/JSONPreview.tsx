@@ -102,26 +102,20 @@ export function JSONPreview({ className, height = '400px' }: JSONPreviewProps) {
   React.useEffect(() => {
     const debouncedFn = debounce((value: string) => {
       try {
-        console.log('Parsing JSON:', value.substring(0, 100)); // Debug log
-
         // Strip Dev Tools format
         const jsonOnly = extractJsonFromDevTools(value);
-        console.log('JSON only:', jsonOnly.substring(0, 100)); // Debug log
 
         // Parse JSON
         const parsed = JSON.parse(jsonOnly);
-        console.log('Parsed:', parsed); // Debug log
 
         // Deserialize to QueryState
         const newState = deserializeQueryState(parsed);
-        console.log('Deserialized state:', newState); // Debug log
 
         // Update QueryContext with new query
         setQuery(newState.query);
 
         // Update pagination if provided
         if (newState.size !== undefined || newState.from !== undefined) {
-          console.log('Setting pagination:', { size: newState.size, from: newState.from });
           setPagination({ size: newState.size, from: newState.from });
         }
 
@@ -131,7 +125,6 @@ export function JSONPreview({ className, height = '400px' }: JSONPreviewProps) {
       } catch (error) {
         // Set error message but keep isEditing true so user can fix it
         const errorMsg = error instanceof Error ? error.message : 'Invalid JSON';
-        console.error('JSON parse error:', errorMsg);
         setParseError(errorMsg);
       }
     }, 500);
@@ -168,7 +161,7 @@ export function JSONPreview({ className, height = '400px' }: JSONPreviewProps) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (error) {
-      console.error('Failed to copy to clipboard:', error);
+      // Silently fail - clipboard access may not be available
     }
   }, [devToolsContent]);
 
@@ -216,10 +209,7 @@ export function JSONPreview({ className, height = '400px' }: JSONPreviewProps) {
           height={height}
           defaultLanguage="json"
           value={devToolsContent}
-          onChange={(value) => {
-            console.log('Editor changed, value:', value?.substring(0, 100));
-            handleJsonChange(value);
-          }}
+          onChange={handleJsonChange}
           options={{
             readOnly: false,
             minimap: { enabled: false },
