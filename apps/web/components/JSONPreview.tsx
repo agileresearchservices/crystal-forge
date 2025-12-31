@@ -83,10 +83,15 @@ export function JSONPreview({ className, height = '400px' }: JSONPreviewProps) {
   }, [jsonBody, currentIndex, isEditing]);
 
   /**
-   * Full Dev Tools format: GET {index}/_search followed by JSON body
+   * Display content for editor: strip GET line from editedJson, or show formatted JSON
    */
   const devToolsContent = useMemo(() => {
-    return editedJson || formatDevTools(jsonBody, currentIndex);
+    if (editedJson) {
+      // If user has edited, show just the JSON part (without GET line for cleaner display)
+      return extractJsonFromDevTools(editedJson).trim();
+    }
+    // When query updates (not editing), show formatted with GET line
+    return formatDevTools(jsonBody, currentIndex);
   }, [editedJson, jsonBody, currentIndex]);
 
   /**
