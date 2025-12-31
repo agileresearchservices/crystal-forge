@@ -83,13 +83,25 @@ export function JSONPreview({ className, height = '400px' }: JSONPreviewProps) {
   }, [jsonBody, currentIndex, isEditing]);
 
   /**
-   * Display content for editor: show full Dev Tools format (GET line + JSON)
-   * The GET line is visible for copy-paste to OpenSearch Dashboards,
-   * but only the JSON part is parsed (validation is disabled)
+   * Content for Monaco editor: show only JSON (no GET line)
+   * This prevents Monaco validation errors on the GET line
    */
-  const devToolsContent = useMemo(() => {
+  const monacoContent = useMemo(() => {
     if (editedJson) {
-      // Keep user's edits as-is (including GET line if present)
+      // Strip GET line from user's edits for Monaco display
+      return extractJsonFromDevTools(editedJson).trim();
+    }
+    // When query updates, show JSON only
+    return jsonBody;
+  }, [editedJson, jsonBody]);
+
+  /**
+   * Full Dev Tools format for copying to clipboard
+   * Includes GET line for copy-paste to OpenSearch Dashboards
+   */
+  const devToolsForCopy = useMemo(() => {
+    if (editedJson) {
+      // If user edited it, preserve as-is for copying
       return editedJson;
     }
     // When query updates, show formatted with GET line
@@ -157,13 +169,13 @@ export function JSONPreview({ className, height = '400px' }: JSONPreviewProps) {
    */
   const handleCopy = useCallback(async () => {
     try {
-      await navigator.clipboard.writeText(devToolsContent);
+      await navigator.clipboard.writeText(devToolsForCopy);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (error) {
       // Silently fail - clipboard access may not be available
     }
-  }, [devToolsContent]);
+  }, [devToolsForCopy]);
 
   return (
     <div className={cn('flex flex-col h-full', className)}>
@@ -208,7 +220,7 @@ export function JSONPreview({ className, height = '400px' }: JSONPreviewProps) {
         <Editor
           height={height}
           defaultLanguage="json"
-          value={devToolsContent}
+          value={monacoContent}
           onChange={handleJsonChange}
           options={{
             readOnly: false,
