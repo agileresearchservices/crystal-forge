@@ -24,7 +24,9 @@ interface JSONPreviewProps {
  */
 function extractJsonFromDevTools(text: string): string {
   const lines = text.split('\n');
-  if (lines[0].match(/^(GET|POST|PUT|DELETE|HEAD)\s+/)) {
+  // Check if first line (after trimming) is a Dev Tools request line
+  if (lines[0].trim().match(/^(GET|POST|PUT|DELETE|HEAD)\s+/)) {
+    // Remove first line and rejoin
     return lines.slice(1).join('\n');
   }
   return text;
