@@ -3,6 +3,7 @@
 import React, { useMemo, useCallback, useState } from 'react';
 import Editor from '@monaco-editor/react';
 import { useQuery } from '@/context/QueryContext';
+import { useConnection } from '@/context/ConnectionContext';
 import { serializeQueryState } from '@crystal-forge/query-dsl';
 import { cn } from '@/lib/utils';
 
@@ -21,12 +22,18 @@ interface JSONPreviewProps {
  */
 export function JSONPreview({ className, height = '400px' }: JSONPreviewProps) {
   const { state } = useQuery();
+  const { state: connectionState } = useConnection();
   const [copied, setCopied] = useState(false);
+
+  /**
+   * Get the current index name for the Dev Tools format
+   */
+  const currentIndex = connectionState.connection.index || '_all';
 
   /**
    * Serialize the current query state to JSON
    */
-  const jsonContent = useMemo(() => {
+  const jsonBody = useMemo(() => {
     try {
       const serialized = serializeQueryState(state.query);
       return JSON.stringify(serialized, null, 2);
@@ -40,23 +47,30 @@ export function JSONPreview({ className, height = '400px' }: JSONPreviewProps) {
   }, [state.query]);
 
   /**
-   * Copy JSON to clipboard
+   * Full Dev Tools format: GET {index}/_search followed by JSON body
+   */
+  const devToolsContent = useMemo(() => {
+    return `GET ${currentIndex}/_search\n${jsonBody}`;
+  }, [currentIndex, jsonBody]);
+
+  /**
+   * Copy Dev Tools format to clipboard
    */
   const handleCopy = useCallback(async () => {
     try {
-      await navigator.clipboard.writeText(jsonContent);
+      await navigator.clipboard.writeText(devToolsContent);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (error) {
       console.error('Failed to copy to clipboard:', error);
     }
-  }, [jsonContent]);
+  }, [devToolsContent]);
 
   return (
     <div className={cn('flex flex-col h-full', className)}>
       {/* Header */}
       <div className="flex items-center justify-between p-3 border-b bg-gray-50">
-        <h3 className="text-sm font-medium text-gray-700">Query JSON</h3>
+        <h3 className="text-sm font-medium text-gray-700">Dev Tools Format</h3>
         <button
           onClick={handleCopy}
           className={cn(
@@ -94,7 +108,7 @@ export function JSONPreview({ className, height = '400px' }: JSONPreviewProps) {
         <Editor
           height={height}
           defaultLanguage="json"
-          value={jsonContent}
+          value={devToolsContent}
           options={{
             readOnly: true,
             minimap: { enabled: false },
@@ -123,9 +137,12 @@ interface SimpleJSONPreviewProps {
 
 export function SimpleJSONPreview({ className }: SimpleJSONPreviewProps) {
   const { state } = useQuery();
+  const { state: connectionState } = useConnection();
   const [copied, setCopied] = useState(false);
 
-  const jsonContent = useMemo(() => {
+  const currentIndex = connectionState.connection.index || '_all';
+
+  const jsonBody = useMemo(() => {
     try {
       const serialized = serializeQueryState(state.query);
       return JSON.stringify(serialized, null, 2);
@@ -134,20 +151,24 @@ export function SimpleJSONPreview({ className }: SimpleJSONPreviewProps) {
     }
   }, [state.query]);
 
+  const devToolsContent = useMemo(() => {
+    return `GET ${currentIndex}/_search\n${jsonBody}`;
+  }, [currentIndex, jsonBody]);
+
   const handleCopy = useCallback(async () => {
     try {
-      await navigator.clipboard.writeText(jsonContent);
+      await navigator.clipboard.writeText(devToolsContent);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (error) {
       console.error('Failed to copy:', error);
     }
-  }, [jsonContent]);
+  }, [devToolsContent]);
 
   return (
     <div className={cn('flex flex-col h-full', className)}>
       <div className="flex items-center justify-between p-3 border-b bg-gray-50">
-        <h3 className="text-sm font-medium text-gray-700">Query JSON</h3>
+        <h3 className="text-sm font-medium text-gray-700">Dev Tools Format</h3>
         <button
           onClick={handleCopy}
           className={cn(
@@ -162,7 +183,7 @@ export function SimpleJSONPreview({ className }: SimpleJSONPreviewProps) {
       </div>
       <div className="flex-1 overflow-auto p-4 bg-gray-900">
         <pre className="text-sm text-green-400 font-mono whitespace-pre-wrap">
-          {jsonContent}
+          {devToolsContent}
         </pre>
       </div>
     </div>
