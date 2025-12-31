@@ -29,26 +29,43 @@ export type {
   QueryNodeBase,
   FieldQueryNode,
 
-  // Query node types
+  // Query node types - Full-text
   MatchQueryNode,
   MatchPhraseQueryNode,
   MatchPhrasePrefixQueryNode,
+  MultiMatchQueryNode,
+  QueryStringQueryNode,
+  SimpleQueryStringQueryNode,
+  // Query node types - Term-level
   TermQueryNode,
   TermsQueryNode,
+  TermsLookup,
   RangeQueryNode,
   PrefixQueryNode,
   WildcardQueryNode,
   RegexpQueryNode,
+  FuzzyQueryNode,
   ExistsQueryNode,
+  IdsQueryNode,
+  // Query node types - Compound
   BoolQueryNode,
+  DisMaxQueryNode,
+  ConstantScoreQueryNode,
+  BoostingQueryNode,
+  FunctionScoreQueryNode,
+  ScoreFunction,
+  DecayFunctionParams,
+  // Query node types - Joining
   NestedQueryNode,
+  // Query node types - Geo
+  GeoBoundingBoxQueryNode,
+  GeoDistanceQueryNode,
+  GeoShapeQueryNode,
+  GeoPoint,
+  GeoShape,
+  // Query node types - Special
   MatchAllQueryNode,
   MatchNoneQueryNode,
-  MultiMatchQueryNode,
-  QueryStringQueryNode,
-  SimpleQueryStringQueryNode,
-  FuzzyQueryNode,
-  IdsQueryNode,
   QueryNode,
 
   // Query state types

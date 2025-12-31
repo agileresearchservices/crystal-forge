@@ -13,43 +13,83 @@
  * All supported OpenSearch query types
  */
 export type QueryType =
+  // Full-text queries
   | 'match'
   | 'match_phrase'
   | 'match_phrase_prefix'
+  | 'multi_match'
+  | 'query_string'
+  | 'simple_query_string'
+  // Term-level queries
   | 'term'
   | 'terms'
-  | 'bool'
   | 'range'
   | 'prefix'
   | 'wildcard'
   | 'regexp'
-  | 'exists'
-  | 'nested'
-  | 'match_all'
-  | 'match_none'
-  | 'multi_match'
-  | 'query_string'
-  | 'simple_query_string'
   | 'fuzzy'
-  | 'ids';
+  | 'exists'
+  | 'ids'
+  // Compound queries
+  | 'bool'
+  | 'dis_max'
+  | 'constant_score'
+  | 'boosting'
+  | 'function_score'
+  // Joining queries
+  | 'nested'
+  // Geo queries
+  | 'geo_bounding_box'
+  | 'geo_distance'
+  | 'geo_shape'
+  // Special queries
+  | 'match_all'
+  | 'match_none';
 
 /**
  * OpenSearch field data types
  */
 export type FieldType =
+  // Text types
   | 'text'
   | 'keyword'
+  | 'completion'
+  | 'search_as_you_type'
+  | 'token_count'
+  // Numeric types
   | 'long'
   | 'integer'
   | 'short'
   | 'byte'
   | 'double'
   | 'float'
+  | 'half_float'
+  | 'scaled_float'
+  | 'unsigned_long'
+  // Date types
   | 'date'
+  | 'date_nanos'
+  // Boolean
   | 'boolean'
+  // Binary
+  | 'binary'
+  // IP address
+  | 'ip'
+  // Geo types
   | 'geo_point'
+  | 'geo_shape'
+  // Complex types
   | 'nested'
-  | 'object';
+  | 'object'
+  | 'flattened'
+  | 'join'
+  // Other types
+  | 'percolator'
+  | 'rank_feature'
+  | 'rank_features'
+  | 'dense_vector'
+  | 'sparse_vector'
+  | 'alias';
 
 /**
  * Comparison operators for range queries
@@ -366,14 +406,31 @@ export interface MatchPhrasePrefixQueryNode extends FieldQueryNode {
 }
 
 /**
+ * Terms lookup configuration for fetching terms from another document
+ */
+export interface TermsLookup {
+  /** Index containing the document with terms */
+  index: string;
+  /** Document ID */
+  id: string;
+  /** Path to the field containing terms */
+  path: string;
+  /** Routing value for the lookup document */
+  routing?: string;
+}
+
+/**
  * Terms query node - exact match for multiple values
+ * Supports both inline values and terms lookup from another document
  */
 export interface TermsQueryNode extends QueryNodeBase {
   type: 'terms';
   /** The field this query targets */
   field: string;
-  /** Array of values to match (OR logic) */
-  values: (string | number | boolean)[];
+  /** Array of values to match (OR logic) - mutually exclusive with lookup */
+  values?: (string | number | boolean)[];
+  /** Terms lookup configuration - mutually exclusive with values */
+  lookup?: TermsLookup;
 }
 
 /**
@@ -433,28 +490,205 @@ export interface SimpleQueryStringQueryNode extends QueryNodeBase {
 }
 
 /**
+ * Dis max query node - returns documents matching any query, with tie breaking
+ */
+export interface DisMaxQueryNode extends QueryNodeBase {
+  type: 'dis_max';
+  /** Array of queries to match */
+  queries: QueryNode[];
+  /** Tie breaker multiplier (0-1) for scores of non-max matching queries */
+  tie_breaker?: number;
+}
+
+/**
+ * Constant score query node - wraps a filter and assigns constant score
+ */
+export interface ConstantScoreQueryNode extends QueryNodeBase {
+  type: 'constant_score';
+  /** The filter query (does not contribute to scoring) */
+  filter: QueryNode;
+}
+
+/**
+ * Boosting query node - demotes documents matching the negative query
+ */
+export interface BoostingQueryNode extends QueryNodeBase {
+  type: 'boosting';
+  /** Query for documents to boost positively */
+  positive: QueryNode;
+  /** Query for documents to demote */
+  negative: QueryNode;
+  /** Boost factor for negative matches (typically < 1) */
+  negative_boost: number;
+}
+
+/**
+ * Score function for function_score query
+ */
+export interface ScoreFunction {
+  /** Optional filter to apply this function only to matching docs */
+  filter?: QueryNode;
+  /** Weight multiplier for this function */
+  weight?: number;
+  /** Script-based scoring */
+  script_score?: {
+    script: {
+      source: string;
+      params?: Record<string, unknown>;
+    };
+  };
+  /** Random score */
+  random_score?: {
+    seed?: number | string;
+    field?: string;
+  };
+  /** Field value factor */
+  field_value_factor?: {
+    field: string;
+    factor?: number;
+    modifier?: 'none' | 'log' | 'log1p' | 'log2p' | 'ln' | 'ln1p' | 'ln2p' | 'square' | 'sqrt' | 'reciprocal';
+    missing?: number;
+  };
+  /** Decay functions */
+  linear?: Record<string, DecayFunctionParams>;
+  exp?: Record<string, DecayFunctionParams>;
+  gauss?: Record<string, DecayFunctionParams>;
+}
+
+/**
+ * Decay function parameters
+ */
+export interface DecayFunctionParams {
+  origin: string | number;
+  scale: string | number;
+  offset?: string | number;
+  decay?: number;
+}
+
+/**
+ * Function score query node - modifies scores using functions
+ */
+export interface FunctionScoreQueryNode extends QueryNodeBase {
+  type: 'function_score';
+  /** Base query */
+  query?: QueryNode;
+  /** Score functions to apply */
+  functions?: ScoreFunction[];
+  /** How to combine function scores */
+  score_mode?: 'multiply' | 'sum' | 'avg' | 'first' | 'max' | 'min';
+  /** How to combine query and function scores */
+  boost_mode?: 'multiply' | 'replace' | 'sum' | 'avg' | 'max' | 'min';
+  /** Maximum boost value */
+  max_boost?: number;
+  /** Minimum score threshold */
+  min_score?: number;
+}
+
+/**
+ * Geo bounding box query node - matches geo points within a bounding box
+ */
+export interface GeoBoundingBoxQueryNode extends QueryNodeBase {
+  type: 'geo_bounding_box';
+  /** The geo_point field to query */
+  field: string;
+  /** Top-left corner */
+  top_left: GeoPoint;
+  /** Bottom-right corner */
+  bottom_right: GeoPoint;
+  /** Validation method */
+  validation_method?: 'STRICT' | 'IGNORE_MALFORMED' | 'COERCE';
+}
+
+/**
+ * Geo distance query node - matches geo points within a distance
+ */
+export interface GeoDistanceQueryNode extends QueryNodeBase {
+  type: 'geo_distance';
+  /** The geo_point field to query */
+  field: string;
+  /** Center point */
+  location: GeoPoint;
+  /** Distance (e.g., '10km', '5mi') */
+  distance: string;
+  /** Distance type calculation */
+  distance_type?: 'arc' | 'plane';
+  /** Validation method */
+  validation_method?: 'STRICT' | 'IGNORE_MALFORMED' | 'COERCE';
+}
+
+/**
+ * Geo shape query node - matches geo shapes
+ */
+export interface GeoShapeQueryNode extends QueryNodeBase {
+  type: 'geo_shape';
+  /** The geo_shape field to query */
+  field: string;
+  /** The shape to match against */
+  shape?: GeoShape;
+  /** Indexed shape reference */
+  indexed_shape?: {
+    index: string;
+    id: string;
+    path?: string;
+  };
+  /** Spatial relation */
+  relation?: 'INTERSECTS' | 'DISJOINT' | 'WITHIN' | 'CONTAINS';
+}
+
+/**
+ * Geo point representation
+ */
+export type GeoPoint =
+  | { lat: number; lon: number }
+  | [number, number]  // [lon, lat]
+  | string;  // "lat,lon" or geohash
+
+/**
+ * Geo shape representation
+ */
+export interface GeoShape {
+  type: 'point' | 'linestring' | 'polygon' | 'multipoint' | 'multilinestring' | 'multipolygon' | 'geometrycollection' | 'envelope' | 'circle';
+  coordinates?: unknown;  // Coordinates depend on shape type
+  radius?: string;  // For circle
+  geometries?: GeoShape[];  // For geometrycollection
+}
+
+/**
  * Union type of all query node types
  */
 export type QueryNode =
+  // Full-text queries
   | MatchQueryNode
   | MatchPhraseQueryNode
   | MatchPhrasePrefixQueryNode
+  | MultiMatchQueryNode
+  | QueryStringQueryNode
+  | SimpleQueryStringQueryNode
+  // Term-level queries
   | TermQueryNode
   | TermsQueryNode
   | RangeQueryNode
   | PrefixQueryNode
   | WildcardQueryNode
   | RegexpQueryNode
-  | ExistsQueryNode
-  | BoolQueryNode
-  | NestedQueryNode
-  | MatchAllQueryNode
-  | MatchNoneQueryNode
-  | MultiMatchQueryNode
-  | QueryStringQueryNode
-  | SimpleQueryStringQueryNode
   | FuzzyQueryNode
-  | IdsQueryNode;
+  | ExistsQueryNode
+  | IdsQueryNode
+  // Compound queries
+  | BoolQueryNode
+  | DisMaxQueryNode
+  | ConstantScoreQueryNode
+  | BoostingQueryNode
+  | FunctionScoreQueryNode
+  // Joining queries
+  | NestedQueryNode
+  // Geo queries
+  | GeoBoundingBoxQueryNode
+  | GeoDistanceQueryNode
+  | GeoShapeQueryNode
+  // Special queries
+  | MatchAllQueryNode
+  | MatchNoneQueryNode;
 
 // =============================================================================
 // Query State Interfaces

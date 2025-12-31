@@ -29,6 +29,14 @@ import type {
   SimpleQueryStringQueryNode,
   FuzzyQueryNode,
   IdsQueryNode,
+  DisMaxQueryNode,
+  ConstantScoreQueryNode,
+  BoostingQueryNode,
+  FunctionScoreQueryNode,
+  GeoBoundingBoxQueryNode,
+  GeoDistanceQueryNode,
+  GeoShapeQueryNode,
+  ScoreFunction,
   SortClause,
   HighlightConfig,
   InnerHitsConfig,
@@ -53,8 +61,34 @@ import type {
 
 /**
  * Serialize a match query node
+ * Uses shorthand format when only the query value is provided
  */
 function serializeMatchQuery(node: MatchQueryNode): OpenSearchQuery {
+  // Check if we can use shorthand format (only value, no additional options)
+  const hasOptions =
+    node.operator !== undefined ||
+    node.fuzziness !== undefined ||
+    node.prefix_length !== undefined ||
+    node.max_expansions !== undefined ||
+    node.lenient !== undefined ||
+    node.zero_terms_query !== undefined ||
+    node.analyzer !== undefined ||
+    node.minimum_should_match !== undefined ||
+    node.fuzzy_transpositions !== undefined ||
+    node.auto_generate_synonyms_phrase_query !== undefined ||
+    node.boost !== undefined ||
+    node._name !== undefined;
+
+  // Use shorthand format when no options are present
+  if (!hasOptions) {
+    return {
+      match: {
+        [node.field]: node.value,
+      },
+    };
+  }
+
+  // Use verbose format with options
   const matchBody: Record<string, unknown> = {
     query: node.value,
   };
@@ -152,26 +186,39 @@ function serializeTermQuery(node: TermQueryNode): OpenSearchQuery {
 
 /**
  * Serialize a terms query node
+ * Supports both inline values and terms lookup
  */
 function serializeTermsQuery(node: TermsQueryNode): OpenSearchQuery {
-  const result: OpenSearchQuery = {
-    terms: {
-      [node.field]: node.values,
-    },
-  };
+  const termsBody: Record<string, unknown> = {};
+
+  // Use either inline values or terms lookup
+  if (node.lookup) {
+    termsBody[node.field] = {
+      index: node.lookup.index,
+      id: node.lookup.id,
+      path: node.lookup.path,
+      ...(node.lookup.routing && { routing: node.lookup.routing }),
+    };
+  } else if (node.values) {
+    termsBody[node.field] = node.values;
+  } else {
+    // Default to empty array if neither is provided
+    termsBody[node.field] = [];
+  }
 
   if (node.boost !== undefined) {
-    (result.terms as Record<string, unknown>).boost = node.boost;
+    termsBody.boost = node.boost;
   }
   if (node._name) {
-    (result.terms as Record<string, unknown>)._name = node._name;
+    termsBody._name = node._name;
   }
 
-  return result;
+  return { terms: termsBody };
 }
 
 /**
  * Serialize a range query node
+ * Warns if no bounds are specified (which produces an invalid query)
  */
 function serializeRangeQuery(node: RangeQueryNode): OpenSearchQuery {
   const rangeBody: Record<string, unknown> = {};
@@ -180,6 +227,21 @@ function serializeRangeQuery(node: RangeQueryNode): OpenSearchQuery {
   if (node.gte !== undefined) rangeBody.gte = node.gte;
   if (node.lt !== undefined) rangeBody.lt = node.lt;
   if (node.lte !== undefined) rangeBody.lte = node.lte;
+
+  // Validate that at least one bound is specified
+  const hasBounds =
+    node.gt !== undefined ||
+    node.gte !== undefined ||
+    node.lt !== undefined ||
+    node.lte !== undefined;
+
+  if (!hasBounds) {
+    console.warn(
+      `Range query on field "${node.field}" has no bounds (gt, gte, lt, lte). ` +
+        'This may produce unexpected results.'
+    );
+  }
+
   if (node.format) rangeBody.format = node.format;
   if (node.time_zone) rangeBody.time_zone = node.time_zone;
   if (node.relation) rangeBody.relation = node.relation;
@@ -521,6 +583,146 @@ function serializeIdsQuery(node: IdsQueryNode): OpenSearchQuery {
   return { ids: idsBody };
 }
 
+/**
+ * Serialize a dis_max query node
+ */
+function serializeDisMaxQuery(node: DisMaxQueryNode): OpenSearchQuery {
+  const body: Record<string, unknown> = {
+    queries: node.queries.map((q) => serializeQuery(q)),
+  };
+
+  if (node.tie_breaker !== undefined) body.tie_breaker = node.tie_breaker;
+  if (node.boost !== undefined) body.boost = node.boost;
+  if (node._name) body._name = node._name;
+
+  return { dis_max: body };
+}
+
+/**
+ * Serialize a constant_score query node
+ */
+function serializeConstantScoreQuery(node: ConstantScoreQueryNode): OpenSearchQuery {
+  const body: Record<string, unknown> = {
+    filter: serializeQuery(node.filter),
+  };
+
+  if (node.boost !== undefined) body.boost = node.boost;
+  if (node._name) body._name = node._name;
+
+  return { constant_score: body };
+}
+
+/**
+ * Serialize a boosting query node
+ */
+function serializeBoostingQuery(node: BoostingQueryNode): OpenSearchQuery {
+  const body: Record<string, unknown> = {
+    positive: serializeQuery(node.positive),
+    negative: serializeQuery(node.negative),
+    negative_boost: node.negative_boost,
+  };
+
+  if (node.boost !== undefined) body.boost = node.boost;
+  if (node._name) body._name = node._name;
+
+  return { boosting: body };
+}
+
+/**
+ * Serialize a score function for function_score
+ */
+function serializeScoreFunction(fn: ScoreFunction): Record<string, unknown> {
+  const result: Record<string, unknown> = {};
+
+  if (fn.filter) result.filter = serializeQuery(fn.filter);
+  if (fn.weight !== undefined) result.weight = fn.weight;
+  if (fn.script_score) result.script_score = fn.script_score;
+  if (fn.random_score) result.random_score = fn.random_score;
+  if (fn.field_value_factor) result.field_value_factor = fn.field_value_factor;
+  if (fn.linear) result.linear = fn.linear;
+  if (fn.exp) result.exp = fn.exp;
+  if (fn.gauss) result.gauss = fn.gauss;
+
+  return result;
+}
+
+/**
+ * Serialize a function_score query node
+ */
+function serializeFunctionScoreQuery(node: FunctionScoreQueryNode): OpenSearchQuery {
+  const body: Record<string, unknown> = {};
+
+  if (node.query) body.query = serializeQuery(node.query);
+  if (node.functions && node.functions.length > 0) {
+    body.functions = node.functions.map((fn) => serializeScoreFunction(fn));
+  }
+  if (node.score_mode) body.score_mode = node.score_mode;
+  if (node.boost_mode) body.boost_mode = node.boost_mode;
+  if (node.max_boost !== undefined) body.max_boost = node.max_boost;
+  if (node.min_score !== undefined) body.min_score = node.min_score;
+  if (node.boost !== undefined) body.boost = node.boost;
+  if (node._name) body._name = node._name;
+
+  return { function_score: body };
+}
+
+/**
+ * Serialize a geo_bounding_box query node
+ */
+function serializeGeoBoundingBoxQuery(node: GeoBoundingBoxQueryNode): OpenSearchQuery {
+  const fieldBody: Record<string, unknown> = {
+    top_left: node.top_left,
+    bottom_right: node.bottom_right,
+  };
+
+  const body: Record<string, unknown> = {
+    [node.field]: fieldBody,
+  };
+
+  if (node.validation_method) body.validation_method = node.validation_method;
+  if (node.boost !== undefined) body.boost = node.boost;
+  if (node._name) body._name = node._name;
+
+  return { geo_bounding_box: body };
+}
+
+/**
+ * Serialize a geo_distance query node
+ */
+function serializeGeoDistanceQuery(node: GeoDistanceQueryNode): OpenSearchQuery {
+  const body: Record<string, unknown> = {
+    distance: node.distance,
+    [node.field]: node.location,
+  };
+
+  if (node.distance_type) body.distance_type = node.distance_type;
+  if (node.validation_method) body.validation_method = node.validation_method;
+  if (node.boost !== undefined) body.boost = node.boost;
+  if (node._name) body._name = node._name;
+
+  return { geo_distance: body };
+}
+
+/**
+ * Serialize a geo_shape query node
+ */
+function serializeGeoShapeQuery(node: GeoShapeQueryNode): OpenSearchQuery {
+  const fieldBody: Record<string, unknown> = {};
+
+  if (node.shape) fieldBody.shape = node.shape;
+  if (node.indexed_shape) fieldBody.indexed_shape = node.indexed_shape;
+  if (node.relation) fieldBody.relation = node.relation;
+
+  const body: Record<string, unknown> = {
+    [node.field]: fieldBody,
+  };
+
+  if (node.boost !== undefined) body.boost = node.boost;
+  if (node._name) body._name = node._name;
+
+  return { geo_shape: body };
+}
+
 // =============================================================================
 // Main Serialization Functions
 // =============================================================================
@@ -546,12 +748,20 @@ function serializeIdsQuery(node: IdsQueryNode): OpenSearchQuery {
  */
 export function serializeQuery(node: QueryNode): OpenSearchQuery {
   switch (node.type) {
+    // Full-text queries
     case 'match':
       return serializeMatchQuery(node);
     case 'match_phrase':
       return serializeMatchPhraseQuery(node);
     case 'match_phrase_prefix':
       return serializeMatchPhrasePrefixQuery(node);
+    case 'multi_match':
+      return serializeMultiMatchQuery(node);
+    case 'query_string':
+      return serializeQueryStringQuery(node);
+    case 'simple_query_string':
+      return serializeSimpleQueryStringQuery(node);
+    // Term-level queries
     case 'term':
       return serializeTermQuery(node);
     case 'terms':
@@ -564,26 +774,38 @@ export function serializeQuery(node: QueryNode): OpenSearchQuery {
       return serializeWildcardQuery(node);
     case 'regexp':
       return serializeRegexpQuery(node);
+    case 'fuzzy':
+      return serializeFuzzyQuery(node);
     case 'exists':
       return serializeExistsQuery(node);
+    case 'ids':
+      return serializeIdsQuery(node);
+    // Compound queries
     case 'bool':
       return serializeBoolQuery(node);
+    case 'dis_max':
+      return serializeDisMaxQuery(node);
+    case 'constant_score':
+      return serializeConstantScoreQuery(node);
+    case 'boosting':
+      return serializeBoostingQuery(node);
+    case 'function_score':
+      return serializeFunctionScoreQuery(node);
+    // Joining queries
     case 'nested':
       return serializeNestedQuery(node);
+    // Geo queries
+    case 'geo_bounding_box':
+      return serializeGeoBoundingBoxQuery(node);
+    case 'geo_distance':
+      return serializeGeoDistanceQuery(node);
+    case 'geo_shape':
+      return serializeGeoShapeQuery(node);
+    // Special queries
     case 'match_all':
       return serializeMatchAllQuery(node);
     case 'match_none':
       return serializeMatchNoneQuery(node);
-    case 'multi_match':
-      return serializeMultiMatchQuery(node);
-    case 'query_string':
-      return serializeQueryStringQuery(node);
-    case 'simple_query_string':
-      return serializeSimpleQueryStringQuery(node);
-    case 'fuzzy':
-      return serializeFuzzyQuery(node);
-    case 'ids':
-      return serializeIdsQuery(node);
     default:
       // Exhaustive check - this should never happen if all types are handled
       const _exhaustiveCheck: never = node;

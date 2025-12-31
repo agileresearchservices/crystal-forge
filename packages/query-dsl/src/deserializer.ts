@@ -29,6 +29,17 @@ import type {
   SimpleQueryStringQueryNode,
   FuzzyQueryNode,
   IdsQueryNode,
+  TermsLookup,
+  DisMaxQueryNode,
+  ConstantScoreQueryNode,
+  BoostingQueryNode,
+  FunctionScoreQueryNode,
+  GeoBoundingBoxQueryNode,
+  GeoDistanceQueryNode,
+  GeoShapeQueryNode,
+  ScoreFunction,
+  GeoPoint,
+  GeoShape,
   SortClause,
   HighlightConfig,
   HighlightFieldConfig,
@@ -41,30 +52,37 @@ import type {
 // ID Generation
 // =============================================================================
 
-let nodeIdCounter = 0;
-
 /**
- * Generate a unique ID for a query node
+ * Generate a unique ID for a query node using crypto.randomUUID when available,
+ * falling back to Math.random for older environments.
+ *
+ * This approach avoids SSR hydration mismatches that occur with global counters.
  *
  * @param prefix - Optional prefix for the ID
  * @returns A unique string identifier
  *
  * @example
  * ```typescript
- * const id = generateNodeId(); // 'node_1'
- * const id2 = generateNodeId('match'); // 'match_2'
+ * const id = generateNodeId(); // 'node_a1b2c3d4'
+ * const id2 = generateNodeId('match'); // 'match_e5f6g7h8'
  * ```
  */
 export function generateNodeId(prefix: string = 'node'): string {
-  nodeIdCounter += 1;
-  return `${prefix}_${nodeIdCounter}`;
+  // Use crypto.randomUUID if available (Node 19+, modern browsers)
+  // Otherwise fall back to Math.random
+  const uniquePart =
+    typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+      ? crypto.randomUUID().slice(0, 8)
+      : Math.random().toString(36).slice(2, 10);
+  return `${prefix}_${uniquePart}`;
 }
 
 /**
- * Reset the node ID counter (useful for testing)
+ * Reset the node ID counter (deprecated - no longer needed with UUID-based IDs)
+ * @deprecated This function is kept for backwards compatibility but has no effect
  */
 export function resetNodeIdCounter(): void {
-  nodeIdCounter = 0;
+  // No-op: UUID-based IDs don't use a counter
 }
 
 // =============================================================================
@@ -214,6 +232,7 @@ function deserializeTermQuery(
 
 /**
  * Deserialize a terms query
+ * Supports both inline values and terms lookup
  */
 function deserializeTermsQuery(
   field: string,
@@ -225,8 +244,31 @@ function deserializeTermsQuery(
     id: generateNodeId('terms'),
     type: 'terms',
     field,
-    values: Array.isArray(values) ? (values as (string | number | boolean)[]) : [],
   };
+
+  // Check if it's a terms lookup (object with index, id, path) or inline values (array)
+  if (Array.isArray(values)) {
+    node.values = values as (string | number | boolean)[];
+  } else if (typeof values === 'object' && values !== null) {
+    const lookupBody = values as Record<string, unknown>;
+    // It's a terms lookup if it has the required fields
+    if ('index' in lookupBody && 'id' in lookupBody && 'path' in lookupBody) {
+      const lookup: TermsLookup = {
+        index: lookupBody.index as string,
+        id: lookupBody.id as string,
+        path: lookupBody.path as string,
+      };
+      if (lookupBody.routing) {
+        lookup.routing = lookupBody.routing as string;
+      }
+      node.lookup = lookup;
+    } else {
+      // Unknown format, default to empty values
+      node.values = [];
+    }
+  } else {
+    node.values = [];
+  }
 
   if (boost !== undefined) node.boost = boost;
   if (_name) node._name = _name;
@@ -687,6 +729,179 @@ function deserializeIdsQuery(body: Record<string, unknown>): IdsQueryNode {
   return node;
 }
 
+/**
+ * Deserialize a dis_max query
+ */
+function deserializeDisMaxQuery(body: Record<string, unknown>): DisMaxQueryNode {
+  const node: DisMaxQueryNode = {
+    id: generateNodeId('dis_max'),
+    type: 'dis_max',
+    queries: (body.queries as OpenSearchQuery[]).map((q) => deserializeQuery(q)),
+  };
+
+  if (body.tie_breaker !== undefined) node.tie_breaker = body.tie_breaker as number;
+  if (body.boost !== undefined) node.boost = body.boost as number;
+  if (body._name) node._name = body._name as string;
+
+  return node;
+}
+
+/**
+ * Deserialize a constant_score query
+ */
+function deserializeConstantScoreQuery(body: Record<string, unknown>): ConstantScoreQueryNode {
+  const node: ConstantScoreQueryNode = {
+    id: generateNodeId('constant_score'),
+    type: 'constant_score',
+    filter: deserializeQuery(body.filter as OpenSearchQuery),
+  };
+
+  if (body.boost !== undefined) node.boost = body.boost as number;
+  if (body._name) node._name = body._name as string;
+
+  return node;
+}
+
+/**
+ * Deserialize a boosting query
+ */
+function deserializeBoostingQuery(body: Record<string, unknown>): BoostingQueryNode {
+  const node: BoostingQueryNode = {
+    id: generateNodeId('boosting'),
+    type: 'boosting',
+    positive: deserializeQuery(body.positive as OpenSearchQuery),
+    negative: deserializeQuery(body.negative as OpenSearchQuery),
+    negative_boost: body.negative_boost as number,
+  };
+
+  if (body.boost !== undefined) node.boost = body.boost as number;
+  if (body._name) node._name = body._name as string;
+
+  return node;
+}
+
+/**
+ * Deserialize a score function
+ */
+function deserializeScoreFunction(fn: Record<string, unknown>): ScoreFunction {
+  const result: ScoreFunction = {};
+
+  if (fn.filter) result.filter = deserializeQuery(fn.filter as OpenSearchQuery);
+  if (fn.weight !== undefined) result.weight = fn.weight as number;
+  if (fn.script_score) result.script_score = fn.script_score as ScoreFunction['script_score'];
+  if (fn.random_score) result.random_score = fn.random_score as ScoreFunction['random_score'];
+  if (fn.field_value_factor) result.field_value_factor = fn.field_value_factor as ScoreFunction['field_value_factor'];
+  if (fn.linear) result.linear = fn.linear as ScoreFunction['linear'];
+  if (fn.exp) result.exp = fn.exp as ScoreFunction['exp'];
+  if (fn.gauss) result.gauss = fn.gauss as ScoreFunction['gauss'];
+
+  return result;
+}
+
+/**
+ * Deserialize a function_score query
+ */
+function deserializeFunctionScoreQuery(body: Record<string, unknown>): FunctionScoreQueryNode {
+  const node: FunctionScoreQueryNode = {
+    id: generateNodeId('function_score'),
+    type: 'function_score',
+  };
+
+  if (body.query) node.query = deserializeQuery(body.query as OpenSearchQuery);
+  if (body.functions && Array.isArray(body.functions)) {
+    node.functions = (body.functions as Record<string, unknown>[]).map((fn) =>
+      deserializeScoreFunction(fn)
+    );
+  }
+  if (body.score_mode) node.score_mode = body.score_mode as FunctionScoreQueryNode['score_mode'];
+  if (body.boost_mode) node.boost_mode = body.boost_mode as FunctionScoreQueryNode['boost_mode'];
+  if (body.max_boost !== undefined) node.max_boost = body.max_boost as number;
+  if (body.min_score !== undefined) node.min_score = body.min_score as number;
+  if (body.boost !== undefined) node.boost = body.boost as number;
+  if (body._name) node._name = body._name as string;
+
+  return node;
+}
+
+/**
+ * Deserialize a geo_bounding_box query
+ */
+function deserializeGeoBoundingBoxQuery(
+  field: string,
+  body: Record<string, unknown>,
+  outerBody: Record<string, unknown>
+): GeoBoundingBoxQueryNode {
+  const node: GeoBoundingBoxQueryNode = {
+    id: generateNodeId('geo_bounding_box'),
+    type: 'geo_bounding_box',
+    field,
+    top_left: body.top_left as GeoPoint,
+    bottom_right: body.bottom_right as GeoPoint,
+  };
+
+  if (outerBody.validation_method) {
+    node.validation_method = outerBody.validation_method as GeoBoundingBoxQueryNode['validation_method'];
+  }
+  if (outerBody.boost !== undefined) node.boost = outerBody.boost as number;
+  if (outerBody._name) node._name = outerBody._name as string;
+
+  return node;
+}
+
+/**
+ * Deserialize a geo_distance query
+ */
+function deserializeGeoDistanceQuery(body: Record<string, unknown>): GeoDistanceQueryNode {
+  // Find the field (not distance, distance_type, validation_method, boost, or _name)
+  const field = Object.keys(body).find(
+    (k) => !['distance', 'distance_type', 'validation_method', 'boost', '_name'].includes(k)
+  );
+
+  if (!field) {
+    throw new Error('geo_distance query missing field');
+  }
+
+  const node: GeoDistanceQueryNode = {
+    id: generateNodeId('geo_distance'),
+    type: 'geo_distance',
+    field,
+    location: body[field] as GeoPoint,
+    distance: body.distance as string,
+  };
+
+  if (body.distance_type) node.distance_type = body.distance_type as GeoDistanceQueryNode['distance_type'];
+  if (body.validation_method) {
+    node.validation_method = body.validation_method as GeoDistanceQueryNode['validation_method'];
+  }
+  if (body.boost !== undefined) node.boost = body.boost as number;
+  if (body._name) node._name = body._name as string;
+
+  return node;
+}
+
+/**
+ * Deserialize a geo_shape query
+ */
+function deserializeGeoShapeQuery(
+  field: string,
+  body: Record<string, unknown>,
+  outerBody: Record<string, unknown>
+): GeoShapeQueryNode {
+  const node: GeoShapeQueryNode = {
+    id: generateNodeId('geo_shape'),
+    type: 'geo_shape',
+    field,
+  };
+
+  if (body.shape) node.shape = body.shape as GeoShape;
+  if (body.indexed_shape) node.indexed_shape = body.indexed_shape as GeoShapeQueryNode['indexed_shape'];
+  if (body.relation) node.relation = body.relation as GeoShapeQueryNode['relation'];
+  if (outerBody.boost !== undefined) node.boost = outerBody.boost as number;
+  if (outerBody._name) node._name = outerBody._name as string;
+
+  return node;
+}
+
 // =============================================================================
 // Main Deserialization Functions
 // =============================================================================
@@ -798,10 +1013,14 @@ export function deserializeQuery(query: OpenSearchQuery): QueryNode {
 
     case 'terms': {
       const termsBody = body as Record<string, unknown>;
-      // Find the field name (it's the key that's not 'boost' or '_name')
-      const field = Object.keys(termsBody).find(
-        (k) => k !== 'boost' && k !== '_name'
-      );
+      // Find the field name - it's the key whose value is an array or terms_lookup object
+      // (not 'boost' or '_name' which are reserved parameters)
+      const field = Object.keys(termsBody).find((k) => {
+        if (k === 'boost' || k === '_name') return false;
+        const val = termsBody[k];
+        // Field value is either an array of values or a terms_lookup object
+        return Array.isArray(val) || (typeof val === 'object' && val !== null);
+      });
       if (!field) {
         return deserializeMatchAllQuery({});
       }
@@ -848,6 +1067,55 @@ export function deserializeQuery(query: OpenSearchQuery): QueryNode {
 
     case 'ids':
       return deserializeIdsQuery(body as Record<string, unknown>);
+
+    // Compound queries
+    case 'dis_max':
+      return deserializeDisMaxQuery(body as Record<string, unknown>);
+
+    case 'constant_score':
+      return deserializeConstantScoreQuery(body as Record<string, unknown>);
+
+    case 'boosting':
+      return deserializeBoostingQuery(body as Record<string, unknown>);
+
+    case 'function_score':
+      return deserializeFunctionScoreQuery(body as Record<string, unknown>);
+
+    // Geo queries
+    case 'geo_bounding_box': {
+      const geoBody = body as Record<string, unknown>;
+      // Find the field (not validation_method, boost, or _name)
+      const field = Object.keys(geoBody).find(
+        (k) => !['validation_method', 'boost', '_name'].includes(k)
+      );
+      if (!field) {
+        return deserializeMatchAllQuery({});
+      }
+      return deserializeGeoBoundingBoxQuery(
+        field,
+        geoBody[field] as Record<string, unknown>,
+        geoBody
+      );
+    }
+
+    case 'geo_distance':
+      return deserializeGeoDistanceQuery(body as Record<string, unknown>);
+
+    case 'geo_shape': {
+      const geoBody = body as Record<string, unknown>;
+      // Find the field (not boost or _name)
+      const field = Object.keys(geoBody).find(
+        (k) => !['boost', '_name'].includes(k)
+      );
+      if (!field) {
+        return deserializeMatchAllQuery({});
+      }
+      return deserializeGeoShapeQuery(
+        field,
+        geoBody[field] as Record<string, unknown>,
+        geoBody
+      );
+    }
 
     default:
       // Unknown query type - create a match_all as fallback

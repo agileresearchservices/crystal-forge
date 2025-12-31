@@ -285,12 +285,16 @@ const BOOLEAN_OPERATORS: OperatorDefinition[] = [
     label: 'is true',
     description: 'Boolean is true',
     requiresValue: false,
+    operatorId: 'term_true',
+    queryParams: { value: true },
   },
   {
     queryType: 'term',
     label: 'is false',
     description: 'Boolean is false',
     requiresValue: false,
+    operatorId: 'term_false',
+    queryParams: { value: false },
   },
   ...COMMON_OPERATORS,
 ];
@@ -330,22 +334,71 @@ const OBJECT_OPERATORS: OperatorDefinition[] = [
 // =============================================================================
 
 /**
+ * IP address operators
+ */
+const IP_OPERATORS: OperatorDefinition[] = [
+  {
+    queryType: 'term',
+    label: 'equals',
+    description: 'Exact IP match',
+    requiresValue: true,
+    operatorId: 'term',
+  },
+  {
+    queryType: 'range',
+    label: 'in range',
+    description: 'IP is within CIDR range',
+    requiresValue: true,
+    isRange: true,
+    operatorId: 'range',
+  },
+  ...COMMON_OPERATORS,
+];
+
+/**
  * Mapping of field types to their available operators
  */
 export const FIELD_TYPE_OPERATORS: Record<FieldType, OperatorDefinition[]> = {
+  // Text types
   text: TEXT_OPERATORS,
   keyword: KEYWORD_OPERATORS,
+  completion: TEXT_OPERATORS,
+  search_as_you_type: TEXT_OPERATORS,
+  token_count: NUMERIC_OPERATORS,
+  // Numeric types
   long: NUMERIC_OPERATORS,
   integer: NUMERIC_OPERATORS,
   short: NUMERIC_OPERATORS,
   byte: NUMERIC_OPERATORS,
   double: NUMERIC_OPERATORS,
   float: NUMERIC_OPERATORS,
+  half_float: NUMERIC_OPERATORS,
+  scaled_float: NUMERIC_OPERATORS,
+  unsigned_long: NUMERIC_OPERATORS,
+  // Date types
   date: DATE_OPERATORS,
+  date_nanos: DATE_OPERATORS,
+  // Boolean
   boolean: BOOLEAN_OPERATORS,
+  // Binary (only exists check makes sense)
+  binary: COMMON_OPERATORS,
+  // IP address
+  ip: IP_OPERATORS,
+  // Geo types
   geo_point: GEO_POINT_OPERATORS,
+  geo_shape: GEO_POINT_OPERATORS,
+  // Complex types
   nested: NESTED_OPERATORS,
   object: OBJECT_OPERATORS,
+  flattened: KEYWORD_OPERATORS,
+  join: COMMON_OPERATORS,
+  // Other types
+  percolator: COMMON_OPERATORS,
+  rank_feature: COMMON_OPERATORS,
+  rank_features: COMMON_OPERATORS,
+  dense_vector: COMMON_OPERATORS,
+  sparse_vector: COMMON_OPERATORS,
+  alias: COMMON_OPERATORS,
 };
 
 // =============================================================================
@@ -403,14 +456,18 @@ export function getOperatorsByQueryType(
 /**
  * Check if a query type is valid for a given field type
  *
+ * This checks against the operator definitions configured for each field type.
+ * Note: OpenSearch may technically accept other query types, but this reflects
+ * the recommended/optimal query types for each field type in the UI.
+ *
  * @param fieldType - The OpenSearch field type
  * @param queryType - The query type to check
- * @returns True if the query type is valid for this field type
+ * @returns True if the query type is recommended for this field type
  *
  * @example
  * ```typescript
- * isQueryTypeValidForField('text', 'match'); // true
- * isQueryTypeValidForField('keyword', 'match'); // false (should use term)
+ * isQueryTypeValidForField('text', 'match'); // true (match is ideal for text)
+ * isQueryTypeValidForField('keyword', 'match'); // false (term is preferred for exact matching)
  * ```
  */
 export function isQueryTypeValidForField(

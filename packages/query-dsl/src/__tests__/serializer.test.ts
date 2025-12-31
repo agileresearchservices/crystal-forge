@@ -22,7 +22,7 @@ import type {
 
 describe('serializeQuery', () => {
   describe('match queries', () => {
-    it('serializes a basic match query', () => {
+    it('serializes a basic match query using shorthand format', () => {
       const node: MatchQueryNode = {
         id: 'match_1',
         type: 'match',
@@ -30,9 +30,10 @@ describe('serializeQuery', () => {
         value: 'hello world',
       };
 
+      // Basic match queries use shorthand format (just the value)
       expect(serializeQuery(node)).toEqual({
         match: {
-          title: { query: 'hello world' },
+          title: 'hello world',
         },
       });
     });
@@ -253,7 +254,8 @@ describe('serializeQuery', () => {
 
       const result = serializeQuery(node);
       expect(result.bool.must).toHaveLength(1);
-      expect(result.bool.must[0].match.title.query).toBe('test');
+      // Match query uses shorthand format when no options are specified
+      expect(result.bool.must[0].match.title).toBe('test');
     });
   });
 

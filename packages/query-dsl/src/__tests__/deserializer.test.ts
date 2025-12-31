@@ -315,16 +315,30 @@ describe('deserializeFromJson', () => {
   });
 });
 
-describe('ID counter isolation', () => {
-  it('resets ID counter properly', () => {
-    resetNodeIdCounter();
+describe('ID generation', () => {
+  it('generates unique IDs with correct prefix', () => {
     const id1 = generateNodeId('test');
     const id2 = generateNodeId('test');
-    expect(id1).toBe('test_1');
-    expect(id2).toBe('test_2');
+    const id3 = generateNodeId('match');
 
+    // IDs should have correct prefixes
+    expect(id1).toMatch(/^test_/);
+    expect(id2).toMatch(/^test_/);
+    expect(id3).toMatch(/^match_/);
+
+    // IDs should be unique
+    expect(id1).not.toBe(id2);
+    expect(id1).not.toBe(id3);
+    expect(id2).not.toBe(id3);
+  });
+
+  it('resetNodeIdCounter is a no-op (deprecated)', () => {
+    // resetNodeIdCounter is deprecated and does nothing with UUID-based IDs
+    const id1 = generateNodeId('test');
     resetNodeIdCounter();
-    const id3 = generateNodeId('test');
-    expect(id3).toBe('test_1');
+    const id2 = generateNodeId('test');
+
+    // IDs should still be unique (reset has no effect)
+    expect(id1).not.toBe(id2);
   });
 });
