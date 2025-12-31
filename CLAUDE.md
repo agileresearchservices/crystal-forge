@@ -149,35 +149,40 @@ OPENSEARCH_PASSWORD=admin
 
 ## Claude Code Commands
 
-### OpenSearch DSL Expert
+### OpenSearch Expert (Global Skill)
 
-Specialized agent for reviewing and improving the query-dsl package implementation.
+Comprehensive global skill for OpenSearch query design, optimization, data modeling, and search relevancy. Available in any OpenSearch project.
 
 ```bash
-# Full implementation review against OpenSearch spec
-/dsl-expert-review
+# Query design and optimization
+/opensearch-expert design a query for searching products by title
+/opensearch-expert my query is slow. How do I optimize it?
 
-# Generate test cases for a specific query type
-/dsl-expert-tests match
-/dsl-expert-tests bool
-/dsl-expert-tests        # all query types
+# Data modeling
+/opensearch-expert design field mappings for an e-commerce index
+/opensearch-expert configure analyzers for text search
 
-# Find missing OpenSearch features
-/dsl-expert-gaps
+# Relevancy tuning
+/opensearch-expert improve search results with field boosting
+/opensearch-expert debug why top result isn't relevant
 
-# General DSL expertise (interactive)
-/dsl-expert review       # review serialization logic
-/dsl-expert edges        # identify edge cases
-/dsl-expert types        # review TypeScript types
-/dsl-expert roundtrip    # verify serialize/deserialize consistency
+# Aggregations and analytics
+/opensearch-expert build aggregations to analyze sales by product and date
+/opensearch-expert design nested aggregations for analytics
+
+# Performance analysis
+/opensearch-expert identify performance bottlenecks in my queries
+/opensearch-expert what's the optimal shard strategy for my data?
 ```
 
-The DSL Expert has deep knowledge of:
-- OpenSearch Query DSL specification
-- All query types and their parameters
-- Query vs filter context implications
-- Field type compatibility rules
-- Performance considerations
+The OpenSearch Expert has deep knowledge of:
+- All OpenSearch Query DSL types and patterns
+- Data modeling and field mappings
+- Search relevancy and ranking (BM25, boosting)
+- Query optimization and performance tuning
+- Aggregations and analytics patterns
+- Index management and configuration
+- Advanced features (percolator, more_like_this, etc.)
 
 ### Web Designer Expert
 
