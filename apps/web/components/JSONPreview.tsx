@@ -231,9 +231,6 @@ export function JSONPreview({ className, height = '400px' }: JSONPreviewProps) {
             automaticLayout: true,
             wordWrap: 'on',
             tabSize: 2,
-            // Disable built-in JSON validation since we handle Dev Tools format
-            // and show our own custom errors below the editor
-            'json.validate.enable': false,
           }}
           theme="vs"
         />
