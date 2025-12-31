@@ -139,7 +139,7 @@ function HomeContent() {
                 aria-live="polite"
                 aria-label={`Connected to ${state.connection.index || 'OpenSearch'}`}
               >
-                <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse flex-shrink-0" aria-hidden="true"></div>
+                <div className="w-2 h-2 rounded-full bg-green-600 animate-pulse flex-shrink-0" aria-hidden="true"></div>
                 <span className="text-xs sm:text-sm font-medium text-green-700 dark:text-green-400 truncate">
                   {state.connection.index || 'Connected'}
                 </span>
@@ -155,6 +155,13 @@ function HomeContent() {
             <ConnectionModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
           </div>
         </header>
+
+        {/* Screen reader announcement for index selection */}
+        {state.connection.index && (
+          <div className="sr-only" role="status" aria-live="polite" aria-atomic="true">
+            Index {state.connection.index} selected with {state.fields.length} fields loaded
+          </div>
+        )}
 
         {/* Main Content */}
         <div className="flex-1 flex min-h-0">

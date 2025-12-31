@@ -153,7 +153,7 @@ export function FieldList({ className }: FieldListProps) {
               aria-label="Clear field search"
               className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded p-0.5"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -319,8 +319,6 @@ interface FieldItemProps {
 }
 
 function FieldItem({ field, onAdd, typeBadgeColor }: FieldItemProps) {
-  const [isHovered, setIsHovered] = useState(false);
-
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: `field-${field.path}`,
     data: {
@@ -348,23 +346,26 @@ function FieldItem({ field, onAdd, typeBadgeColor }: FieldItemProps) {
       ref={setNodeRef}
       style={style}
       className={cn(
-        'flex items-center gap-2 px-3 py-1.5',
-        'hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-grab',
+        'flex items-center gap-2 px-3 py-1.5 group',
+        'hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors',
         'focus-within:ring-2 focus-within:ring-inset focus-within:ring-indigo-500 rounded',
-        isDragging && 'opacity-50 cursor-grabbing'
+        isDragging && 'opacity-50'
       )}
-      aria-label={`${field.path} - ${fieldDescription}`}
-      aria-description="Drag to add to a clause or click to add to active clause"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      onClick={onAdd}
-      {...attributes}
-      {...listeners}
     >
-      {/* Field name */}
-      <span className="flex-1 text-sm text-gray-700 dark:text-gray-300 truncate">
-        {field.path}
-      </span>
+      {/* Clickable field name - semantic button for accessibility */}
+      <button
+        onClick={onAdd}
+        className={cn(
+          'flex items-center gap-2 flex-1 min-w-0 text-left',
+          'cursor-grab active:cursor-grabbing',
+          'focus:outline-none text-sm text-gray-700 dark:text-gray-300'
+        )}
+        aria-label={`Add ${field.path} (${field.type}) to active clause via click, or drag to specific clause`}
+        {...attributes}
+        {...listeners}
+      >
+        <span className="truncate">{field.path}</span>
+      </button>
 
       {/* Type badge */}
       <span
@@ -377,26 +378,29 @@ function FieldItem({ field, onAdd, typeBadgeColor }: FieldItemProps) {
         {field.type}
       </span>
 
-      {/* Add button (shown on hover) */}
-      {isHovered && (
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onAdd();
-          }}
-          aria-label={`Add ${field.path} to query`}
-          className="p-1 text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors flex-shrink-0 focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 4v16m8-8H4"
-            />
-          </svg>
-        </button>
-      )}
+      {/* Add button - ALWAYS VISIBLE */}
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          onAdd();
+        }}
+        aria-label={`Add ${field.path} to active clause`}
+        className={cn(
+          'p-1 rounded transition-all flex-shrink-0',
+          'text-gray-400 dark:text-gray-500',
+          'hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20',
+          'focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:text-indigo-600 dark:focus:text-indigo-400'
+        )}
+      >
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M12 4v16m8-8H4"
+          />
+        </svg>
+      </button>
 
       {/* Indicators */}
       {field.isNested && (

@@ -195,7 +195,7 @@ export function AggregationsPanel() {
       {/* Loading state */}
       {aggState.loading && (
         <div className="flex items-center gap-2 text-sm text-gray-500">
-          <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+          <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24" aria-hidden="true">
             <circle
               className="opacity-25"
               cx="12"
