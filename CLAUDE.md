@@ -188,9 +188,11 @@ OPENSEARCH_PASSWORD=admin
 
 ## Claude Code Commands
 
-### OpenSearch Expert (Global Skill)
+### OpenSearch Expert
 
-Comprehensive global skill for OpenSearch query design, optimization, data modeling, and search relevancy. Available in any OpenSearch project.
+Comprehensive personal skill for OpenSearch query design, optimization, data modeling, and search relevancy. Available across all projects.
+
+**Location:** `~/.claude/skills/opensearch-expert/` (Personal global skill)
 
 ```bash
 # Query design and optimization
@@ -215,17 +217,20 @@ Comprehensive global skill for OpenSearch query design, optimization, data model
 ```
 
 The OpenSearch Expert has deep knowledge of:
-- All OpenSearch Query DSL types and patterns
+- All OpenSearch Query DSL types and patterns (40+ query types, 30+ field types, 11+ aggregation types)
 - Data modeling and field mappings
 - Search relevancy and ranking (BM25, boosting)
 - Query optimization and performance tuning
 - Aggregations and analytics patterns
 - Index management and configuration
-- Advanced features (percolator, more_like_this, etc.)
+- Advanced features (percolator, more_like_this, nested, geo queries, etc.)
+- Crystal Forge architecture and query builder patterns
 
 ### Web Designer Expert
 
-Specialized expert for UI design, accessibility, responsive design, and performance optimization.
+Specialized personal skill for UI design, accessibility, responsive design, and performance optimization. Available across all projects.
+
+**Location:** `~/.claude/skills/web-designer/` (Personal global skill)
 
 ```bash
 # Get design help for Crystal Forge components
@@ -248,6 +253,7 @@ The Web Designer Expert has expertise in:
 - Next.js 15+ App Router and Server Components
 - Design systems and Tailwind CSS
 - shadcn/ui component patterns
+- Crystal Forge component architecture and design system
 
 ## Accessibility Features
 
