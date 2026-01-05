@@ -18,9 +18,12 @@ import { ResultsPanel } from '@/components/ResultsPanel';
 import { FieldList } from '@/components/FieldList';
 import { ConnectionModal } from '@/components/ConnectionModal';
 import { AggregationsPanel } from '@/components/AggregationsPanel';
+import { TemplateLibraryModal } from '@/components/TemplateLibrary/TemplateLibraryModal';
+import { SaveTemplateModal } from '@/components/TemplateLibrary/SaveTemplateModal';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
 import { useConnection } from '@/context/ConnectionContext';
 import { useQuery, createEmptyBoolQuery } from '@/context/QueryContext';
+import { TemplateProvider } from '@/context/TemplateContext';
 import { ActiveClauseProvider, useActiveClause, type BoolClause } from '@/context/ActiveClauseContext';
 import { useResizablePanels } from '@/hooks/useResizablePanels';
 import { createQueryNodeFromField } from '@/utils/createQueryNodeFromField';
@@ -38,9 +41,11 @@ interface DropData {
 
 export default function Home() {
   return (
-    <ActiveClauseProvider>
-      <HomeContent />
-    </ActiveClauseProvider>
+    <TemplateProvider>
+      <ActiveClauseProvider>
+        <HomeContent />
+      </ActiveClauseProvider>
+    </TemplateProvider>
   );
 }
 
@@ -50,6 +55,8 @@ function HomeContent() {
   const { activeClause } = useActiveClause();
   const { sizes, handleLayoutChange } = useResizablePanels();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isTemplateLibraryOpen, setIsTemplateLibraryOpen] = useState(false);
+  const [isSaveTemplateOpen, setIsSaveTemplateOpen] = useState(false);
   const [rightPanel, setRightPanel] = useState<'json' | 'explore'>('json');
   const [activeField, setActiveField] = useState<FieldInfo | null>(null);
 
@@ -147,6 +154,22 @@ function HomeContent() {
               </div>
             )}
             <button
+              onClick={() => setIsTemplateLibraryOpen(true)}
+              aria-label="Open template library"
+              className="px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold rounded-lg border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-900 active:scale-95 transition-all duration-200"
+              title="Open template library (Cmd+K)"
+            >
+              Templates
+            </button>
+            <button
+              onClick={() => setIsSaveTemplateOpen(true)}
+              aria-label="Save current query as template"
+              className="px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold rounded-lg border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-900 active:scale-95 transition-all duration-200"
+              title="Save as template (Cmd+S)"
+            >
+              Save
+            </button>
+            <button
               onClick={() => setIsModalOpen(true)}
               aria-label={state.connection.isConnected ? 'Reconnect to OpenSearch' : 'Connect to OpenSearch'}
               className="px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-900 active:scale-95 shadow-lg hover:shadow-xl transition-all duration-200"
@@ -154,6 +177,8 @@ function HomeContent() {
               {state.connection.isConnected ? 'Reconnect' : 'Connect'}
             </button>
             <ConnectionModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+            <TemplateLibraryModal isOpen={isTemplateLibraryOpen} onClose={() => setIsTemplateLibraryOpen(false)} />
+            <SaveTemplateModal isOpen={isSaveTemplateOpen} onClose={() => setIsSaveTemplateOpen(false)} />
           </div>
         </header>
 
