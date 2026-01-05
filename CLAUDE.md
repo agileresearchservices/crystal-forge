@@ -62,6 +62,14 @@ docker compose up -d              # Start all services (UI, OpenSearch, Dashboar
 docker compose down               # Stop all services
 docker compose logs -f            # View logs
 docker compose up --build         # Rebuild and start
+
+# Docker scripts (interactive with status feedback)
+./docker/scripts/setup.sh             # Interactive setup with health checks
+./docker/scripts/setup.sh --build     # Force rebuild images
+./docker/scripts/setup.sh --no-cache  # Full rebuild without cache
+./docker/scripts/teardown.sh          # Stop containers (keep data)
+./docker/scripts/teardown.sh --volumes # Stop and remove volumes
+./docker/scripts/teardown.sh --clean  # Full cleanup (volumes + generated files)
 ```
 
 ## Docker Environment
@@ -87,6 +95,8 @@ The Docker setup provides a complete development/demo environment:
 **Key Files:**
 - `Dockerfile`: Multi-stage build (base → deps → builder → runner)
 - `docker-compose.yml`: Service definitions with health checks
+- `docker/scripts/setup.sh`: Interactive setup script with health checks
+- `docker/scripts/teardown.sh`: Cleanup script with options for volumes/data
 - `docker/scripts/data_generator.py`: Generates deterministic sample data
 - `docker/scripts/bulk_loader.py`: Loads data with retry logic
 - `docker/scripts/index_mappings.json`: Custom analyzers and field mappings

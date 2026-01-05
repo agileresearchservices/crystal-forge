@@ -192,6 +192,12 @@ docker compose up -d          # Start all services
 docker compose down           # Stop all services
 docker compose logs -f        # View logs
 docker compose up --build     # Rebuild and start
+
+# Docker scripts (alternative)
+./docker/scripts/setup.sh             # Interactive setup with status
+./docker/scripts/setup.sh --build     # Force rebuild images
+./docker/scripts/teardown.sh          # Stop containers (keep data)
+./docker/scripts/teardown.sh --clean  # Full cleanup including volumes
 ```
 
 ## License
