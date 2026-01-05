@@ -24,7 +24,8 @@ crystal-forge/
 ├── packages/
 │   ├── query-dsl/                # Query types, serialization/deserialization
 │   ├── query-validator/          # Query validation logic
-│   └── opensearch-client/        # OpenSearch API client wrapper
+│   ├── opensearch-client/        # OpenSearch API client wrapper
+│   └── storage/                  # IndexedDB storage for templates & history
 ├── package.json                  # Root workspace config
 ├── turbo.json                    # Turborepo pipeline config
 └── tsconfig.json                 # Base TypeScript config
@@ -75,6 +76,22 @@ OpenSearch API wrapper. Key exports:
 - `OpenSearchClient` class (connect, getIndices, getMapping, search)
 - `parseMapping()` for schema parsing
 - Types: `ConnectionConfig`, `IndexInfo`, `SearchResponse`, `FieldInfo`
+
+### @crystal-forge/storage
+
+Browser-local storage for templates and history using IndexedDB. Key exports:
+
+- **Database:** `initDB()`, `getDB()`, `ensureDB()`
+- **Templates:** `getAllTemplates()`, `getTemplatesByCategory()`, `saveTemplate()`, `updateTemplate()`, `deleteTemplate()`, `searchTemplates()`, `duplicateTemplate()`
+- **History:** `addToHistory()`, `getAllHistory()`, `getHistoryForIndex()`, `getRecentHistory()`, `clearHistory()`
+- **Aggregations:** Template CRUD for aggregation patterns
+- **Seed Data:** `seedDefaultTemplates()` - 18 built-in templates across Common, E-commerce, and Advanced categories
+- **Types:** `QueryTemplate`, `QueryHistoryEntry`, `AggregationTemplate`, `StorageConfig`
+
+Object stores:
+- `query-templates`: Full saved queries with metadata
+- `query-history`: Execution history with results metadata
+- `aggregation-templates`: Reusable aggregation patterns
 
 ## Architecture
 
@@ -195,6 +212,87 @@ Key files:
 - `apps/web/components/JSONPreview.tsx` - Main bidirectional sync implementation
 - Uses `deserializeQueryState()` from `@crystal-forge/query-dsl`
 - `lodash.debounce` for debounced updates
+
+### Query Template Library & History
+
+Users can save common query patterns as reusable templates and track execution history:
+
+**Features:**
+- **18 Built-in Templates** across Common (full-text, exact match, ranges, exists), E-commerce (product search, category filter, facets), and Advanced (nested, geo, function score) categories
+- **Query History** - Automatic tracking of executed queries with results metadata (max 50 entries)
+- **Search & Filtering** - Find templates by name, category, or tags
+- **Template Actions** - Load, duplicate, edit, and delete templates
+- **IndexedDB Storage** - Persistent browser-local storage with fast access
+
+**Template Categories:**
+- **Common:** Basic patterns every user needs (full-text, term, range, exists, boolean)
+- **E-commerce:** Domain-specific patterns (product search, faceting, price ranges)
+- **Advanced:** Complex patterns (nested queries, geo distance, function score, fuzzy matching)
+- **Custom:** User-created templates
+
+**Key Components:**
+- `apps/web/context/TemplateContext.tsx` - State management
+- `apps/web/components/TemplateLibrary/TemplateLibraryModal.tsx` - UI with tabs (Templates, History, Saved)
+- `apps/web/components/TemplateLibrary/SaveTemplateModal.tsx` - Quick save form
+- `apps/web/components/TemplateLibrary/QueryHistory.tsx` - History display and management
+- `packages/storage/` - IndexedDB implementation with CRUD operations
+
+**Storage Schema:**
+- `query-templates`: `{id, name, description, category, tags, query, aggs, isBuiltIn, created_at, updated_at}`
+- `query-history`: `{id, query, index_name, result_count, timestamp}`
+- `aggregation-templates`: Reusable aggregation patterns with configuration
+
+### Monaco Editor Enhancements
+
+Advanced code editor with intelligent autocomplete and validation for OpenSearch Query DSL:
+
+**Features:**
+- **Context-Aware Autocomplete** - Suggests query types, aggregation types, bool clauses, and properties based on cursor position
+- **JSON Schema Validation** - Visual indicators for valid/invalid queries with warnings
+- **Dark Mode Support** - Automatic theme detection and switching
+- **Snippets** - Quick-insert templates for common query patterns
+- **Dev Tools Format** - Supports OpenSearch Dashboards dev tools format (`GET {index}/_search`)
+- **Syntax Highlighting** - Color-coded JSON with folding support
+- **Bidirectional Sync** - Edit in JSON or visual builder, changes reflect immediately
+
+**Query Types Supported (23 total):**
+- Full-text: match, match_phrase, match_phrase_prefix, multi_match, query_string, simple_query_string
+- Exact matching: term, terms, ids
+- Range queries: range
+- Boolean logic: bool, boosting, constant_score, dis_max
+- Special: nested, geo_distance, geo_bounding_box, match_all, match_none
+- Advanced: function_score, wildcard, prefix, regexp, fuzzy, exists
+
+**Key Components:**
+- `apps/web/components/JSONPreview.tsx` - Monaco editor integration with schema and completions
+- `apps/web/lib/opensearch-schema.ts` - Comprehensive JSON schema for OpenSearch DSL
+- `apps/web/lib/monaco-completions.ts` - Context-aware completion and hover providers
+
+### Visual Aggregation Builder
+
+Intuitive UI for building complex aggregations without writing JSON:
+
+**Features:**
+- **All 11 Aggregation Types** - Terms, Stats, Extended Stats, Date Histogram, Histogram, Range, Cardinality, Avg, Sum, Min, Max, Value Count
+- **Type-Specific Parameters** - Dynamic forms for each aggregation type with validation
+- **Multiple Aggregations** - Add, edit, remove multiple aggregations in one view
+- **Explore Tab** - Auto-generated aggregations for quick field analysis (existing feature)
+- **Build Tab** - Manual aggregation builder for complex queries
+- **Aggregation Templates** - Pre-configured patterns for common aggregations
+
+**Parameter Forms:**
+- **Terms Aggregation**: size, sort order (count/key, asc/desc)
+- **Date Histogram**: calendar interval, timezone, min_doc_count
+- **Histogram**: bucket interval, offset, extended bounds
+- **Range**: Custom range definitions with add/remove
+- **Cardinality**: Precision threshold for approximate counting
+- **Extended Stats**: Standard deviation sigma for confidence bounds
+- **Metric Aggregations** (Avg, Sum, Min, Max, Stats): Field-based calculations with no parameters
+
+**Key Components:**
+- `apps/web/components/AggregationsBuilder/AggregationBuilder.tsx` - Main builder with type selector
+- `apps/web/components/AggregationsBuilder/AggregationParameterForm.tsx` - Dynamic parameter forms
+- `apps/web/components/AggregationsPanel.tsx` - Tabbed interface (Explore/Build)
 
 ## Environment Setup
 
@@ -320,6 +418,7 @@ Crystal Forge follows **WCAG 2.1 Level AA** standards for web accessibility.
 - Tab through bool clauses and query nodes
 - Press Enter/Space to remove clauses or execute queries
 - All node removals accessible via keyboard
+- **Spellcheck Enabled** - Browser spell-check available on value inputs for better UX
 
 ### Connection Modal
 
