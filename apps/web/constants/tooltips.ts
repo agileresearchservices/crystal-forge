@@ -1,6 +1,8 @@
 'use client';
 
-import type { QueryType, BoolClause, FieldType } from '@crystal-forge/query-dsl';
+import type { QueryType, FieldType } from '@crystal-forge/query-dsl';
+
+type BoolClause = 'must' | 'should' | 'must_not' | 'filter';
 
 export interface TooltipContent {
   title: string;
@@ -362,9 +364,17 @@ export const CLAUSE_TOOLTIPS: Record<BoolClause, TooltipContent> = {
  * Helps developers understand what each field type is for and how to query it
  */
 export const FIELD_TYPE_TOOLTIPS: Record<FieldType, string> = {
+  // Text types
   text: 'Full-text searchable text that is analyzed (tokenized and normalized). Use "match" query. Examples: product descriptions, article content, comments.',
   keyword:
     'Structured exact-match keyword. NOT analyzed - must match exactly. Use "term" query. Examples: order IDs, product codes, status values, tags.',
+  completion:
+    'Specialized field type for autocomplete. Optimized for prefix queries and suggestions. Use for typeahead search features.',
+  search_as_you_type:
+    'Field type optimized for searching as you type. Analyzes in multiple ways for better prefix matching. Good for search interfaces.',
+  token_count:
+    'Stores the count of tokens in the field. Use for filtering by text length or token count.',
+  // Numeric types
   long: 'Integer numbers (up to 64-bit). Use "range" query. Examples: product quantities, user IDs, prices in cents.',
   integer:
     'Integer numbers (up to 32-bit). Use "range" query. Examples: inventory counts, ratings (1-5).',
@@ -373,17 +383,44 @@ export const FIELD_TYPE_TOOLTIPS: Record<FieldType, string> = {
   double:
     'Decimal numbers with high precision. Use "range" query. Examples: prices, coordinates, measurements.',
   float: 'Decimal numbers with regular precision. Use "range" query.',
+  half_float: 'Decimal numbers with reduced precision. Use "range" query. More memory efficient than float.',
+  scaled_float:
+    'Decimal numbers scaled by a fixed factor. Use "range" query. Examples: prices stored as integers.',
+  unsigned_long:
+    'Large unsigned integer numbers (up to 64-bit, no negative). Use "range" query. Examples: large counters, IDs.',
+  // Date types
   date: 'Date/timestamp values. Use "range" query with date math (e.g., now-7d). Examples: created_at, updated_at, last_login.',
+  date_nanos:
+    'Date/timestamp with nanosecond precision. Use "range" query. Examples: high-precision timestamps, event timing.',
+  // Boolean
   boolean: 'True/false values. Use "term" query with true or false. Examples: is_active, is_premium, is_deleted.',
-  object: 'JSON object structure. Cannot search directly - search nested fields instead.',
-  nested:
-    'Array of objects. Use "nested" query to search as a unit. Examples: array of comments, array of orders.',
+  // Binary
+  binary: 'Base64-encoded binary data. Not typically searchable.',
+  // IP address
   ip: 'IP addresses (IPv4 or IPv6). Use "term" or "range" query. Examples: user IP, server IP.',
+  // Geo types
   geo_point:
     'Geographic coordinates (latitude, longitude). Use "geo_distance" or "geo_bounding_box" query. Examples: store locations, user locations.',
   geo_shape:
     'Complex geographic shapes (polygons, lines). Use "geo_shape" query. Examples: regional boundaries, delivery areas.',
-  binary: 'Base64-encoded binary data. Not typically searchable.',
-  wildcard:
-    'Wildcard field optimized for wildcard queries. Use "wildcard" query. Examples: log patterns, flexible matching.',
+  // Complex types
+  nested:
+    'Array of objects. Use "nested" query to search as a unit. Examples: array of comments, array of orders.',
+  object: 'JSON object structure. Cannot search directly - search nested fields instead.',
+  flattened:
+    'Flattened object structure that allows searching inside objects without using nested queries. Simpler but less flexible than nested.',
+  join: 'Join field type for parent-child relationships. Use with has_parent or has_child queries.',
+  // Specialized types
+  percolator:
+    'Percolator field for storing queries to be used with the percolator query. Advanced feature for reverse searches.',
+  rank_feature:
+    'Numeric field optimized for ranking calculations. Use with rank_feature query for scoring.',
+  rank_features:
+    'Multiple numeric fields optimized for ranking. Use with rank_features query for complex scoring.',
+  dense_vector:
+    'Dense vector field for dense vector search (semantic search, embeddings). Use with dense_vector query.',
+  sparse_vector:
+    'Sparse vector field for sparse vector search. Use with sparse_vector query. Examples: term frequencies, sparse embeddings.',
+  // Aliases
+  alias: 'Alias to another field. Allows searching a field by multiple names.',
 };
