@@ -60,12 +60,11 @@ The fastest way to try Crystal Forge with a fully configured OpenSearch environm
 git clone https://github.com/yourusername/crystal-forge.git
 cd crystal-forge
 
-# Start all services
-docker compose up -d
+# Start all services (interactive with status feedback)
+./docker/scripts/setup.sh
 
-# Wait ~30 seconds for data loading, then open:
-# Crystal Forge UI: http://localhost:3000
-# OpenSearch Dashboards: http://localhost:5601
+# Or use docker compose directly
+docker compose up -d
 ```
 
 This starts:
@@ -75,6 +74,16 @@ This starts:
 - **Sample data** - 1000 documents across 4 domains (e-commerce, technical docs, blog articles, user reviews)
 
 Connect to `http://localhost:9200` and select the `opensearch-demo` index to start exploring.
+
+### Stopping the Environment
+
+```bash
+# Stop containers (preserves data for fast restart)
+./docker/scripts/teardown.sh
+
+# Full cleanup (removes volumes and generated data)
+./docker/scripts/teardown.sh --clean
+```
 
 ### Local Development
 

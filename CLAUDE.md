@@ -102,6 +102,24 @@ The Docker setup provides a complete development/demo environment:
 - `docker/scripts/index_mappings.json`: Custom analyzers and field mappings
 - `apps/web/lib/docker-host.ts`: Translates localhost to Docker network names
 
+**Common Workflows:**
+```bash
+# First time setup
+./docker/scripts/setup.sh
+
+# Daily start (fast - data persisted)
+docker compose up -d
+
+# Stop for the day (keep data)
+./docker/scripts/teardown.sh
+
+# Full reset (remove all data)
+./docker/scripts/teardown.sh --clean
+
+# Rebuild after code changes
+docker compose up --build -d
+```
+
 ## Package Details
 
 ### @crystal-forge/query-dsl
