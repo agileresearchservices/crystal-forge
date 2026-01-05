@@ -147,21 +147,24 @@ export function AggregationsPanel() {
 
   if (!connectionState.connection.isConnected) {
     return (
-      <div className="text-sm text-gray-700">
-        <p className="mb-2 font-medium">Field Explorer</p>
-        <p>Connect to OpenSearch to explore field values.</p>
+      <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
+        <svg className="w-14 h-14 text-gray-300 dark:text-gray-700 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.658 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+        </svg>
+        <h3 className="text-sm font-medium text-gray-900 dark:text-white mb-1">Field Explorer</h3>
+        <p className="text-xs text-gray-700 dark:text-gray-400">Connect to OpenSearch to explore and analyze field values in your index.</p>
       </div>
     );
   }
 
   if (aggregatableFields.length === 0) {
     return (
-      <div className="text-sm text-gray-700">
-        <p className="mb-2 font-medium">Field Explorer</p>
-        <p>No aggregatable fields available.</p>
-        <p className="mt-2 text-xs text-gray-700">
-          Aggregations require keyword, numeric, date, or boolean fields.
-        </p>
+      <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
+        <svg className="w-14 h-14 text-gray-300 dark:text-gray-700 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20.325 4.317c.426-1.756-2.924-2.882-4.33-.893-4.113 6.169-7.056 8.581-8.956 8.581-.82 0-1.578-.298-2.25-.868l-.015-.015a2.130 2.130 0 01-.765-2.955m19.933 7.358c.027-.20.05-.41.05-.645A8 8 0 005.064 4.867m0 0c1.344-1.195 3.297-1.945 5.336-1.945 1.527 0 2.921.584 3.978 1.52M5 12a7 7 0 1114 0m-14 0a7 7 0 0014 0m-14 0v.01" />
+        </svg>
+        <h3 className="text-sm font-medium text-gray-900 dark:text-white mb-1">No aggregatable fields</h3>
+        <p className="text-xs text-gray-700 dark:text-gray-400">Aggregations require keyword, numeric, date, or boolean fields. Text fields are not aggregatable by default.</p>
       </div>
     );
   }
