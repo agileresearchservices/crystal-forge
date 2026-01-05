@@ -56,7 +56,18 @@ export function useQueryExecution() {
         }),
       });
 
-      const data = await response.json();
+      const contentType = response.headers.get('content-type');
+      if (!contentType?.includes('application/json')) {
+        const text = await response.text();
+        throw new Error(`Server returned non-JSON response: ${text.substring(0, 100)}`);
+      }
+
+      let data;
+      try {
+        data = await response.json();
+      } catch (err) {
+        throw new Error('Failed to parse server response as JSON');
+      }
 
       if (!response.ok) {
         throw new Error(data.error || 'Query execution failed');

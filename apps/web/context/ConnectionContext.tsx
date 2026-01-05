@@ -5,6 +5,7 @@ import React, {
   useContext,
   useReducer,
   useCallback,
+  useEffect,
   type ReactNode,
 } from 'react';
 import type {
@@ -13,6 +14,7 @@ import type {
   IndexInfo,
 } from '@crystal-forge/opensearch-client';
 import type { FieldInfo } from '@crystal-forge/opensearch-client';
+import { useConnectionPersistence } from '@/hooks/useConnectionPersistence';
 
 // =============================================================================
 // Types
@@ -217,6 +219,95 @@ interface ConnectionProviderProps {
 
 export function ConnectionProvider({ children }: ConnectionProviderProps) {
   const [state, dispatch] = useReducer(connectionReducer, initialState);
+  const { saveConnectionState, loadConnectionState, clearConnectionState } = useConnectionPersistence();
+
+  // Auto-reconnect on mount if connection was previously saved
+  useEffect(() => {
+    const persisted = loadConnectionState();
+    if (persisted && persisted.host) {
+      // Auto-reconnect with persisted credentials
+      const config: ConnectionConfig = {
+        host: persisted.host,
+        verifySsl: false,
+        auth: persisted.authType === 'basic'
+          ? { type: 'basic', username: persisted.username!, password: persisted.password! }
+          : persisted.authType === 'apiKey'
+          ? { type: 'apiKey', apiKey: persisted.apiKey! }
+          : undefined,
+      };
+
+      // Connect with the persisted config
+      void (async () => {
+        try {
+          dispatch({ type: 'CONNECT_START' });
+          const response = await fetch('/api/opensearch/connect', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(config),
+          });
+
+          const contentType = response.headers.get('content-type');
+          if (!contentType?.includes('application/json')) {
+            const text = await response.text();
+            throw new Error(`Server returned non-JSON response: ${text.substring(0, 100)}`);
+          }
+
+          const data = await response.json();
+
+          if (!response.ok) {
+            throw new Error(data.error || 'Failed to connect');
+          }
+
+          dispatch({
+            type: 'CONNECT_SUCCESS',
+            payload: {
+              config,
+              indices: data.indices || [],
+            },
+          });
+
+          // If there was a previously selected index, restore it
+          if (persisted.index) {
+            // Schedule setIndex to run after connect completes
+            setTimeout(() => {
+              void (async () => {
+                const schemaParams = new URLSearchParams({
+                  host: config.host,
+                  index: persisted.index!,
+                });
+                if (config.auth) {
+                  schemaParams.set('auth', JSON.stringify(config.auth));
+                }
+                const schemaResponse = await fetch(`/api/opensearch/schema?${schemaParams}`);
+
+                const schemaContentType = schemaResponse.headers.get('content-type');
+                if (!schemaContentType?.includes('application/json')) {
+                  const text = await schemaResponse.text();
+                  throw new Error(`Server returned non-JSON response: ${text.substring(0, 100)}`);
+                }
+
+                const schemaData = await schemaResponse.json();
+                if (schemaResponse.ok) {
+                  dispatch({
+                    type: 'SET_INDEX_SUCCESS',
+                    payload: {
+                      index: persisted.index!,
+                      fields: schemaData.fields || [],
+                    },
+                  });
+                }
+              })();
+            }, 0);
+          }
+        } catch (error) {
+          dispatch({
+            type: 'CONNECT_ERROR',
+            payload: error instanceof Error ? error.message : 'Failed to reconnect',
+          });
+        }
+      })();
+    }
+  }, [loadConnectionState]);
 
   const connect = useCallback(async (config: ConnectionConfig) => {
     dispatch({ type: 'CONNECT_START' });
@@ -229,7 +320,18 @@ export function ConnectionProvider({ children }: ConnectionProviderProps) {
         body: JSON.stringify(config),
       });
 
-      const data = await response.json();
+      const contentType = response.headers.get('content-type');
+      if (!contentType?.includes('application/json')) {
+        const text = await response.text();
+        throw new Error(`Server returned non-JSON response: ${text.substring(0, 100)}`);
+      }
+
+      let data;
+      try {
+        data = await response.json();
+      } catch (err) {
+        throw new Error('Failed to parse server response as JSON');
+      }
 
       if (!response.ok) {
         throw new Error(data.error || 'Failed to connect');
@@ -242,17 +344,21 @@ export function ConnectionProvider({ children }: ConnectionProviderProps) {
           indices: data.indices || [],
         },
       });
+
+      // Save connection state (without index for initial connect)
+      saveConnectionState(config, null);
     } catch (error) {
       dispatch({
         type: 'CONNECT_ERROR',
         payload: error instanceof Error ? error.message : 'Connection failed',
       });
     }
-  }, []);
+  }, [saveConnectionState]);
 
   const disconnect = useCallback(() => {
     dispatch({ type: 'DISCONNECT' });
-  }, []);
+    clearConnectionState();
+  }, [clearConnectionState]);
 
   const setIndex = useCallback(async (index: string) => {
     if (!state.config) {
@@ -274,7 +380,19 @@ export function ConnectionProvider({ children }: ConnectionProviderProps) {
       }
 
       const response = await fetch(`/api/opensearch/schema?${params}`);
-      const data = await response.json();
+
+      const contentType = response.headers.get('content-type');
+      if (!contentType?.includes('application/json')) {
+        const text = await response.text();
+        throw new Error(`Server returned non-JSON response: ${text.substring(0, 100)}`);
+      }
+
+      let data;
+      try {
+        data = await response.json();
+      } catch (err) {
+        throw new Error('Failed to parse server response as JSON');
+      }
 
       if (!response.ok) {
         throw new Error(data.error || 'Failed to fetch schema');
@@ -287,13 +405,16 @@ export function ConnectionProvider({ children }: ConnectionProviderProps) {
           fields: data.fields || [],
         },
       });
+
+      // Save connection state with the selected index
+      saveConnectionState(state.config, index);
     } catch (error) {
       dispatch({
         type: 'SET_INDEX_ERROR',
         payload: error instanceof Error ? error.message : 'Failed to set index',
       });
     }
-  }, [state.config]);
+  }, [state.config, saveConnectionState]);
 
   const setIndices = useCallback((indices: IndexInfo[]) => {
     dispatch({ type: 'SET_INDICES', payload: indices });

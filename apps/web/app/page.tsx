@@ -196,6 +196,7 @@ function HomeContent() {
                   defaultSize={sizes.horizontal[0]}
                   minSize={30}
                   id="query-builder"
+                  className="overflow-hidden"
                 >
                   <DroppableQueryBuilder />
                 </ResizablePanel>
@@ -375,7 +376,7 @@ function DroppableQueryBuilder() {
   return (
     <div
       ref={setNodeRef}
-      className={`flex-1 p-4 border-r overflow-auto min-w-0 transition-colors ${
+      className={`h-full flex flex-col p-4 border-r overflow-hidden min-w-0 transition-colors ${
         isOver ? 'bg-blue-50 ring-2 ring-inset ring-blue-300' : ''
       }`}
     >

@@ -7,6 +7,7 @@ import type {
   OpenSearchError,
   AuthConfig,
 } from './types';
+import { safeParseJSON } from './utils';
 
 /**
  * HTTP method types
@@ -130,7 +131,7 @@ export class OpenSearchClient {
 
       clearTimeout(timeoutId);
 
-      const responseData = await response.json();
+      const responseData = await safeParseJSON(response);
 
       if (!response.ok) {
         const opensearchError = responseData as OpenSearchError;
@@ -322,7 +323,7 @@ export class OpenSearchClient {
     });
 
     if (!response.ok) {
-      const errorData = (await response.json()) as OpenSearchError;
+      const errorData = await safeParseJSON<OpenSearchError>(response);
       throw new OpenSearchClientError(
         errorData.error?.reason ?? `HTTP ${response.status}`,
         response.status,
@@ -330,7 +331,7 @@ export class OpenSearchClient {
       );
     }
 
-    return response.json() as Promise<{ responses: SearchResponse<T>[] }>;
+    return safeParseJSON<{ responses: SearchResponse<T>[] }>(response);
   }
 
   /**
