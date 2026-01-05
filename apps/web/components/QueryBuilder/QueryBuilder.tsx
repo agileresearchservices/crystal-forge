@@ -68,7 +68,7 @@ export function QueryBuilder() {
   return (
     <div className="flex flex-col h-full bg-white dark:bg-gray-900">
       {/* Toolbar */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border-b border-gray-200 dark:border-gray-800 gap-3 sm:gap-2">
+      <div className="flex-shrink-0 flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border-b border-gray-200 dark:border-gray-800 gap-3 sm:gap-2">
         <div className="flex items-center gap-2">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Query Builder</h2>
         </div>
