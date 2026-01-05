@@ -114,7 +114,7 @@ export function FieldList({ className }: FieldListProps) {
     <div className={cn('flex flex-col h-full bg-white dark:bg-gray-900', className)}>
       {/* Header */}
       <div className="p-3 border-b border-gray-200 dark:border-gray-800">
-        <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">Fields</h3>
+        <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">Fields</h2>
 
         {/* Search input */}
         <div className="relative">

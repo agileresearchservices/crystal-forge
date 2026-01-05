@@ -29,7 +29,7 @@ export function ResultsPanel({ className }: ResultsPanelProps) {
     <div className={cn('flex flex-col h-full bg-white dark:bg-gray-900', className)}>
       {/* Header */}
       <div className="flex items-center justify-between p-3 border-b border-gray-200 dark:border-gray-800">
-        <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Results</h3>
+        <h2 className="text-sm font-semibold text-gray-900 dark:text-white">Results</h2>
         {results && (
           <span className="text-xs text-gray-700 dark:text-gray-400" aria-live="polite">
             {results.hits.total.value.toLocaleString()} hits
