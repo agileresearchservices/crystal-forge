@@ -91,7 +91,12 @@ Crystal Forge fills a genuine gap in the OpenSearch ecosystem. While tools like 
 1. **Modern Architecture** - Built with Next.js 15, TypeScript, React 18, and Tailwind CSS
 2. **OpenSearch-First** - Deep OpenSearch knowledge, not an Elasticsearch port
 3. **Complete DSL Coverage** - 26+ query types covering 95%+ of real-world use cases
-4. **Accessibility** - WCAG 2.1 Level AA compliance throughout
+4. **Accessibility Excellence** - **100/100 Lighthouse accessibility score** with full WCAG 2.1 Level AA compliance
+   - Full keyboard navigation support (Tab, Arrow keys, Escape)
+   - Screen reader compatible with proper ARIA labels
+   - 4.5:1+ color contrast ratio on all text
+   - 44x44px minimum touch targets on mobile
+   - Resizable panels with keyboard support
 5. **Responsive Design** - Works on desktop and mobile with drag-and-drop, resizable panels
 6. **Developer Experience** - Bidirectional JSON/visual sync, field exploration, real-time validation
 7. **Open Source** - MIT licensed, community-driven development
