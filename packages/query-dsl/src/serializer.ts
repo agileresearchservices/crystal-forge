@@ -39,6 +39,10 @@ import type {
   ScoreFunction,
   SortClause,
   HighlightConfig,
+  TermSuggesterConfig,
+  DirectGenerator,
+  PhraseSuggesterConfig,
+  SuggesterConfig,
   InnerHitsConfig,
   Aggregation,
   TermsAggregation,
@@ -875,6 +879,84 @@ function serializeHighlight(
 }
 
 /**
+ * Serialize term suggester configuration
+ */
+function serializeTermSuggester(config: TermSuggesterConfig): Record<string, unknown> {
+  const result: Record<string, unknown> = {
+    field: config.field,
+  };
+
+  if (config.suggest_mode) result.suggest_mode = config.suggest_mode;
+  if (config.min_word_length !== undefined) result.min_word_length = config.min_word_length;
+  if (config.prefix_length !== undefined) result.prefix_length = config.prefix_length;
+  if (config.max_edits !== undefined) result.max_edits = config.max_edits;
+  if (config.max_inspections !== undefined) result.max_inspections = config.max_inspections;
+  if (config.max_term_freq !== undefined) result.max_term_freq = config.max_term_freq;
+  if (config.min_doc_freq !== undefined) result.min_doc_freq = config.min_doc_freq;
+  if (config.sort) result.sort = config.sort;
+
+  return result;
+}
+
+/**
+ * Serialize direct generator
+ */
+function serializeDirectGenerator(gen: DirectGenerator): Record<string, unknown> {
+  const result: Record<string, unknown> = {
+    field: gen.field,
+  };
+
+  if (gen.suggest_mode) result.suggest_mode = gen.suggest_mode;
+  if (gen.min_word_length !== undefined) result.min_word_length = gen.min_word_length;
+  if (gen.prefix_length !== undefined) result.prefix_length = gen.prefix_length;
+  if (gen.max_edits !== undefined) result.max_edits = gen.max_edits;
+  if (gen.size !== undefined) result.size = gen.size;
+
+  return result;
+}
+
+/**
+ * Serialize phrase suggester configuration
+ */
+function serializePhraseSuggester(config: PhraseSuggesterConfig): Record<string, unknown> {
+  const result: Record<string, unknown> = {
+    field: config.field,
+  };
+
+  if (config.max_errors !== undefined) result.max_errors = config.max_errors;
+  if (config.confidence !== undefined) result.confidence = config.confidence;
+  if (config.gram_size !== undefined) result.gram_size = config.gram_size;
+  if (config.real_word_error_likelihood !== undefined) {
+    result.real_word_error_likelihood = config.real_word_error_likelihood;
+  }
+  if (config.direct_generator && config.direct_generator.length > 0) {
+    result.direct_generator = config.direct_generator.map(serializeDirectGenerator);
+  }
+  if (config.highlight) result.highlight = config.highlight;
+  if (config.collate) result.collate = config.collate;
+
+  return result;
+}
+
+/**
+ * Serialize suggester configuration
+ */
+function serializeSuggester(config: SuggesterConfig): Record<string, unknown> {
+  const result: Record<string, unknown> = {
+    text: config.text,
+  };
+
+  if (config.term) {
+    result.term = serializeTermSuggester(config.term);
+  }
+  if (config.phrase) {
+    result.phrase = serializePhraseSuggester(config.phrase);
+  }
+
+  return result;
+}
+
+/**
  * Serialize complete query state to OpenSearch request body
  *
  * @param state - The query state to serialize
@@ -920,6 +1002,17 @@ export function serializeQueryState(state: QueryState): OpenSearchRequestBody {
   if (state.min_score !== undefined) body.min_score = state.min_score;
   if (state.search_after) body.search_after = state.search_after;
   if (state.aggs) body.aggs = state.aggs;
+
+  // Suggesters
+  if (state.suggest) {
+    body.suggest = Object.entries(state.suggest).reduce(
+      (acc, [name, config]) => {
+        acc[name] = serializeSuggester(config);
+        return acc;
+      },
+      {} as Record<string, unknown>
+    );
+  }
 
   return body;
 }

@@ -43,6 +43,10 @@ import type {
   SortClause,
   HighlightConfig,
   HighlightFieldConfig,
+  TermSuggesterConfig,
+  DirectGenerator,
+  PhraseSuggesterConfig,
+  SuggesterConfig,
   InnerHitsConfig,
   SortOrder,
   SortMode,
@@ -1214,6 +1218,86 @@ function deserializeHighlight(
 }
 
 /**
+ * Deserialize term suggester configuration
+ */
+function deserializeTermSuggester(body: Record<string, unknown>): TermSuggesterConfig {
+  const config: TermSuggesterConfig = {
+    field: body.field as string,
+  };
+
+  if (body.suggest_mode) config.suggest_mode = body.suggest_mode as 'missing' | 'popular' | 'always';
+  if (body.min_word_length !== undefined) config.min_word_length = body.min_word_length as number;
+  if (body.prefix_length !== undefined) config.prefix_length = body.prefix_length as number;
+  if (body.max_edits !== undefined) config.max_edits = body.max_edits as number;
+  if (body.max_inspections !== undefined) config.max_inspections = body.max_inspections as number;
+  if (body.max_term_freq !== undefined) config.max_term_freq = body.max_term_freq as number;
+  if (body.min_doc_freq !== undefined) config.min_doc_freq = body.min_doc_freq as number;
+  if (body.sort) config.sort = body.sort as 'score' | 'frequency';
+
+  return config;
+}
+
+/**
+ * Deserialize direct generator
+ */
+function deserializeDirectGenerator(body: Record<string, unknown>): DirectGenerator {
+  const gen: DirectGenerator = {
+    field: body.field as string,
+  };
+
+  if (body.suggest_mode) gen.suggest_mode = body.suggest_mode as 'missing' | 'popular' | 'always';
+  if (body.min_word_length !== undefined) gen.min_word_length = body.min_word_length as number;
+  if (body.prefix_length !== undefined) gen.prefix_length = body.prefix_length as number;
+  if (body.max_edits !== undefined) gen.max_edits = body.max_edits as number;
+  if (body.size !== undefined) gen.size = body.size as number;
+
+  return gen;
+}
+
+/**
+ * Deserialize phrase suggester configuration
+ */
+function deserializePhraseSuggester(body: Record<string, unknown>): PhraseSuggesterConfig {
+  const config: PhraseSuggesterConfig = {
+    field: body.field as string,
+  };
+
+  if (body.max_errors !== undefined) config.max_errors = body.max_errors as number;
+  if (body.confidence !== undefined) config.confidence = body.confidence as number;
+  if (body.gram_size !== undefined) config.gram_size = body.gram_size as number;
+  if (body.real_word_error_likelihood !== undefined) {
+    config.real_word_error_likelihood = body.real_word_error_likelihood as number;
+  }
+  if (Array.isArray(body.direct_generator)) {
+    config.direct_generator = body.direct_generator.map((g) =>
+      deserializeDirectGenerator(g as Record<string, unknown>)
+    );
+  }
+  if (body.highlight) config.highlight = body.highlight as { pre_tag?: string; post_tag?: string };
+  if (body.collate) config.collate = body.collate as any;
+
+  return config;
+}
+
+/**
+ * Deserialize suggester configuration
+ */
+function deserializeSuggester(body: Record<string, unknown>): SuggesterConfig {
+  const config: SuggesterConfig = {
+    text: body.text as string,
+  };
+
+  if (body.term) {
+    config.term = deserializeTermSuggester(body.term as Record<string, unknown>);
+  }
+  if (body.phrase) {
+    config.phrase = deserializePhraseSuggester(body.phrase as Record<string, unknown>);
+  }
+
+  return config;
+}
+
+/**
  * Deserialize an OpenSearch request body to QueryState
  *
  * @param body - The OpenSearch request body
@@ -1261,6 +1345,16 @@ export function deserializeQueryState(
   if (body.min_score !== undefined) state.min_score = body.min_score;
   if (body.search_after) state.search_after = body.search_after;
   if (body.aggs) state.aggs = body.aggs;
+
+  if (body.suggest && typeof body.suggest === 'object') {
+    state.suggest = Object.entries(body.suggest).reduce(
+      (acc, [name, config]) => {
+        acc[name] = deserializeSuggester(config as Record<string, unknown>);
+        return acc;
+      },
+      {} as Record<string, SuggesterConfig>
+    );
+  }
 
   return state;
 }

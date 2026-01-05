@@ -171,6 +171,36 @@ export interface AggregationResult {
 }
 
 /**
+ * Suggester option in response
+ */
+export interface SuggesterOption {
+  /** Suggested text */
+  text: string;
+  /** Suggestion score */
+  score: number;
+  /** Frequency of term */
+  freq?: number;
+  /** Highlighted suggestion (phrase suggester only) */
+  highlighted?: string;
+  /** Collation matches (phrase suggester only) */
+  collate_match?: boolean;
+}
+
+/**
+ * Suggester result entry
+ */
+export interface SuggesterResult {
+  /** Original text */
+  text: string;
+  /** Offset in original text */
+  offset: number;
+  /** Length of text */
+  length: number;
+  /** Suggestion options */
+  options: SuggesterOption[];
+}
+
+/**
  * Complete search response from OpenSearch
  */
 export interface SearchResponse<T = Record<string, unknown>> {
@@ -194,6 +224,8 @@ export interface SearchResponse<T = Record<string, unknown>> {
   };
   /** Aggregation results */
   aggregations?: Record<string, AggregationResult>;
+  /** Suggester results */
+  suggest?: Record<string, SuggesterResult[]>;
   /** Scroll ID for pagination */
   _scroll_id?: string;
 }

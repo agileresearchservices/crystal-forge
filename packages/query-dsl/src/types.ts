@@ -762,6 +762,92 @@ export interface HighlightConfig {
 }
 
 /**
+ * Term suggester configuration
+ * Suggests corrections for individual words based on edit distance
+ */
+export interface TermSuggesterConfig {
+  /** Field to use for suggestions */
+  field: string;
+  /** When to suggest: missing (default), popular, always */
+  suggest_mode?: 'missing' | 'popular' | 'always';
+  /** Minimum word length to suggest */
+  min_word_length?: number;
+  /** Prefix length that must match */
+  prefix_length?: number;
+  /** Maximum Levenshtein edit distance (1-2) */
+  max_edits?: number;
+  /** Maximum terms to inspect */
+  max_inspections?: number;
+  /** Maximum term frequency */
+  max_term_freq?: number;
+  /** Minimum document frequency */
+  min_doc_freq?: number;
+  /** Sort suggestions by score or frequency */
+  sort?: 'score' | 'frequency';
+}
+
+/**
+ * Direct generator for phrase suggester
+ */
+export interface DirectGenerator {
+  /** Field to generate candidates from */
+  field: string;
+  /** When to suggest */
+  suggest_mode?: 'missing' | 'popular' | 'always';
+  /** Minimum word length */
+  min_word_length?: number;
+  /** Prefix length */
+  prefix_length?: number;
+  /** Max edit distance */
+  max_edits?: number;
+  /** Size of candidates to generate */
+  size?: number;
+}
+
+/**
+ * Phrase suggester configuration
+ * Suggests corrections for entire phrases with context awareness
+ */
+export interface PhraseSuggesterConfig {
+  /** Field to use for suggestions */
+  field: string;
+  /** Maximum errors allowed */
+  max_errors?: number;
+  /** Confidence threshold (0-1) */
+  confidence?: number;
+  /** Gram size for shingle generation */
+  gram_size?: number;
+  /** Real word error likelihood */
+  real_word_error_likelihood?: number;
+  /** Direct generators for candidate generation */
+  direct_generator?: DirectGenerator[];
+  /** Highlight pre/post tags */
+  highlight?: {
+    pre_tag?: string;
+    post_tag?: string;
+  };
+  /** Collation check */
+  collate?: {
+    query: { source: string };
+    params?: Record<string, unknown>;
+    prune?: boolean;
+  };
+}
+
+/**
+ * Suggester configuration
+ * Wraps term or phrase suggester with the text to check
+ */
+export interface SuggesterConfig {
+  /** Text to get suggestions for */
+  text: string;
+  /** Term suggester config */
+  term?: TermSuggesterConfig;
+  /** Phrase suggester config */
+  phrase?: PhraseSuggesterConfig;
+}
+
+/**
  * Inner hits configuration for nested queries
  */
 export interface InnerHitsConfig {
@@ -815,6 +901,8 @@ export interface QueryState {
   search_after?: (string | number)[];
   /** Aggregations (placeholder for future implementation) */
   aggs?: Record<string, unknown>;
+  /** Suggester configuration for spell-check and suggestions */
+  suggest?: Record<string, SuggesterConfig>;
 }
 
 // =============================================================================
@@ -872,6 +960,7 @@ export interface OpenSearchRequestBody {
   min_score?: number;
   search_after?: (string | number)[];
   aggs?: Record<string, unknown>;
+  suggest?: Record<string, unknown>;
 }
 
 // =============================================================================

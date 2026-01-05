@@ -5,14 +5,18 @@ import React, {
   useContext,
   useReducer,
   useCallback,
+  useEffect,
   type ReactNode,
 } from 'react';
 import type {
   QueryNode,
   QueryState,
   BoolQueryNode,
+  HighlightConfig,
+  SuggesterConfig,
 } from '@crystal-forge/query-dsl';
 import type { SearchResponse } from '@crystal-forge/opensearch-client';
+import { useQueryPersistence } from '@/hooks/useQueryPersistence';
 
 // =============================================================================
 // Types
@@ -50,7 +54,9 @@ type QueryAction =
   | { type: 'SET_ERROR'; payload: string | null }
   | { type: 'RESET_QUERY' }
   | { type: 'SET_QUERY'; payload: QueryNode | null }
-  | { type: 'SET_PAGINATION'; payload: { size?: number; from?: number } };
+  | { type: 'SET_PAGINATION'; payload: { size?: number; from?: number } }
+  | { type: 'SET_HIGHLIGHT'; payload: HighlightConfig | undefined }
+  | { type: 'SET_SUGGEST'; payload: Record<string, SuggesterConfig> | undefined };
 
 // =============================================================================
 // Helper Functions
@@ -424,6 +430,24 @@ function queryReducer(
         },
       };
 
+    case 'SET_HIGHLIGHT':
+      return {
+        ...state,
+        query: {
+          ...state.query,
+          highlight: action.payload,
+        },
+      };
+
+    case 'SET_SUGGEST':
+      return {
+        ...state,
+        query: {
+          ...state.query,
+          suggest: action.payload,
+        },
+      };
+
     default:
       return state;
   }
@@ -445,6 +469,8 @@ interface QueryContextValue {
   resetQuery: () => void;
   setQuery: (query: QueryNode | null) => void;
   setPagination: (pagination: { size?: number; from?: number }) => void;
+  setHighlight: (highlight: HighlightConfig | undefined) => void;
+  setSuggest: (suggest: Record<string, SuggesterConfig> | undefined) => void;
 }
 
 const QueryContext = createContext<QueryContextValue | null>(null);
@@ -459,6 +485,32 @@ interface QueryProviderProps {
 
 export function QueryProvider({ children }: QueryProviderProps) {
   const [state, dispatch] = useReducer(queryReducer, initialState);
+  const { loadQueryState, saveQueryState, clearQueryState } = useQueryPersistence();
+
+  // Load persisted state on mount
+  useEffect(() => {
+    const persisted = loadQueryState();
+    if (persisted) {
+      // Restore query state
+      if (persisted.query) {
+        dispatch({ type: 'SET_QUERY', payload: persisted.query });
+      }
+      if (persisted.size !== undefined || persisted.from !== undefined) {
+        dispatch({ type: 'SET_PAGINATION', payload: { size: persisted.size, from: persisted.from } });
+      }
+      if (persisted.highlight) {
+        dispatch({ type: 'SET_HIGHLIGHT', payload: persisted.highlight });
+      }
+      if (persisted.suggest) {
+        dispatch({ type: 'SET_SUGGEST', payload: persisted.suggest });
+      }
+    }
+  }, [loadQueryState]);
+
+  // Auto-save query state on changes (debounced)
+  useEffect(() => {
+    saveQueryState(state.query);
+  }, [state.query, saveQueryState]);
 
   const addNode = useCallback((path: NodePath, node: QueryNode) => {
     dispatch({ type: 'ADD_NODE', payload: { path, node } });
@@ -489,7 +541,8 @@ export function QueryProvider({ children }: QueryProviderProps) {
 
   const resetQuery = useCallback(() => {
     dispatch({ type: 'RESET_QUERY' });
-  }, []);
+    clearQueryState();
+  }, [clearQueryState]);
 
   const setQuery = useCallback((query: QueryNode | null) => {
     dispatch({ type: 'SET_QUERY', payload: query });
@@ -498,6 +551,20 @@ export function QueryProvider({ children }: QueryProviderProps) {
   const setPagination = useCallback(
     (pagination: { size?: number; from?: number }) => {
       dispatch({ type: 'SET_PAGINATION', payload: pagination });
+    },
+    []
+  );
+
+  const setHighlight = useCallback(
+    (highlight: HighlightConfig | undefined) => {
+      dispatch({ type: 'SET_HIGHLIGHT', payload: highlight });
+    },
+    []
+  );
+
+  const setSuggest = useCallback(
+    (suggest: Record<string, SuggesterConfig> | undefined) => {
+      dispatch({ type: 'SET_SUGGEST', payload: suggest });
     },
     []
   );
@@ -516,6 +583,8 @@ export function QueryProvider({ children }: QueryProviderProps) {
         resetQuery,
         setQuery,
         setPagination,
+        setHighlight,
+        setSuggest,
       }}
     >
       {children}
