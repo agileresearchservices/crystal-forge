@@ -321,3 +321,193 @@ Manual testing:
 - Test with screen reader (VoiceOver on Mac, NVDA on Windows)
 - Verify focus indicators visible in all themes
 - Test error states and recovery paths
+
+## Feature Roadmap & Enhancement Opportunities
+
+Crystal Forge has excellent core coverage of basic-to-intermediate OpenSearch features, with 40+ query types, 30+ field types, and 11 aggregation types. However, there are opportunities for advanced capabilities.
+
+### TIER 1: Critical Missing Features (High Impact)
+
+#### 1. Script-Based Queries & Scoring
+
+- **Why:** Scripts enable sophisticated custom logic (e.g., boost results where price < competitor_price)
+- **Impact:** 15-20% of production search applications use scripts
+- **Status:** Not yet implemented
+- **Effort:** Medium
+
+#### 2. Advanced Aggregations (50% Coverage Gap)
+
+Missing: percentiles, percentile_ranks, moving_average, derivative, cumulative_sum, bucket_sort, composite, serial_differencing, matrix_stats
+
+- **Why:** Essential for analytics (E-commerce: distribution analysis, DevOps: trend analysis)
+- **Impact:** Very High - composite aggregations critical for large datasets
+- **Status:** Basic aggregations working (terms, date_histogram, range, stats)
+- **Effort:** Medium-High
+
+#### 3. Query Performance Analysis & Debugging
+
+- **Why:** Users can't see why queries are slow or which clauses cost most
+- **Missing:** Profile API integration, Explain API visualization, query cost estimation
+- **Status:** Not yet implemented
+- **Effort:** Medium-High
+
+#### 4. Query Templates & Reusability
+
+- **Why:** Common query patterns repeated manually; no save/load mechanism
+- **Missing:** Query templates, history/versioning, collaboration features
+- **Status:** Not yet implemented
+- **Effort:** Medium
+
+### TIER 2: Important Enhancements (Medium Impact)
+
+#### 5. Search Quality & Relevancy Tools
+
+- A/B Testing Helper - Compare two queries side-by-side
+- Relevancy Analyzer - Show score breakdown per result
+- Query Rewrite Suggester - Simplification suggestions
+- Synonym & Analyzer Preview - See how text is tokenized
+- Similar Documents Explorer - Find documents similar to top result
+
+#### 6. Advanced Result Processing
+
+- **Field Collapse** - Deduplication by field (show 1 best result per product/category)
+- **Rescore Queries** - Multi-tier ranking (fast first pass, expensive second pass on top-N)
+- **Search_after Cursor Navigation** - Cursor-based pagination (better than offset)
+- **Field Transformations** - Display different field than search field
+
+#### 7. Advanced Query Types
+
+- **Percolator Queries** - Inverse search ("which saved searches match this doc?")
+- **More-Like-This Queries** - Find similar documents
+- **Span Queries** - Advanced phrase/proximity search
+- **Combined Fields Query** - Multi-field relevancy with single BM25
+- **Pinned Query** - Guarantee specific documents at top
+
+#### 8. Named Queries & Query Analysis
+
+- Automatically add `_name` parameter for debugging
+- Show in results which clause matched each document
+
+### TIER 3: Valuable Additions (Lower Priority)
+
+- Index & Field Analysis (health dashboard, cardinality, statistics)
+- Query Composition Helpers (conditional logic, visualization, complexity metric)
+- Advanced Sorting (script-based, geo distance, randomization)
+- Time Series & Analytics (trend visualization, anomaly detection, forecasting)
+- Alerts & Monitoring (query threshold alerts, scheduled execution, webhooks)
+- Integration & Export (OpenSearch Dashboards format, code generation, API integration)
+
+### Implementation Priority Recommendation
+
+**Phase 1: Foundation (Highest ROI)** - 2-3 months
+
+1. Script Query Support (3 weeks)
+2. Advanced Aggregations Phase 1: percentiles, moving_average, composite (3 weeks)
+3. Profile/Explain API UI (2 weeks)
+4. Query Save/Templates (2 weeks)
+
+**Phase 2: Enhancement (Medium Priority)** - 2-3 months
+
+1. Field Collapse & Rescore (2 weeks)
+2. More-like-this & Percolator (2 weeks)
+3. Query Versioning & History (1 week)
+4. Relevancy Testing Tools (2 weeks)
+
+**Phase 3: Polish (Nice to Have)** - 1-2 months
+
+- Advanced sorting options
+- Index health dashboard
+- Code export features (Python, Node.js, curl)
+- Alerts & scheduling
+
+### Feature Impact Matrix
+
+| Feature              | Effort | Impact | User Type              |
+| -------------------- | ------ | ------ | ---------------------- |
+| Script Queries       | 5/10   | 9/10   | Power Users            |
+| Advanced Aggregations | 6/10   | 9/10   | Analysts, DevOps       |
+| Profile/Explain UI   | 5/10   | 8/10   | All Users              |
+| Query Templates      | 4/10   | 8/10   | All Users              |
+| Field Collapse       | 3/10   | 7/10   | E-commerce             |
+| Rescore Queries      | 3/10   | 7/10   | Performance-focused    |
+| More-like-this       | 2/10   | 6/10   | Content/Recommendation |
+| Percolator           | 3/10   | 6/10   | Alerts/Triggers        |
+| Query Versioning     | 2/10   | 6/10   | Teams                  |
+| Relevancy Tools      | 6/10   | 7/10   | Search Teams           |
+
+## Missing OpenSearch Query DSL Features
+
+Crystal Forge implements **26 out of 54** query types from the complete OpenSearch Query DSL specification (~48% coverage). The implemented types cover the vast majority of real-world use cases.
+
+### Currently Implemented (26 types)
+
+**Full-Text:** match, match_phrase, match_phrase_prefix, multi_match, query_string
+**Term-Level:** term, terms, range, prefix, wildcard, regexp, fuzzy, exists, ids
+**Compound:** bool, dis_max, constant_score, boosting, function_score
+**Joining:** nested (with inner_hits, score_mode)
+**Geo:** geo_bounding_box, geo_distance, geo_shape
+**Special:** match_all, match_none
+**Aggregations:** terms, date_histogram, range, stats, cardinality, avg, sum, min, max, value_count
+
+### High Priority Missing Features (Quick Wins)
+
+1. **simple_query_string** - Never throws exceptions, unlike query_string. Essential for user-facing search.
+   - Status: Type definition exists, missing deserializer
+   - Effort: Small
+
+2. **match_bool_prefix** - Autocomplete queries (last term as prefix)
+   - Status: Missing completely
+   - Effort: Small
+
+3. **combined_fields** - Multi-field search with unified relevance score
+   - Status: Missing completely
+   - Effort: Medium
+
+4. **Joining Queries** - has_child, has_parent, parent_id for parent-child relationships
+   - Status: Missing completely
+   - Effort: Large
+
+### Medium Priority Missing Features (Power User)
+
+1. **more_like_this** - Find similar documents
+2. **script_score** - Custom scoring with Painless scripts
+3. **intervals** - Advanced phrase matching with position rules
+
+### Low Priority Missing Features (Specialized)
+
+- Span queries (9 variants) - Position-aware linguistic analysis
+- Percolate Query - Inverse search (which saved searches match this doc?)
+- Pinned Query - Force specific documents to top
+- Wrapper Query - Pass raw JSON for unsupported queries
+- Rank Feature Query - Boost based on rank_feature field values
+- Terms Set Query - Match if minimum number of terms match
+- Geo Polygon - Deprecated but still supported
+
+### Missing Parameters on Existing Types
+
+- **bool query:** `adjust_pure_negative` - Handle pure negative bool queries
+- **range query:** All parameters implemented
+
+### Implementation Recommendations
+
+#### Phase 1: Quick Wins (Effort: 3-4 hours)
+
+- simple_query_string deserializer
+- match_bool_prefix complete implementation
+- adjust_pure_negative parameter
+
+#### Phase 2: Core Features (Effort: 11 hours)
+
+- combined_fields
+- Joining queries (has_child, has_parent, parent_id)
+
+#### Phase 3: Advanced Features (Effort: 13 hours)
+
+- more_like_this
+- script_score
+- intervals
+
+#### Phase 4: Specialized (Defer unless requested)
+
+- Span queries
+- Percolator, pinned, wrapper, rank_feature, terms_set
