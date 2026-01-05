@@ -63,6 +63,7 @@ export function AggregationParameterForm({
           type="text"
           value={aggregation.name}
           onChange={(e) => handleNameChange(e.target.value)}
+          spellCheck={true}
           className={cn(
             'w-full px-3 py-2 text-sm rounded-md',
             'border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950',

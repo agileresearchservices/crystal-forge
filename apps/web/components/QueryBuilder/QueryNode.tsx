@@ -263,12 +263,13 @@ function ValueInput({ node, fieldType, onChange }: ValueInputProps) {
     return <RangeValueInput node={node as RangeQueryNode} onChange={onChange} />;
   }
 
-  // Default text input
+  // Default text input (with spellcheck enabled)
   return (
     <input
       type="text"
       value={getValue()}
       onChange={(e) => onChange(e.target.value)}
+      spellCheck={true}
       className={cn(
         'w-full px-2 py-1.5 text-sm rounded-md',
         'border border-gray-300 bg-white',
