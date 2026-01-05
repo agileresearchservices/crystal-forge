@@ -3,11 +3,15 @@
 import React, { useCallback } from 'react';
 import { useQuery, createEmptyBoolQuery, generateNodeId } from '@/context/QueryContext';
 import { useQueryExecution } from '@/hooks/useQueryExecution';
+import { useActiveClause, type BoolClause } from '@/context/ActiveClauseContext';
 import { BooleanGroup } from './BooleanGroup';
 import { QueryNodeComponent } from './QueryNode';
 import { Button } from '@/components/ui/button';
 import { HighlightingPanel } from '@/components/HighlightingPanel/HighlightingPanel';
 import { SuggesterPanel } from '@/components/SuggesterPanel/SuggesterPanel';
+import { InfoTooltip } from '@/components/ui/info-tooltip';
+import { CLAUSE_TOOLTIPS } from '@/constants/tooltips';
+import { EXAMPLE_QUERIES, type ExampleQuery } from '@/constants/example-queries';
 import type { BoolQueryNode, MatchQueryNode, QueryNode } from '@crystal-forge/query-dsl';
 import { cn } from '@/lib/utils';
 
@@ -18,6 +22,7 @@ import { cn } from '@/lib/utils';
 export function QueryBuilder() {
   const { state, addNode, setQuery, resetQuery } = useQuery();
   const { executeQuery, isLoading, canExecute } = useQueryExecution();
+  const { activeClause } = useActiveClause();
 
   const { query } = state;
   const rootNode = query.query;
@@ -65,6 +70,16 @@ export function QueryBuilder() {
     await executeQuery();
   }, [executeQuery]);
 
+  /**
+   * Load an example query
+   */
+  const handleLoadExample = useCallback(
+    (example: ExampleQuery) => {
+      setQuery(example.query);
+    },
+    [setQuery]
+  );
+
   return (
     <div className="flex flex-col h-full bg-white dark:bg-gray-900">
       {/* Toolbar */}
@@ -105,6 +120,19 @@ export function QueryBuilder() {
         </div>
       </div>
 
+      {/* Active Clause Indicator */}
+      <div className="flex-shrink-0 px-4 py-2 bg-indigo-50 dark:bg-indigo-900/20 border-b border-indigo-200 dark:border-indigo-800 flex items-center gap-3" aria-live="polite" aria-atomic="true">
+        <span className="text-xs font-medium text-gray-700 dark:text-gray-300">Adding fields to:</span>
+        <span className="px-3 py-1 rounded-full bg-indigo-100 dark:bg-indigo-800 text-indigo-700 dark:text-indigo-200 font-semibold text-sm">
+          {activeClause.toUpperCase()}
+        </span>
+        <InfoTooltip
+          content={CLAUSE_TOOLTIPS[activeClause as BoolClause]}
+          side="right"
+          className="flex-shrink-0"
+        />
+      </div>
+
       {/* Query Tree */}
       <div className="flex-1 overflow-auto p-4" role="main" aria-label="Query builder interface">
         {/* Highlighting configuration panel */}
@@ -133,6 +161,7 @@ export function QueryBuilder() {
           <EmptyState
             onAddBoolQuery={handleAddBoolQuery}
             onAddSimpleQuery={handleAddSimpleQuery}
+            onLoadExample={handleLoadExample}
           />
         )}
       </div>
@@ -146,9 +175,10 @@ export function QueryBuilder() {
 interface EmptyStateProps {
   onAddBoolQuery: () => void;
   onAddSimpleQuery: () => void;
+  onLoadExample: (example: ExampleQuery) => void;
 }
 
-function EmptyState({ onAddBoolQuery, onAddSimpleQuery }: EmptyStateProps) {
+function EmptyState({ onAddBoolQuery, onAddSimpleQuery, onLoadExample }: EmptyStateProps) {
   return (
     <div className="flex flex-col items-center justify-center h-full min-h-64 text-center py-12 px-4" role="status" aria-live="polite">
       <div className="flex flex-col items-center gap-4 max-w-md">
@@ -188,6 +218,38 @@ function EmptyState({ onAddBoolQuery, onAddSimpleQuery }: EmptyStateProps) {
           >
             Add Simple Query
           </Button>
+        </div>
+
+        {/* Example Queries */}
+        <div className="w-full pt-8 border-t border-gray-200 dark:border-gray-800 mt-8 max-w-2xl">
+          <p className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-3">
+            Try an example to get started:
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full">
+            {EXAMPLE_QUERIES.map((example) => (
+              <button
+                key={example.id}
+                onClick={() => onLoadExample(example)}
+                className={cn(
+                  'flex flex-col items-start gap-2 p-3 rounded-lg text-left',
+                  'border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800',
+                  'hover:border-indigo-400 dark:hover:border-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/20',
+                  'transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900'
+                )}
+                aria-label={`Load ${example.title} example query`}
+              >
+                <h4 className="font-semibold text-sm text-gray-900 dark:text-white">
+                  {example.title}
+                </h4>
+                <p className="text-xs text-gray-600 dark:text-gray-400">
+                  {example.description}
+                </p>
+                <div className="mt-1 text-xs text-gray-500 dark:text-gray-500 line-clamp-2">
+                  {example.explanation}
+                </div>
+              </button>
+            ))}
+          </div>
         </div>
       </div>
     </div>

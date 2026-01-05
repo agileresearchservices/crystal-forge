@@ -126,15 +126,18 @@ export function BooleanGroup({ node, path }: BooleanGroupProps) {
           const isActive = activeTab === clause;
 
           return (
-            <div key={clause} className="flex items-center flex-1">
+            <div key={clause} className="flex items-center flex-1 relative">
+              {isActive && (
+                <div className="absolute inset-0 -top-1 rounded-t-lg bg-indigo-50 dark:bg-indigo-900/30 pointer-events-none" aria-hidden="true" />
+              )}
               <button
                 onClick={() => setActiveTab(clause)}
                 className={cn(
-                  'flex-1 px-3 py-2 text-sm font-medium',
-                  'border-b-2 transition-colors flex items-center justify-between',
+                  'flex-1 px-3 py-2 text-sm font-medium relative',
+                  'border-b-2 transition-all flex items-center justify-between',
                   isActive
-                    ? 'border-blue-500 text-blue-600 bg-white'
-                    : 'border-transparent text-gray-700 hover:text-gray-800 hover:bg-gray-100'
+                    ? 'border-indigo-500 text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/30 shadow-sm'
+                    : 'border-transparent text-gray-700 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
                 )}
               >
                 <span className="flex items-center gap-1">
