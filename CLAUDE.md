@@ -26,6 +26,13 @@ crystal-forge/
 │   ├── query-validator/          # Query validation logic
 │   ├── opensearch-client/        # OpenSearch API client wrapper
 │   └── storage/                  # IndexedDB storage for templates & history
+├── docker/
+│   └── scripts/                  # Python scripts for data generation
+│       ├── data_generator.py     # Generates 1000 sample documents
+│       ├── bulk_loader.py        # Loads data into OpenSearch
+│       └── index_mappings.json   # Custom analyzers & field mappings
+├── Dockerfile                    # Multi-stage build for Next.js
+├── docker-compose.yml            # Full stack: UI + OpenSearch + Dashboards
 ├── package.json                  # Root workspace config
 ├── turbo.json                    # Turborepo pipeline config
 └── tsconfig.json                 # Base TypeScript config
@@ -49,7 +56,41 @@ cd apps/web && npm run test -- --watch  # Watch mode for web tests
 # Lint and format
 npm run lint                      # Lint all
 npm run format                    # Format with Prettier
+
+# Docker (recommended for quick start)
+docker compose up -d              # Start all services (UI, OpenSearch, Dashboards)
+docker compose down               # Stop all services
+docker compose logs -f            # View logs
+docker compose up --build         # Rebuild and start
 ```
+
+## Docker Environment
+
+The Docker setup provides a complete development/demo environment:
+
+**Services:**
+- **crystal-forge** (port 3000): Next.js production build
+- **opensearch** (port 9200): Single-node OpenSearch 2.17.1 (security disabled)
+- **opensearch-dashboards** (port 5601): OpenSearch Dashboards
+- **data-loader**: Python scripts that seed sample data on startup
+
+**Sample Data:**
+- Index: `opensearch-demo` with 1000 documents
+- Domains: e-commerce (350), technical docs (300), blog articles (200), user reviews (150)
+- Custom analyzers: english_analyzer, phrase_analyzer, synonym_analyzer
+
+**Architecture:**
+- Multi-stage Dockerfile with `output: 'standalone'` for optimized builds (~200MB image)
+- Docker network translation: API routes translate `localhost:9200` to `opensearch:9200`
+- Health checks ensure proper startup order
+
+**Key Files:**
+- `Dockerfile`: Multi-stage build (base → deps → builder → runner)
+- `docker-compose.yml`: Service definitions with health checks
+- `docker/scripts/data_generator.py`: Generates deterministic sample data
+- `docker/scripts/bulk_loader.py`: Loads data with retry logic
+- `docker/scripts/index_mappings.json`: Custom analyzers and field mappings
+- `apps/web/lib/docker-host.ts`: Translates localhost to Docker network names
 
 ## Package Details
 

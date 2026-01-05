@@ -51,13 +51,40 @@ A visual query builder UI for OpenSearch that enables users to construct complex
 
 ## Getting Started
 
-### Prerequisites
+### Quick Start with Docker (Recommended)
+
+The fastest way to try Crystal Forge with a fully configured OpenSearch environment:
+
+```bash
+# Clone the repository
+git clone https://github.com/yourusername/crystal-forge.git
+cd crystal-forge
+
+# Start all services
+docker compose up -d
+
+# Wait ~30 seconds for data loading, then open:
+# Crystal Forge UI: http://localhost:3000
+# OpenSearch Dashboards: http://localhost:5601
+```
+
+This starts:
+- **Crystal Forge** on port 3000
+- **OpenSearch** on port 9200 (no authentication)
+- **OpenSearch Dashboards** on port 5601
+- **Sample data** - 1000 documents across 4 domains (e-commerce, technical docs, blog articles, user reviews)
+
+Connect to `http://localhost:9200` and select the `opensearch-demo` index to start exploring.
+
+### Local Development
+
+#### Prerequisites
 
 - Node.js 18+
 - npm 10+
 - OpenSearch cluster (local or remote)
 
-### Installation
+#### Installation
 
 ```bash
 # Clone the repository
@@ -107,6 +134,13 @@ crystal-forge/
 │   ├── query-validator/          # Query validation
 │   ├── opensearch-client/        # OpenSearch API client
 │   └── storage/                  # IndexedDB storage for templates
+├── docker/
+│   └── scripts/                  # Python scripts for data generation
+│       ├── data_generator.py     # Generates 1000 sample documents
+│       ├── bulk_loader.py        # Loads data into OpenSearch
+│       └── index_mappings.json   # Custom analyzers & field mappings
+├── Dockerfile                    # Multi-stage build for Next.js
+└── docker-compose.yml            # Full stack: UI + OpenSearch + Dashboards
 ```
 
 ## Why Crystal Forge?
@@ -146,11 +180,18 @@ Crystal Forge fills a genuine gap in the OpenSearch ecosystem. While tools like 
 ## Development
 
 ```bash
+# Local development
 npm run dev          # Start dev server
 npm run build        # Build all packages and app
 npm run lint         # Lint all code
 npm run test         # Run tests
 npm run format       # Format code with Prettier
+
+# Docker
+docker compose up -d          # Start all services
+docker compose down           # Stop all services
+docker compose logs -f        # View logs
+docker compose up --build     # Rebuild and start
 ```
 
 ## License
