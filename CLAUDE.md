@@ -88,7 +88,7 @@ OpenSearch API wrapper. Key exports:
 ### Key Files
 
 | Task | Files |
-|------|-------|
+| ------ | ------- |
 | Add query type | `packages/query-dsl/src/types.ts`, `serializer.ts`, `deserializer.ts` |
 | Add UI component | `apps/web/components/` |
 | Modify query builder | `apps/web/components/QueryBuilder/` |
