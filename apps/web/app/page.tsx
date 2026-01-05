@@ -18,6 +18,9 @@ import { ResultsPanel } from '@/components/ResultsPanel';
 import { FieldList } from '@/components/FieldList';
 import { ConnectionModal } from '@/components/ConnectionModal';
 import { AggregationsPanel } from '@/components/AggregationsPanel';
+import { HelpMenu } from '@/components/HelpMenu/HelpMenu';
+import { AutoStartTour } from '@/components/Tour/AutoStartTour';
+import { ValidationProvider } from '@/context/ValidationContext';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
 import { useConnection } from '@/context/ConnectionContext';
 import { useQuery, createEmptyBoolQuery } from '@/context/QueryContext';
@@ -38,9 +41,11 @@ interface DropData {
 
 export default function Home() {
   return (
-    <ActiveClauseProvider>
-      <HomeContent />
-    </ActiveClauseProvider>
+    <ValidationProvider>
+      <ActiveClauseProvider>
+        <HomeContent />
+      </ActiveClauseProvider>
+    </ValidationProvider>
   );
 }
 
@@ -113,9 +118,13 @@ function HomeContent() {
       onDragEnd={handleDragEnd}
       onDragCancel={handleDragCancel}
     >
+      {/* Auto-start tour for first-time users */}
+      <AutoStartTour />
+
       <main className="h-screen flex flex-col overflow-hidden bg-gradient-to-b from-gray-50 to-white dark:from-gray-950 dark:to-gray-900">
         {/* Header */}
         <header
+          id="tour-welcome"
           className="flex-shrink-0 border-b border-gray-200 dark:border-gray-800 px-4 sm:px-6 py-4 flex items-center justify-between bg-white dark:bg-gray-900 shadow-sm"
           role="banner"
         >
@@ -136,6 +145,7 @@ function HomeContent() {
           <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0 ml-4">
             {state.connection.isConnected && (
               <div
+                id="tour-connection-status"
                 className="flex items-center gap-2 px-2 sm:px-3 py-2 rounded-lg bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border border-green-200 dark:border-green-800"
                 aria-live="polite"
                 aria-label={`Connected to ${state.connection.index || 'OpenSearch'}`}
@@ -146,7 +156,11 @@ function HomeContent() {
                 </span>
               </div>
             )}
+            <div id="tour-help-menu">
+              <HelpMenu />
+            </div>
             <button
+              id="tour-connect-button"
               onClick={() => setIsModalOpen(true)}
               aria-label={state.connection.isConnected ? 'Reconnect to OpenSearch' : 'Connect to OpenSearch'}
               className="px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-900 active:scale-95 shadow-lg hover:shadow-xl transition-all duration-200"
@@ -168,6 +182,7 @@ function HomeContent() {
         <div className="flex-1 flex min-h-0">
           {/* Sidebar - Field List */}
           <aside
+            id="tour-field-list"
             className="w-52 sm:w-64 flex-shrink-0 border-r border-gray-200 dark:border-gray-800 overflow-hidden flex flex-col bg-white dark:bg-gray-900"
             aria-label="Available fields"
           >
@@ -195,7 +210,7 @@ function HomeContent() {
                 <ResizablePanel
                   defaultSize={sizes.horizontal[0]}
                   minSize={30}
-                  id="query-builder"
+                  id="tour-query-builder"
                   className="overflow-hidden"
                 >
                   <DroppableQueryBuilder />
@@ -254,11 +269,11 @@ function HomeContent() {
                     {/* Panel Content */}
                     <div className="flex-1 overflow-auto p-4">
                       {rightPanel === 'json' ? (
-                        <div id="json-panel" role="tabpanel">
+                        <div id="tour-json-panel" role="tabpanel">
                           <JSONPreview />
                         </div>
                       ) : (
-                        <div id="explore-panel" role="tabpanel">
+                        <div id="tour-explore-panel" role="tabpanel">
                           <AggregationsPanel />
                         </div>
                       )}
@@ -280,7 +295,7 @@ function HomeContent() {
               defaultSize={sizes.vertical[1]}
               minSize={15}
               maxSize={60}
-              id="results-panel"
+              id="tour-results-panel"
               className="overflow-hidden"
             >
               <div className="h-full overflow-hidden border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">

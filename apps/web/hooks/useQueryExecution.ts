@@ -3,6 +3,7 @@
 import { useCallback, useState } from 'react';
 import { useConnection } from '@/context/ConnectionContext';
 import { useQuery } from '@/context/QueryContext';
+import { useValidation } from '@/context/ValidationContext';
 import { serializeQueryState } from '@crystal-forge/query-dsl';
 import type { SearchResponse } from '@crystal-forge/opensearch-client';
 
@@ -13,9 +14,31 @@ import type { SearchResponse } from '@crystal-forge/opensearch-client';
 export function useQueryExecution() {
   const { state: connectionState } = useConnection();
   const { state: queryState, setResults, setLoading, setError } = useQuery();
+  const { validateQuery } = useValidation();
   const [localError, setLocalError] = useState<string | null>(null);
 
   const executeQuery = useCallback(async () => {
+    // Validate query before execution
+    const validationResult = validateQuery();
+    if (!validationResult.isValid) {
+      const errorCount = validationResult.errors?.length || 0;
+      const errorMessage =
+        errorCount === 1
+          ? 'Cannot execute query: 1 validation error found. Please fix it.'
+          : `Cannot execute query: ${errorCount} validation errors found. Please fix them.`;
+      setError(errorMessage);
+      setLocalError(errorMessage);
+      return;
+    }
+
+    // Show warning if there are warnings (but still execute)
+    if (validationResult.warnings && validationResult.warnings.length > 0) {
+      console.warn(
+        `Query has ${validationResult.warnings.length} warning(s):`,
+        validationResult.warnings
+      );
+    }
+
     // Validate connection
     if (!connectionState.connection.isConnected) {
       const error = 'Not connected to OpenSearch';
@@ -87,6 +110,7 @@ export function useQueryExecution() {
     connectionState.connection.index,
     connectionState.config,
     queryState.query,
+    validateQuery,
     setResults,
     setLoading,
     setError,

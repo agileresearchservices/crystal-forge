@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   getOperatorsForFieldType,
   type FieldType,
@@ -10,6 +10,9 @@ import {
 import { cn } from '@/lib/utils';
 import { InfoTooltip } from '@/components/ui/info-tooltip';
 import { OPERATOR_TOOLTIPS } from '@/constants/tooltips';
+import { getComparisonsForOperator } from '@/constants/query-comparisons';
+import { ComparisonModal } from '@/components/ComparisonModal/ComparisonModal';
+import { HelpCircle } from 'lucide-react';
 
 /**
  * Props for OperatorSelector
@@ -37,6 +40,9 @@ export function OperatorSelector({
   className,
   disabled = false,
 }: OperatorSelectorProps) {
+  const [comparisonKey, setComparisonKey] = useState<string | null>(null);
+  const [isComparisonOpen, setIsComparisonOpen] = useState(false);
+
   /**
    * Get available operators for the current field type
    */
@@ -78,48 +84,82 @@ export function OperatorSelector({
     return operators.find((op: OperatorDefinition) => op.queryType === value);
   }, [operators, value]);
 
+  /**
+   * Get relevant comparisons for the current operator
+   */
+  const relevantComparisons = useMemo(() => {
+    return getComparisonsForOperator(value as string);
+  }, [value]);
+
   return (
-    <div className="flex items-center gap-2">
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value as QueryType)}
-        disabled={disabled}
-        className={cn(
-          'flex-1 px-2 py-1.5 text-sm rounded-md',
-          'border border-gray-300 bg-white',
-          'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent',
-          'disabled:opacity-50 disabled:cursor-not-allowed',
-          className
+    <>
+      <div className="flex items-center gap-2">
+        <select
+          value={value}
+          onChange={(e) => onChange(e.target.value as QueryType)}
+          disabled={disabled}
+          className={cn(
+            'flex-1 px-2 py-1.5 text-sm rounded-md',
+            'border border-gray-300 bg-white',
+            'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent',
+            'disabled:opacity-50 disabled:cursor-not-allowed',
+            className
+          )}
+          title={currentOperator?.description}
+        >
+          {groupedOperators.recommended.length > 0 && (
+            <optgroup label="Recommended for this field type">
+              {groupedOperators.recommended.map((op) => (
+                <option key={op.queryType} value={op.queryType} title={op.description}>
+                  ⭐ {op.label}
+                </option>
+              ))}
+            </optgroup>
+          )}
+          {groupedOperators.other.length > 0 && (
+            <optgroup label="Other options">
+              {groupedOperators.other.map((op) => (
+                <option key={op.queryType} value={op.queryType} title={op.description}>
+                  {op.label}
+                </option>
+              ))}
+            </optgroup>
+          )}
+        </select>
+
+        {/* Tooltip for current operator */}
+        {currentOperator && value in OPERATOR_TOOLTIPS && (
+          <InfoTooltip
+            content={OPERATOR_TOOLTIPS[value as QueryType]}
+            side="right"
+            className="flex-shrink-0"
+          />
         )}
-        title={currentOperator?.description}
-      >
-        {groupedOperators.recommended.length > 0 && (
-          <optgroup label="Recommended for this field type">
-            {groupedOperators.recommended.map((op) => (
-              <option key={op.queryType} value={op.queryType} title={op.description}>
-                ⭐ {op.label}
-              </option>
-            ))}
-          </optgroup>
+
+        {/* Compare button for relevant comparisons */}
+        {relevantComparisons.length > 0 && (
+          <button
+            type="button"
+            onClick={() => {
+              setComparisonKey(relevantComparisons[0]);
+              setIsComparisonOpen(true);
+            }}
+            title="Compare with similar query types"
+            className="p-1.5 text-gray-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-md transition-colors flex-shrink-0"
+            aria-label="Compare with similar query types"
+          >
+            <HelpCircle className="w-4 h-4" />
+          </button>
         )}
-        {groupedOperators.other.length > 0 && (
-          <optgroup label="Other options">
-            {groupedOperators.other.map((op) => (
-              <option key={op.queryType} value={op.queryType} title={op.description}>
-                {op.label}
-              </option>
-            ))}
-          </optgroup>
-        )}
-      </select>
-      {currentOperator && value in OPERATOR_TOOLTIPS && (
-        <InfoTooltip
-          content={OPERATOR_TOOLTIPS[value as QueryType]}
-          side="right"
-          className="flex-shrink-0"
-        />
-      )}
-    </div>
+      </div>
+
+      {/* Comparison Modal */}
+      <ComparisonModal
+        comparisonKey={comparisonKey}
+        isOpen={isComparisonOpen}
+        onClose={() => setIsComparisonOpen(false)}
+      />
+    </>
   );
 }
 

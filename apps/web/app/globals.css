@@ -57,3 +57,107 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Custom driver.js theme matching Crystal Forge design */
+.driver-popover {
+  background-color: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+.dark .driver-popover {
+  background-color: #1f2937;
+  color: #f9fafb;
+}
+
+.driver-popover-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 0.5rem 0;
+}
+
+.dark .driver-popover-title {
+  color: #f9fafb;
+}
+
+.driver-popover-description {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.dark .driver-popover-description {
+  color: #d1d5db;
+}
+
+.driver-popover-progress-text {
+  color: #6366f1;
+  font-weight: 500;
+  font-size: 0.75rem;
+}
+
+.driver-popover-buttons {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.driver-popover-buttons button {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  border-radius: 0.375rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+}
+
+.driver-popover-buttons button:not(:disabled):hover {
+  opacity: 0.9;
+}
+
+/* Next button - Indigo (primary) */
+.driver-popover-buttons button:not(.driver-popover-btn-prev):not(.driver-popover-btn-close) {
+  background-color: #6366f1;
+  color: white;
+}
+
+.dark .driver-popover-buttons button:not(.driver-popover-btn-prev):not(.driver-popover-btn-close) {
+  background-color: #6366f1;
+}
+
+/* Previous and Close buttons */
+.driver-popover-buttons button.driver-popover-btn-prev,
+.driver-popover-buttons button.driver-popover-btn-close {
+  background-color: #e5e7eb;
+  color: #374151;
+}
+
+.dark .driver-popover-buttons button.driver-popover-btn-prev,
+.dark .driver-popover-buttons button.driver-popover-btn-close {
+  background-color: #4b5563;
+  color: #f3f4f6;
+}
+
+/* Highlight color for active elements - Indigo */
+.driver-active-element {
+  outline: 2px solid #6366f1 !important;
+  outline-offset: 2px;
+}
+
+/* Overlay dimming */
+.driver-overlay {
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+/* Popover arrow color */
+.driver-popover-arrow {
+  color: white;
+}
+
+.dark .driver-popover-arrow {
+  color: #1f2937;
+}
