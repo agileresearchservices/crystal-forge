@@ -126,8 +126,6 @@ export const ONBOARDING_TOUR_STEPS: DriveStep[] = [
     popover: {
       title: `You're All Set! 🎉`,
       description: `You now know the basics of Crystal Forge. Start building queries and exploring your data! You can replay this tour anytime from the Help menu.`,
-      side: 'center',
-      align: 'center',
     },
   },
 ];

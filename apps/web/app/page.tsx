@@ -20,7 +20,6 @@ import { ConnectionModal } from '@/components/ConnectionModal';
 import { AggregationsPanel } from '@/components/AggregationsPanel';
 import { HelpMenu } from '@/components/HelpMenu/HelpMenu';
 import { AutoStartTour } from '@/components/Tour/AutoStartTour';
-import { ValidationProvider } from '@/context/ValidationContext';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
 import { useConnection } from '@/context/ConnectionContext';
 import { useQuery, createEmptyBoolQuery } from '@/context/QueryContext';
@@ -41,11 +40,9 @@ interface DropData {
 
 export default function Home() {
   return (
-    <ValidationProvider>
-      <ActiveClauseProvider>
-        <HomeContent />
-      </ActiveClauseProvider>
-    </ValidationProvider>
+    <ActiveClauseProvider>
+      <HomeContent />
+    </ActiveClauseProvider>
   );
 }
 

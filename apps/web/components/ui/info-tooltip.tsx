@@ -22,6 +22,7 @@ export interface InfoTooltipProps {
   className?: string;
   side?: 'top' | 'right' | 'bottom' | 'left';
   delayDuration?: number;
+  children?: React.ReactNode;
 }
 
 /**
@@ -38,6 +39,7 @@ export const InfoTooltip = React.forwardRef<
       className,
       side = 'right',
       delayDuration = 300,
+      children,
     }: InfoTooltipProps,
     ref
   ) => {
@@ -45,21 +47,25 @@ export const InfoTooltip = React.forwardRef<
       <TooltipProvider delayDuration={delayDuration}>
         <Tooltip>
           <TooltipTrigger asChild>
-            <button
-              ref={ref}
-              className={cn(
-                'inline-flex items-center justify-center',
-                'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300',
-                'transition-colors duration-200',
-                'focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900',
-                'rounded p-0.5',
-                className
-              )}
-              aria-label="More information"
-              type="button"
-            >
-              <HelpCircle className="w-4 h-4" />
-            </button>
+            {children ? (
+              <div>{children}</div>
+            ) : (
+              <button
+                ref={ref}
+                className={cn(
+                  'inline-flex items-center justify-center',
+                  'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300',
+                  'transition-colors duration-200',
+                  'focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900',
+                  'rounded p-0.5',
+                  className
+                )}
+                aria-label="More information"
+                type="button"
+              >
+                <HelpCircle className="w-4 h-4" />
+              </button>
+            )}
           </TooltipTrigger>
           <TooltipContent
             side={side}

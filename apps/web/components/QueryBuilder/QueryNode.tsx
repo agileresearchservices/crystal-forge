@@ -3,7 +3,6 @@
 import React, { useCallback } from 'react';
 import { useQuery, generateNodeId } from '@/context/QueryContext';
 import { useConnection } from '@/context/ConnectionContext';
-import { useValidation } from '@/context/ValidationContext';
 import { OperatorSelector } from './OperatorSelector';
 import { BooleanGroup } from './BooleanGroup';
 import type {
@@ -38,13 +37,11 @@ interface QueryNodeProps {
 export function QueryNodeComponent({ node, path, onRemove }: QueryNodeProps) {
   const { updateNode } = useQuery();
   const { state: connectionState } = useConnection();
-  const { getNodeErrors, getNodeWarnings } = useValidation();
 
   const fields = connectionState.fields;
-  const errors = getNodeErrors(node.id);
-  const warnings = getNodeWarnings(node.id);
-  const hasErrors = errors.length > 0;
-  const hasWarnings = warnings.length > 0;
+  // Validation temporarily disabled - will be re-enabled in future update
+  const hasErrors = false;
+  const hasWarnings = false;
 
   /**
    * Get field type for the current node's field
@@ -101,42 +98,9 @@ export function QueryNodeComponent({ node, path, onRemove }: QueryNodeProps) {
       className={cn(
         'relative flex items-start gap-2 p-3 rounded-lg',
         'transition-colors',
-        hasErrors
-          ? 'border-2 border-red-300 bg-red-50 dark:border-red-800 dark:bg-red-900/10'
-          : hasWarnings
-            ? 'border-2 border-amber-300 bg-amber-50 dark:border-amber-800 dark:bg-amber-900/10'
-            : 'bg-white border border-gray-200 hover:border-gray-300'
+        'bg-white border border-gray-200 hover:border-gray-300'
       )}
     >
-      {/* Validation Badge */}
-      {(hasErrors || hasWarnings) && (
-        <div className="absolute -top-2 -right-2">
-          <InfoTooltip
-            content={{
-              title: hasErrors ? 'Validation Errors' : 'Warnings',
-              description: [...errors, ...warnings].map((e) => e.message).join('\n'),
-            }}
-            side="left"
-          >
-            <div
-              className={cn(
-                'flex items-center justify-center w-6 h-6 rounded-full shadow-md',
-                hasErrors
-                  ? 'bg-red-500 text-white hover:bg-red-600'
-                  : 'bg-amber-500 text-white hover:bg-amber-600'
-              )}
-              role="img"
-              aria-label={hasErrors ? 'Has validation errors' : 'Has warnings'}
-            >
-              {hasErrors ? (
-                <AlertCircle className="w-4 h-4" />
-              ) : (
-                <AlertTriangle className="w-4 h-4" />
-              )}
-            </div>
-          </InfoTooltip>
-        </div>
-      )}
       {/* Field Selector */}
       <div className="flex-1 min-w-0">
         <label className="block text-xs font-medium text-gray-700 mb-1">

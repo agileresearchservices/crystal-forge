@@ -23,9 +23,7 @@ export function useOnboardingTour() {
         localStorage.setItem('crystal-forge:tour-completed', 'true');
       },
       allowClose: true,
-      overlayClickNextStep: false,
       smoothScroll: true,
-      disableActiveInteraction: false,
     });
 
     driverObj.drive();
