@@ -15,6 +15,8 @@ Crystal Forge is a visual query builder UI for OpenSearch that enables users to 
 - **Code Editor:** Monaco Editor (@monaco-editor/react)
 - **Testing:** Vitest + React Testing Library
 - **Build System:** Turborepo + tsup (for packages)
+- **Onboarding:** driver.js (interactive tours)
+- **Date Utilities:** date-fns ^4.1.0
 
 ## Monorepo Structure
 
@@ -112,12 +114,21 @@ Object stores:
 | Change state management | `apps/web/context/QueryContext.tsx` |
 | Add API endpoint | `apps/web/app/api/opensearch/` |
 | Add shadcn component | `apps/web/components/ui/` |
+| Modify onboarding tour | `apps/web/components/Tour/`, `apps/web/constants/tour-steps.ts` |
+| Add help documentation | `apps/web/components/HelpMenu/` |
+| Modify date inputs | `apps/web/components/DatePickers/` |
 
 ### Component Hierarchy
 
 ```text
 page.tsx
 ├── ConnectionModal         # OpenSearch connection dialog
+├── HelpMenu                # Help dropdown with guides and tour
+│   ├── KeyboardShortcutsModal
+│   ├── BoolQueryGuideModal
+│   ├── FieldTypesGuideModal
+│   └── QueryPatternsModal
+├── AutoStartTour           # Onboarding tour (first-time users)
 ├── FieldList               # Sidebar with index fields (draggable)
 ├── QueryBuilder            # Main visual builder (droppable)
 │   ├── QueryNode           # Individual query clause
@@ -293,6 +304,108 @@ Intuitive UI for building complex aggregations without writing JSON:
 - `apps/web/components/AggregationsBuilder/AggregationBuilder.tsx` - Main builder with type selector
 - `apps/web/components/AggregationsBuilder/AggregationParameterForm.tsx` - Dynamic parameter forms
 - `apps/web/components/AggregationsPanel.tsx` - Tabbed interface (Explore/Build)
+
+### Onboarding Tour
+
+Interactive guided tour for first-time users using driver.js:
+
+**Features:**
+- **14-step tour** covering all major UI elements
+- **Auto-start** for first-time users (2-second delay after page load)
+- **Completion persistence** to localStorage (`crystal-forge:tour-completed`)
+- **Replay option** via "Take a Tour" in the Help menu
+- **Keyboard navigation** - fully accessible via arrow/enter keys
+- **Custom theming** matching Crystal Forge design (indigo accent, dark mode support)
+
+**Tour Steps:**
+1. Welcome → Connect to OpenSearch → Connection Status → Field List → Field Search
+2. Query Builder → Bool Clauses → Active Clause Indicator → JSON Preview
+3. Explore Panel → Execute Query → Results Panel → Help Menu → Completion
+
+**Key Files:**
+- `apps/web/components/Tour/OnboardingTour.tsx` - `useOnboardingTour()` hook
+- `apps/web/components/Tour/AutoStartTour.tsx` - Auto-start component
+- `apps/web/constants/tour-steps.ts` - Tour step definitions
+
+**Hook API:**
+```tsx
+const { startTour, hasTourCompleted, resetTourCompletion } = useOnboardingTour();
+```
+
+### Help Menu & Documentation
+
+Dropdown menu providing contextual help and documentation:
+
+**Menu Items (7 total):**
+1. **Take a Tour** - Launches the onboarding tour
+2. **Keyboard Shortcuts** - Modal with 6 shortcuts:
+   - Tab/Shift+Tab - Navigate elements
+   - Enter - Add field to query
+   - Escape - Close modals
+   - Ctrl+Enter - Execute query
+   - Arrow Keys - Resize panels
+3. **OpenSearch Query DSL Docs** - External link to official docs
+4. **Bool Query Guide** - Explains Must/Should/Must Not/Filter clauses with SQL equivalents
+5. **Field Types Reference** - Documents 9 field types with recommended operators
+6. **Common Query Patterns** - Library of 10 query patterns with examples
+
+**Key Files:**
+- `apps/web/components/HelpMenu/HelpMenu.tsx` - Main dropdown component
+- `apps/web/components/HelpMenu/KeyboardShortcutsModal.tsx` - Shortcuts guide
+- `apps/web/components/HelpMenu/BoolQueryGuideModal.tsx` - Bool query explanation
+- `apps/web/components/HelpMenu/FieldTypesGuideModal.tsx` - Field types reference
+- `apps/web/components/HelpMenu/QueryPatternsModal.tsx` - Query patterns guide
+
+### Date Picker Components
+
+Specialized date input components for OpenSearch date queries:
+
+**Components:**
+
+1. **DatePicker** - Single datetime selection with calendar popup and time input
+   ```tsx
+   <DatePicker value={isoString} onChange={(iso) => handleChange(iso)} />
+   ```
+
+2. **DateRangePicker** - Dual-month calendar for date range selection
+   - Quick range buttons: Last 7 days, Last 30 days, This month, This year
+   - Returns `{ gte: string, lte: string }` for range queries
+   ```tsx
+   <DateRangePicker value={{ gte, lte }} onChange={(range) => handleChange(range)} />
+   ```
+
+3. **DateMathInput** - OpenSearch date math expression input
+   - Help popover with 7 clickable examples: `now`, `now-7d`, `now-1h`, `now+30d`, `now/d`, `now/M`, `now/y`
+   - Syntax guide for units (y, M, w, d, h, m, s) and rounding operators
+   ```tsx
+   <DateMathInput value={mathExpr} onChange={(expr) => handleChange(expr)} />
+   ```
+
+**Key Files:**
+- `apps/web/components/DatePickers/DatePicker.tsx`
+- `apps/web/components/DatePickers/DateRangePicker.tsx`
+- `apps/web/components/DatePickers/DateMathInput.tsx`
+
+**Dependencies:** `date-fns ^4.1.0`
+
+### Real-time Validation
+
+JSON validation with visual feedback:
+
+**Current Features:**
+- **JSON Parse Validation** - 500ms debounced validation on editor changes
+- **Error Display** - Red border ring on editor, error message below
+- **Schema Validation** - Monaco editor validates against OpenSearch query schema
+- **Accessibility** - Error alerts with `role="alert"` and `aria-live="polite"`
+
+**Error UI:**
+- Red ring indicator: `ring-2 ring-red-500` on invalid JSON
+- Error panel with AlertCircle icon and detailed error message
+- Loading state: "Parsing JSON..." message during debounce
+
+**Key Files:**
+- `apps/web/components/JSONPreview.tsx` - JSON validation implementation
+- `apps/web/lib/opensearch-schema.ts` - OpenSearch query JSON schema
 
 ## Environment Setup
 
