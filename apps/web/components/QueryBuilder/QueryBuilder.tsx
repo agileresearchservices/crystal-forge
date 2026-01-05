@@ -155,8 +155,8 @@ function EmptyState({ onAddBoolQuery, onAddSimpleQuery }: EmptyStateProps) {
           />
         </svg>
         <div className="space-y-2">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">No query defined</h3>
-          <p className="text-sm text-gray-700 dark:text-gray-400">Start building your search query by adding a clause. You can create a boolean query with multiple conditions or a simple single-field query.</p>
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">No query defined</h3>
+          <p className="text-xs sm:text-sm text-gray-700 dark:text-gray-400">Start building your search query by adding a clause. You can create a boolean query with multiple conditions or a simple single-field query.</p>
         </div>
         <div className="flex flex-col sm:flex-row gap-3 w-full pt-4">
           <Button

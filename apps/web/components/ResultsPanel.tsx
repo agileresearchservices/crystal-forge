@@ -96,8 +96,8 @@ export function ResultsPanel({ className }: ResultsPanelProps) {
               />
             </svg>
             <div>
-              <p className="text-sm font-semibold text-gray-900 dark:text-white">No results yet</p>
-              <p className="text-xs text-gray-700 dark:text-gray-400 mt-1">Build a query and execute it to see the results from your OpenSearch index</p>
+              <p className="text-sm sm:text-base font-semibold text-gray-900 dark:text-white">No results yet</p>
+              <p className="text-xs sm:text-sm text-gray-700 dark:text-gray-400 mt-1">Build a query and execute it to see the results from your OpenSearch index</p>
             </div>
           </div>
         </div>
