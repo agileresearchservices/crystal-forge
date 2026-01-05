@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useMemo, useCallback, useState, useRef } from 'react';
+import React, { useMemo, useCallback, useState, useRef, useEffect } from 'react';
 import Editor from '@monaco-editor/react';
+import * as monaco from 'monaco-editor';
 import debounce from 'lodash.debounce';
 import { AlertCircle } from 'lucide-react';
 import { useQuery } from '@/context/QueryContext';
@@ -9,6 +10,8 @@ import { useConnection } from '@/context/ConnectionContext';
 import { Button } from '@/components/ui/button';
 import { serializeQueryState, deserializeQueryState } from '@crystal-forge/query-dsl';
 import { cn } from '@/lib/utils';
+import { opensearchQuerySchema } from '@/lib/opensearch-schema';
+import { registerCompletionProvider, registerHoverProvider } from '@/lib/monaco-completions';
 
 /**
  * Props for JSONPreview
@@ -50,7 +53,9 @@ export function JSONPreview({ className, height = '400px' }: JSONPreviewProps) {
   const [editedJson, setEditedJson] = useState<string>('');
   const [parseError, setParseError] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(false);
   const debouncedUpdateRef = useRef<((value: string) => void) | null>(null);
+  const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
 
   /**
    * Get the current index name for the Dev Tools format
@@ -108,6 +113,71 @@ export function JSONPreview({ className, height = '400px' }: JSONPreviewProps) {
     // When query updates, show formatted with GET line
     return formatDevTools(jsonBody, currentIndex);
   }, [editedJson, jsonBody, currentIndex]);
+
+  /**
+   * Detect dark mode and register Monaco providers on mount
+   */
+  useEffect(() => {
+    // Detect dark mode from document (only in browser)
+    if (typeof window !== 'undefined') {
+      const isDark =
+        window.matchMedia?.('(prefers-color-scheme: dark)').matches ||
+        document.documentElement.classList.contains('dark');
+      setIsDarkMode(isDark);
+
+      // Listen for theme changes
+      const mediaQuery = window.matchMedia?.('(prefers-color-scheme: dark)');
+      const handler = (e: MediaQueryListEvent) => setIsDarkMode(e.matches);
+
+      if (mediaQuery?.addEventListener) {
+        mediaQuery.addEventListener('change', handler);
+      }
+
+      return () => {
+        if (mediaQuery?.removeEventListener) {
+          mediaQuery.removeEventListener('change', handler);
+        }
+      };
+    }
+  }, []);
+
+  /**
+   * Register providers once
+   */
+  useEffect(() => {
+    registerHoverProvider();
+  }, []);
+
+  /**
+   * Handle Monaco editor mount
+   */
+  const handleEditorMount = useCallback(
+    (editor: monaco.editor.IStandaloneCodeEditor, _monaco: typeof monaco) => {
+      editorRef.current = editor;
+
+      // Register completion provider with the editor
+      registerCompletionProvider(editor);
+
+      // Register JSON schema using the deprecated but available API
+      try {
+        (_monaco.languages.json as any).jsonDefaults?.setDiagnosticsOptions?.({
+          validate: true,
+          schemaValidation: 'warning',
+          schemas: [
+            {
+              uri: 'http://myserver/opensearch-query-schema.json',
+              fileMatch: ['*'],
+              schema: opensearchQuerySchema as any,
+            },
+          ],
+        });
+      } catch (error) {
+        // Schema registration is optional - proceed without it if not available
+        console.debug('JSON schema registration not available');
+      }
+    },
+    []
+  );
 
   /**
    * Create and initialize debounced update function
@@ -221,6 +291,7 @@ export function JSONPreview({ className, height = '400px' }: JSONPreviewProps) {
           defaultLanguage="json"
           value={monacoContent}
           onChange={handleJsonChange}
+          onMount={handleEditorMount}
           options={{
             readOnly: false,
             minimap: { enabled: false },
@@ -232,8 +303,19 @@ export function JSONPreview({ className, height = '400px' }: JSONPreviewProps) {
             automaticLayout: true,
             wordWrap: 'on',
             tabSize: 2,
+            quickSuggestions: {
+              other: true,
+              comments: false,
+              strings: true,
+            },
+            suggest: {
+              snippetsPreventQuickSuggestions: false,
+              showSnippets: true,
+            },
+            formatOnPaste: true,
+            formatOnType: true,
           }}
-          theme="vs"
+          theme={isDarkMode ? 'vs-dark' : 'vs'}
         />
       </div>
 

@@ -1,5 +1,6 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import { useState, useCallback } from 'react';
 import {
   DndContext,
@@ -12,7 +13,7 @@ import {
   DragEndEvent,
 } from '@dnd-kit/core';
 import { QueryBuilder } from '@/components/QueryBuilder/QueryBuilder';
-import { JSONPreview } from '@/components/JSONPreview';
+const JSONPreview = dynamic(() => import('@/components/JSONPreview').then((mod) => ({ default: mod.JSONPreview })), { ssr: false });
 import { ResultsPanel } from '@/components/ResultsPanel';
 import { FieldList } from '@/components/FieldList';
 import { ConnectionModal } from '@/components/ConnectionModal';

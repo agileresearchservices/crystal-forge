@@ -13,8 +13,10 @@ import type {
   DateHistogramAggregationResult,
   TermQueryNode,
   RangeQueryNode,
+  Aggregation,
 } from '@crystal-forge/query-dsl';
 import { cn } from '@/lib/utils';
+import { AggregationBuilder } from './AggregationsBuilder/AggregationBuilder';
 
 type AggregationResultType =
   | TermsAggregationResult
@@ -29,12 +31,14 @@ interface AggregationState {
 }
 
 /**
- * Panel for exploring field values via aggregations
+ * Panel for exploring field values via aggregations and building aggregations
  */
 export function AggregationsPanel() {
   const { state: connectionState } = useConnection();
   const { state: queryState, addNode } = useQuery();
   const [selectedField, setSelectedField] = useState<FieldInfo | null>(null);
+  const [activeTab, setActiveTab] = useState<'explore' | 'build'>('explore');
+  const [builderAggregations, setBuilderAggregations] = useState<Aggregation[]>([]);
 
   // Debounce the query to avoid too many requests on rapid changes
   const queryJson = useMemo(
@@ -147,16 +151,122 @@ export function AggregationsPanel() {
 
   if (!connectionState.connection.isConnected) {
     return (
-      <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
-        <svg className="w-14 h-14 text-gray-300 dark:text-gray-700 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.658 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-        </svg>
-        <h3 className="text-sm font-medium text-gray-900 dark:text-white mb-1">Field Explorer</h3>
-        <p className="text-xs text-gray-700 dark:text-gray-400">Connect to OpenSearch to explore and analyze field values in your index.</p>
+      <div className="flex flex-col h-full">
+        {/* Tab Bar */}
+        <div className="flex border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-4">
+          <button
+            onClick={() => setActiveTab('explore')}
+            className={cn(
+              'px-4 py-3 text-sm font-medium border-b-2 transition-colors',
+              activeTab === 'explore'
+                ? 'border-indigo-600 dark:border-indigo-400 text-indigo-600 dark:text-indigo-400'
+                : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-300'
+            )}
+          >
+            Explore
+          </button>
+          <button
+            onClick={() => setActiveTab('build')}
+            className={cn(
+              'px-4 py-3 text-sm font-medium border-b-2 transition-colors',
+              activeTab === 'build'
+                ? 'border-indigo-600 dark:border-indigo-400 text-indigo-600 dark:text-indigo-400'
+                : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-300'
+            )}
+          >
+            Build
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 overflow-auto p-4">
+          <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
+            <svg className="w-14 h-14 text-gray-300 dark:text-gray-700 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.658 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+            </svg>
+            <h3 className="text-sm font-medium text-gray-900 dark:text-white mb-1">
+              {activeTab === 'explore' ? 'Field Explorer' : 'Aggregation Builder'}
+            </h3>
+            <p className="text-xs text-gray-700 dark:text-gray-400">
+              Connect to OpenSearch to {activeTab === 'explore' ? 'explore and analyze field values' : 'build custom aggregations'}.
+            </p>
+          </div>
+        </div>
       </div>
     );
   }
 
+  return (
+    <div className="flex flex-col h-full">
+      {/* Tab Bar */}
+      <div className="flex border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-4 flex-shrink-0">
+        <button
+          onClick={() => setActiveTab('explore')}
+          className={cn(
+            'px-4 py-3 text-sm font-medium border-b-2 transition-colors',
+            activeTab === 'explore'
+              ? 'border-indigo-600 dark:border-indigo-400 text-indigo-600 dark:text-indigo-400'
+              : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-300'
+          )}
+        >
+          Explore
+        </button>
+        <button
+          onClick={() => setActiveTab('build')}
+          className={cn(
+            'px-4 py-3 text-sm font-medium border-b-2 transition-colors',
+            activeTab === 'build'
+              ? 'border-indigo-600 dark:border-indigo-400 text-indigo-600 dark:text-indigo-400'
+              : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-300'
+          )}
+        >
+          Build
+        </button>
+      </div>
+
+      {/* Content */}
+      <div className="flex-1 overflow-auto p-4">
+        {activeTab === 'explore' ? (
+          <ExploreTab
+            aggregatableFields={aggregatableFields}
+            selectedField={selectedField}
+            onFieldChange={setSelectedField}
+            aggState={aggState}
+            onAddTermFilter={handleAddTermFilter}
+            onAddDateRangeFilter={handleAddDateRangeFilter}
+          />
+        ) : (
+          <BuildTab
+            aggregations={builderAggregations}
+            fields={aggregatableFields}
+            onChange={setBuilderAggregations}
+          />
+        )}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Explore Tab - Field exploration via auto-generated aggregations
+ */
+interface ExploreTabProps {
+  aggregatableFields: FieldInfo[];
+  selectedField: FieldInfo | null;
+  onFieldChange: (field: FieldInfo | null) => void;
+  aggState: AggregationState;
+  onAddTermFilter: (field: string, value: string | number | boolean) => void;
+  onAddDateRangeFilter: (field: string, from: string, to: string) => void;
+}
+
+function ExploreTab({
+  aggregatableFields,
+  selectedField,
+  onFieldChange,
+  aggState,
+  onAddTermFilter,
+  onAddDateRangeFilter,
+}: ExploreTabProps) {
   if (aggregatableFields.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
@@ -172,19 +282,19 @@ export function AggregationsPanel() {
   return (
     <div className="space-y-4">
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           Select Field to Explore
         </label>
         <select
           value={selectedField?.path || ''}
           onChange={(e) => {
             const field = aggregatableFields.find((f) => f.path === e.target.value);
-            setSelectedField(field || null);
+            onFieldChange(field || null);
           }}
           className={cn(
             'w-full px-3 py-2 text-sm rounded-md',
-            'border border-gray-300 bg-white',
-            'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent'
+            'border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950',
+            'focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent'
           )}
         >
           <option value="">Choose a field...</option>
@@ -198,7 +308,7 @@ export function AggregationsPanel() {
 
       {/* Loading state */}
       {aggState.loading && (
-        <div className="flex items-center gap-2 text-sm text-gray-700">
+        <div className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
           <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24" aria-hidden="true">
             <circle
               className="opacity-25"
@@ -220,7 +330,7 @@ export function AggregationsPanel() {
 
       {/* Error state */}
       {aggState.error && (
-        <div className="p-3 text-sm text-red-600 bg-red-50 rounded-md">
+        <div className="p-3 text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 rounded-md">
           {aggState.error}
         </div>
       )}
@@ -231,18 +341,37 @@ export function AggregationsPanel() {
           field={selectedField}
           result={aggState.result}
           aggregationType={aggState.aggregationType!}
-          onAddTermFilter={handleAddTermFilter}
-          onAddDateRangeFilter={handleAddDateRangeFilter}
+          onAddTermFilter={onAddTermFilter}
+          onAddDateRangeFilter={onAddDateRangeFilter}
         />
       )}
 
       {/* Help text */}
       {!selectedField && !aggState.loading && (
-        <p className="text-xs text-gray-700">
+        <p className="text-xs text-gray-700 dark:text-gray-400">
           Click a value to add it as a filter to your query.
         </p>
       )}
     </div>
+  );
+}
+
+/**
+ * Build Tab - Visual aggregation builder
+ */
+interface BuildTabProps {
+  aggregations: Aggregation[];
+  fields: FieldInfo[];
+  onChange: (aggregations: Aggregation[]) => void;
+}
+
+function BuildTab({ aggregations, fields, onChange }: BuildTabProps) {
+  return (
+    <AggregationBuilder
+      aggregations={aggregations}
+      fields={fields}
+      onChange={onChange}
+    />
   );
 }
 
@@ -377,9 +506,9 @@ function StatsResults({ result }: StatsResultsProps) {
 
 function StatCard({ label, value }: { label: string; value: string }) {
   return (
-    <div className="bg-gray-100 rounded p-2">
-      <div className="text-xs text-gray-500">{label}</div>
-      <div className="font-medium text-gray-700">{value}</div>
+    <div className="bg-gray-100 dark:bg-gray-800 rounded p-2">
+      <div className="text-xs text-gray-500 dark:text-gray-400">{label}</div>
+      <div className="font-medium text-gray-700 dark:text-gray-300">{value}</div>
     </div>
   );
 }
