@@ -302,8 +302,14 @@ export function TemplateProvider({ children }: TemplateProviderProps) {
         dispatch({ type: 'SET_LOADING', payload: true });
         dispatch({ type: 'SET_ERROR', payload: null });
 
-        // Initialize IndexedDB and seed templates
-        await initDB();
+        // Initialize IndexedDB
+        const dbResult = await initDB();
+        if (!dbResult.success) {
+          throw new Error(dbResult.error || 'Failed to initialize database');
+        }
+
+        // Seed built-in templates (idempotent - only adds if not already present)
+        await seedTemplates();
 
         // Load all templates and history
         const [templates, aggs, hist] = await Promise.all([

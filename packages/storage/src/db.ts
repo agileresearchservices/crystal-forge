@@ -36,19 +36,26 @@ const storageConfig: StorageConfig = {
 };
 
 let dbInstance: IDBDatabase | null = null;
+let initPromise: Promise<DBInitResult> | null = null;
 
 /**
- * Initialize IndexedDB database
+ * Initialize IndexedDB database with proper store creation
  */
 export async function initDB(): Promise<DBInitResult> {
-  return new Promise((resolve) => {
+  // Return existing promise if initialization is already in progress
+  if (initPromise) {
+    return initPromise;
+  }
+
+  initPromise = new Promise((resolve) => {
     // Check if IndexedDB is available
     if (!('indexedDB' in window)) {
-      resolve({
+      const result: DBInitResult = {
         success: false,
         db: null,
         error: 'IndexedDB is not available in this browser',
-      });
+      };
+      resolve(result);
       return;
     }
 
@@ -62,6 +69,65 @@ export async function initDB(): Promise<DBInitResult> {
       return;
     }
 
+    // Helper function to check and recreate stores if needed
+    const checkAndCreateStores = (db: IDBDatabase) => {
+      const missingStores = Object.keys(storageConfig.stores).filter(
+        (storeName) => !db.objectStoreNames.contains(storeName)
+      );
+
+      if (missingStores.length > 0) {
+        // Close the current connection and reopen with incremented version
+        db.close();
+        dbInstance = null;
+        initPromise = null;
+
+        // Reopen with a higher version to trigger onupgradeneeded
+        const newVersion = (db.version || DB_VERSION) + 1;
+        const retryRequest = window.indexedDB.open(DB_NAME, newVersion);
+
+        retryRequest.onerror = () => {
+          resolve({
+            success: false,
+            db: null,
+            error: `Failed to recreate stores: ${retryRequest.error?.message}`,
+          });
+        };
+
+        retryRequest.onsuccess = () => {
+          dbInstance = retryRequest.result;
+          resolve({
+            success: true,
+            db: dbInstance,
+            error: null,
+          });
+        };
+
+        retryRequest.onupgradeneeded = (event) => {
+          const upgradingDb = (event.target as IDBOpenDBRequest).result;
+          Object.entries(storageConfig.stores).forEach(([storeName, storeConfig]) => {
+            if (!upgradingDb.objectStoreNames.contains(storeName)) {
+              const objectStore = upgradingDb.createObjectStore(storeName, {
+                keyPath: storeConfig.keyPath,
+              });
+              storeConfig.indexes.forEach((index) => {
+                objectStore.createIndex(index.name, index.keyPath, {
+                  unique: index.unique ?? false,
+                });
+              });
+            }
+          });
+        };
+      } else {
+        // All stores exist
+        dbInstance = db;
+        resolve({
+          success: true,
+          db: dbInstance,
+          error: null,
+        });
+      }
+    };
+
     const request = window.indexedDB.open(DB_NAME, DB_VERSION);
 
     request.onerror = () => {
@@ -73,12 +139,8 @@ export async function initDB(): Promise<DBInitResult> {
     };
 
     request.onsuccess = () => {
-      dbInstance = request.result;
-      resolve({
-        success: true,
-        db: dbInstance,
-        error: null,
-      });
+      const db = request.result;
+      checkAndCreateStores(db);
     };
 
     request.onupgradeneeded = (event) => {
@@ -86,25 +148,24 @@ export async function initDB(): Promise<DBInitResult> {
 
       // Create or update object stores
       Object.entries(storageConfig.stores).forEach(([storeName, storeConfig]) => {
-        let objectStore: IDBObjectStore;
-
-        if (db.objectStoreNames.contains(storeName)) {
-          // Store already exists, skip creation
-          return;
-        }
-
-        // Create new object store
-        objectStore = db.createObjectStore(storeName, { keyPath: storeConfig.keyPath });
-
-        // Create indexes
-        storeConfig.indexes.forEach((index) => {
-          objectStore.createIndex(index.name, index.keyPath, {
-            unique: index.unique ?? false,
+        if (!db.objectStoreNames.contains(storeName)) {
+          // Create new object store
+          const objectStore = db.createObjectStore(storeName, {
+            keyPath: storeConfig.keyPath,
           });
-        });
+
+          // Create indexes
+          storeConfig.indexes.forEach((index) => {
+            objectStore.createIndex(index.name, index.keyPath, {
+              unique: index.unique ?? false,
+            });
+          });
+        }
       });
     };
   });
+
+  return initPromise;
 }
 
 /**
