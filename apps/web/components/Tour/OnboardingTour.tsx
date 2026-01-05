@@ -32,6 +32,18 @@ export function useOnboardingTour() {
           driverObj.destroy();
         }
       },
+      onNextClick: () => {
+        if (driverObj) {
+          // On the last step, "Next" button becomes "Done" - destroy the tour
+          const currentStep = driverObj.getActiveIndex?.() ?? 0;
+          const totalSteps = ONBOARDING_TOUR_STEPS.length;
+          if (currentStep >= totalSteps - 1) {
+            driverObj.destroy();
+          } else {
+            driverObj.moveNext();
+          }
+        }
+      },
       onDestroyStarted: () => {
         // Mark tour as completed in localStorage
         localStorage.setItem('crystal-forge:tour-completed', 'true');
