@@ -8,6 +8,8 @@ import {
   type OperatorDefinition,
 } from '@crystal-forge/query-dsl';
 import { cn } from '@/lib/utils';
+import { InfoTooltip } from '@/components/ui/info-tooltip';
+import { OPERATOR_TOOLTIPS } from '@/constants/tooltips';
 
 /**
  * Props for OperatorSelector
@@ -61,6 +63,15 @@ export function OperatorSelector({
   }, [operators]);
 
   /**
+   * Group operators by recommended status
+   */
+  const groupedOperators = useMemo(() => {
+    const recommended = uniqueOperators.filter((op) => op.isRecommended);
+    const other = uniqueOperators.filter((op) => !op.isRecommended);
+    return { recommended, other };
+  }, [uniqueOperators]);
+
+  /**
    * Find the current operator definition
    */
   const currentOperator = useMemo(() => {
@@ -68,25 +79,47 @@ export function OperatorSelector({
   }, [operators, value]);
 
   return (
-    <select
-      value={value}
-      onChange={(e) => onChange(e.target.value as QueryType)}
-      disabled={disabled}
-      className={cn(
-        'w-full px-2 py-1.5 text-sm rounded-md',
-        'border border-gray-300 bg-white',
-        'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent',
-        'disabled:opacity-50 disabled:cursor-not-allowed',
-        className
+    <div className="flex items-center gap-2">
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value as QueryType)}
+        disabled={disabled}
+        className={cn(
+          'flex-1 px-2 py-1.5 text-sm rounded-md',
+          'border border-gray-300 bg-white',
+          'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent',
+          'disabled:opacity-50 disabled:cursor-not-allowed',
+          className
+        )}
+        title={currentOperator?.description}
+      >
+        {groupedOperators.recommended.length > 0 && (
+          <optgroup label="Recommended for this field type">
+            {groupedOperators.recommended.map((op) => (
+              <option key={op.queryType} value={op.queryType} title={op.description}>
+                ⭐ {op.label}
+              </option>
+            ))}
+          </optgroup>
+        )}
+        {groupedOperators.other.length > 0 && (
+          <optgroup label="Other options">
+            {groupedOperators.other.map((op) => (
+              <option key={op.queryType} value={op.queryType} title={op.description}>
+                {op.label}
+              </option>
+            ))}
+          </optgroup>
+        )}
+      </select>
+      {currentOperator && value in OPERATOR_TOOLTIPS && (
+        <InfoTooltip
+          content={OPERATOR_TOOLTIPS[value as QueryType]}
+          side="right"
+          className="flex-shrink-0"
+        />
       )}
-      title={currentOperator?.description}
-    >
-      {uniqueOperators.map((op) => (
-        <option key={op.queryType} value={op.queryType} title={op.description}>
-          {op.label}
-        </option>
-      ))}
-    </select>
+    </div>
   );
 }
 
@@ -129,29 +162,66 @@ export function OperatorButtonGroup({
     );
   }
 
+  const currentOp = useMemo(
+    () => operators.find((op: OperatorDefinition) => op.queryType === value),
+    [operators, value]
+  );
+
+  // Group operators for button group
+  const groupedOpsForButtons = useMemo(() => {
+    const seen = new Set<QueryType>();
+    const unique: OperatorDefinition[] = [];
+
+    for (const op of operators) {
+      if (!seen.has(op.queryType)) {
+        seen.add(op.queryType);
+        unique.push(op);
+      }
+    }
+
+    const recommended = unique.filter((op) => op.isRecommended);
+    const other = unique.filter((op) => !op.isRecommended);
+    return [...recommended, ...other];
+  }, [operators]);
+
   return (
-    <div className={cn('inline-flex rounded-md shadow-sm', className)}>
-      {operators.map((op: OperatorDefinition, index: number) => (
-        <button
-          key={op.queryType}
-          type="button"
-          onClick={() => onChange(op.queryType)}
-          title={op.description}
-          className={cn(
-            'px-3 py-1.5 text-sm font-medium',
-            'border border-gray-300',
-            index === 0 && 'rounded-l-md',
-            index === operators.length - 1 && 'rounded-r-md',
-            index > 0 && '-ml-px',
-            value === op.queryType
-              ? 'bg-blue-50 text-blue-700 border-blue-500 z-10'
-              : 'bg-white text-gray-700 hover:bg-gray-50',
-            'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:z-10'
-          )}
-        >
-          {op.label}
-        </button>
-      ))}
+    <div className="flex items-center gap-2">
+      <div className={cn('inline-flex rounded-md shadow-sm', className)}>
+        {groupedOpsForButtons.map((op: OperatorDefinition, index: number) => (
+          <button
+            key={op.queryType}
+            type="button"
+            onClick={() => onChange(op.queryType)}
+            title={op.description}
+            className={cn(
+              'px-3 py-1.5 text-sm font-medium relative',
+              'border border-gray-300',
+              index === 0 && 'rounded-l-md',
+              index === groupedOpsForButtons.length - 1 && 'rounded-r-md',
+              index > 0 && '-ml-px',
+              value === op.queryType
+                ? 'bg-blue-50 text-blue-700 border-blue-500 z-10'
+                : 'bg-white text-gray-700 hover:bg-gray-50',
+              op.isRecommended && 'border-indigo-300',
+              'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:z-10'
+            )}
+          >
+            {op.label}
+            {op.isRecommended && (
+              <span className="ml-1" title="Recommended for this field type">
+                ⭐
+              </span>
+            )}
+          </button>
+        ))}
+      </div>
+      {currentOp && value in OPERATOR_TOOLTIPS && (
+        <InfoTooltip
+          content={OPERATOR_TOOLTIPS[value as QueryType]}
+          side="right"
+          className="flex-shrink-0"
+        />
+      )}
     </div>
   );
 }

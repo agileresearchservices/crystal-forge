@@ -10,6 +10,8 @@ import type {
   MatchQueryNode,
 } from '@crystal-forge/query-dsl';
 import { cn } from '@/lib/utils';
+import { InfoTooltip } from '@/components/ui/info-tooltip';
+import { CLAUSE_TOOLTIPS } from '@/constants/tooltips';
 
 /**
  * Clause metadata for display
@@ -124,29 +126,39 @@ export function BooleanGroup({ node, path }: BooleanGroupProps) {
           const isActive = activeTab === clause;
 
           return (
-            <button
-              key={clause}
-              onClick={() => setActiveTab(clause)}
-              className={cn(
-                'flex-1 px-3 py-2 text-sm font-medium',
-                'border-b-2 transition-colors',
-                isActive
-                  ? 'border-blue-500 text-blue-600 bg-white'
-                  : 'border-transparent text-gray-700 hover:text-gray-800 hover:bg-gray-100'
-              )}
-            >
-              {info.label}
-              {count > 0 && (
-                <span
-                  className={cn(
-                    'ml-1.5 px-1.5 py-0.5 text-xs rounded-full',
-                    isActive ? 'bg-blue-100 text-blue-600' : 'bg-gray-200 text-gray-600'
+            <div key={clause} className="flex items-center flex-1">
+              <button
+                onClick={() => setActiveTab(clause)}
+                className={cn(
+                  'flex-1 px-3 py-2 text-sm font-medium',
+                  'border-b-2 transition-colors flex items-center justify-between',
+                  isActive
+                    ? 'border-blue-500 text-blue-600 bg-white'
+                    : 'border-transparent text-gray-700 hover:text-gray-800 hover:bg-gray-100'
+                )}
+              >
+                <span className="flex items-center gap-1">
+                  {info.label}
+                  {count > 0 && (
+                    <span
+                      className={cn(
+                        'ml-1.5 px-1.5 py-0.5 text-xs rounded-full',
+                        isActive ? 'bg-blue-100 text-blue-600' : 'bg-gray-200 text-gray-600'
+                      )}
+                    >
+                      {count}
+                    </span>
                   )}
-                >
-                  {count}
                 </span>
-              )}
-            </button>
+              </button>
+              <div className="px-1">
+                <InfoTooltip
+                  content={CLAUSE_TOOLTIPS[clause]}
+                  side="right"
+                  className="flex-shrink-0"
+                />
+              </div>
+            </div>
           );
         })}
       </div>

@@ -9,7 +9,10 @@ import { useActiveClause } from '@/context/ActiveClauseContext';
 import { useFieldSelector } from '@/hooks/useFieldSelector';
 import { createQueryNodeFromField } from '@/utils/createQueryNodeFromField';
 import { Button } from '@/components/ui/button';
+import { InfoTooltip } from '@/components/ui/info-tooltip';
+import { FIELD_TYPE_TOOLTIPS } from '@/constants/tooltips';
 import type { FieldInfo } from '@crystal-forge/opensearch-client';
+import type { FieldType } from '@crystal-forge/query-dsl';
 import { cn } from '@/lib/utils';
 
 /**
@@ -392,16 +395,28 @@ function FieldItem({ field, onAdd, typeBadgeColor }: FieldItemProps) {
         <span className="truncate">{field.path}</span>
       </button>
 
-      {/* Type badge */}
-      <span
-        className={cn(
-          'px-1.5 py-0.5 text-xs rounded font-medium flex-shrink-0',
-          typeBadgeColor
+      {/* Type badge with tooltip */}
+      <div className="flex items-center gap-1">
+        <span
+          className={cn(
+            'px-1.5 py-0.5 text-xs rounded font-medium flex-shrink-0',
+            typeBadgeColor
+          )}
+          aria-label={`Field type: ${field.type}`}
+        >
+          {field.type}
+        </span>
+        {field.type in FIELD_TYPE_TOOLTIPS && (
+          <InfoTooltip
+            content={{
+              title: field.type.charAt(0).toUpperCase() + field.type.slice(1),
+              description: FIELD_TYPE_TOOLTIPS[field.type as FieldType],
+            }}
+            side="right"
+            className="flex-shrink-0"
+          />
         )}
-        aria-label={`Field type: ${field.type}`}
-      >
-        {field.type}
-      </span>
+      </div>
 
       {/* Add button - ALWAYS VISIBLE */}
       <button

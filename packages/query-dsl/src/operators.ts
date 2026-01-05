@@ -31,6 +31,10 @@ export interface OperatorDefinition {
   queryParams?: Record<string, unknown>;
   /** Unique identifier for the operator (for operators with same queryType) */
   operatorId?: string;
+  /** Whether this is the recommended operator for its field type */
+  isRecommended?: boolean;
+  /** Difficulty level for using this operator */
+  difficulty?: 'beginner' | 'intermediate' | 'advanced';
 }
 
 /**
@@ -55,6 +59,8 @@ const TEXT_OPERATORS: OperatorDefinition[] = [
     description: 'Full-text search with analysis',
     requiresValue: true,
     operatorId: 'match',
+    isRecommended: true,
+    difficulty: 'beginner',
   },
   {
     queryType: 'match_phrase',
@@ -62,6 +68,7 @@ const TEXT_OPERATORS: OperatorDefinition[] = [
     description: 'Exact phrase match',
     requiresValue: true,
     operatorId: 'match_phrase',
+    difficulty: 'beginner',
   },
   {
     queryType: 'match_phrase_prefix',
@@ -69,6 +76,7 @@ const TEXT_OPERATORS: OperatorDefinition[] = [
     description: 'Phrase prefix for autocomplete',
     requiresValue: true,
     operatorId: 'match_phrase_prefix',
+    difficulty: 'intermediate',
   },
   {
     queryType: 'multi_match',
@@ -76,6 +84,7 @@ const TEXT_OPERATORS: OperatorDefinition[] = [
     description: 'Search across multiple fields',
     requiresValue: true,
     operatorId: 'multi_match',
+    difficulty: 'intermediate',
   },
   {
     queryType: 'query_string',
@@ -83,6 +92,7 @@ const TEXT_OPERATORS: OperatorDefinition[] = [
     description: 'Lucene query syntax',
     requiresValue: true,
     operatorId: 'query_string',
+    difficulty: 'advanced',
   },
   {
     queryType: 'simple_query_string',
@@ -90,6 +100,7 @@ const TEXT_OPERATORS: OperatorDefinition[] = [
     description: 'Simple query syntax (safer)',
     requiresValue: true,
     operatorId: 'simple_query_string',
+    difficulty: 'intermediate',
   },
   {
     queryType: 'fuzzy',
@@ -97,6 +108,7 @@ const TEXT_OPERATORS: OperatorDefinition[] = [
     description: 'Fuzzy matching for typo tolerance',
     requiresValue: true,
     operatorId: 'fuzzy',
+    difficulty: 'intermediate',
   },
   {
     queryType: 'wildcard',
@@ -104,6 +116,7 @@ const TEXT_OPERATORS: OperatorDefinition[] = [
     description: 'Pattern matching with * and ?',
     requiresValue: true,
     operatorId: 'wildcard',
+    difficulty: 'advanced',
   },
   {
     queryType: 'prefix',
@@ -111,6 +124,7 @@ const TEXT_OPERATORS: OperatorDefinition[] = [
     description: 'Prefix matching',
     requiresValue: true,
     operatorId: 'prefix',
+    difficulty: 'intermediate',
   },
   ...COMMON_OPERATORS,
 ];
@@ -125,6 +139,8 @@ const KEYWORD_OPERATORS: OperatorDefinition[] = [
     description: 'Exact match (case-sensitive)',
     requiresValue: true,
     operatorId: 'term',
+    isRecommended: true,
+    difficulty: 'beginner',
   },
   {
     queryType: 'term',
@@ -133,6 +149,7 @@ const KEYWORD_OPERATORS: OperatorDefinition[] = [
     requiresValue: true,
     operatorId: 'term_case_insensitive',
     queryParams: { case_insensitive: true },
+    difficulty: 'intermediate',
   },
   {
     queryType: 'terms',
@@ -140,6 +157,7 @@ const KEYWORD_OPERATORS: OperatorDefinition[] = [
     description: 'Match any of multiple values',
     requiresValue: true,
     operatorId: 'terms',
+    difficulty: 'intermediate',
   },
   {
     queryType: 'prefix',
@@ -147,6 +165,7 @@ const KEYWORD_OPERATORS: OperatorDefinition[] = [
     description: 'Prefix matching',
     requiresValue: true,
     operatorId: 'prefix',
+    difficulty: 'intermediate',
   },
   {
     queryType: 'wildcard',
@@ -154,6 +173,7 @@ const KEYWORD_OPERATORS: OperatorDefinition[] = [
     description: 'Pattern matching with * and ?',
     requiresValue: true,
     operatorId: 'wildcard',
+    difficulty: 'advanced',
   },
   {
     queryType: 'regexp',
@@ -161,6 +181,7 @@ const KEYWORD_OPERATORS: OperatorDefinition[] = [
     description: 'Regular expression matching',
     requiresValue: true,
     operatorId: 'regexp',
+    difficulty: 'advanced',
   },
   {
     queryType: 'fuzzy',
@@ -168,6 +189,7 @@ const KEYWORD_OPERATORS: OperatorDefinition[] = [
     description: 'Fuzzy matching for typo tolerance',
     requiresValue: true,
     operatorId: 'fuzzy',
+    difficulty: 'intermediate',
   },
   ...COMMON_OPERATORS,
 ];
@@ -181,6 +203,7 @@ const NUMERIC_OPERATORS: OperatorDefinition[] = [
     label: 'equals',
     description: 'Exact numeric match',
     requiresValue: true,
+    difficulty: 'beginner',
   },
   {
     queryType: 'range',
@@ -189,6 +212,7 @@ const NUMERIC_OPERATORS: OperatorDefinition[] = [
     requiresValue: true,
     rangeOperator: 'gt',
     isRange: true,
+    difficulty: 'beginner',
   },
   {
     queryType: 'range',
@@ -197,6 +221,8 @@ const NUMERIC_OPERATORS: OperatorDefinition[] = [
     requiresValue: true,
     rangeOperator: 'gte',
     isRange: true,
+    isRecommended: true,
+    difficulty: 'beginner',
   },
   {
     queryType: 'range',
@@ -205,6 +231,7 @@ const NUMERIC_OPERATORS: OperatorDefinition[] = [
     requiresValue: true,
     rangeOperator: 'lt',
     isRange: true,
+    difficulty: 'beginner',
   },
   {
     queryType: 'range',
@@ -213,6 +240,7 @@ const NUMERIC_OPERATORS: OperatorDefinition[] = [
     requiresValue: true,
     rangeOperator: 'lte',
     isRange: true,
+    difficulty: 'beginner',
   },
   {
     queryType: 'range',
@@ -220,6 +248,8 @@ const NUMERIC_OPERATORS: OperatorDefinition[] = [
     description: 'Value is within a range',
     requiresValue: true,
     isRange: true,
+    isRecommended: true,
+    difficulty: 'beginner',
   },
   ...COMMON_OPERATORS,
 ];
@@ -233,6 +263,7 @@ const DATE_OPERATORS: OperatorDefinition[] = [
     label: 'equals',
     description: 'Exact date match',
     requiresValue: true,
+    difficulty: 'beginner',
   },
   {
     queryType: 'range',
@@ -241,6 +272,7 @@ const DATE_OPERATORS: OperatorDefinition[] = [
     requiresValue: true,
     rangeOperator: 'gt',
     isRange: true,
+    difficulty: 'beginner',
   },
   {
     queryType: 'range',
@@ -249,6 +281,8 @@ const DATE_OPERATORS: OperatorDefinition[] = [
     requiresValue: true,
     rangeOperator: 'gte',
     isRange: true,
+    isRecommended: true,
+    difficulty: 'beginner',
   },
   {
     queryType: 'range',
@@ -257,6 +291,7 @@ const DATE_OPERATORS: OperatorDefinition[] = [
     requiresValue: true,
     rangeOperator: 'lt',
     isRange: true,
+    difficulty: 'beginner',
   },
   {
     queryType: 'range',
@@ -265,6 +300,7 @@ const DATE_OPERATORS: OperatorDefinition[] = [
     requiresValue: true,
     rangeOperator: 'lte',
     isRange: true,
+    difficulty: 'beginner',
   },
   {
     queryType: 'range',
@@ -272,6 +308,8 @@ const DATE_OPERATORS: OperatorDefinition[] = [
     description: 'Date is within a range',
     requiresValue: true,
     isRange: true,
+    isRecommended: true,
+    difficulty: 'beginner',
   },
   ...COMMON_OPERATORS,
 ];
@@ -287,6 +325,8 @@ const BOOLEAN_OPERATORS: OperatorDefinition[] = [
     requiresValue: false,
     operatorId: 'term_true',
     queryParams: { value: true },
+    isRecommended: true,
+    difficulty: 'beginner',
   },
   {
     queryType: 'term',
@@ -295,6 +335,7 @@ const BOOLEAN_OPERATORS: OperatorDefinition[] = [
     requiresValue: false,
     operatorId: 'term_false',
     queryParams: { value: false },
+    difficulty: 'beginner',
   },
   ...COMMON_OPERATORS,
 ];
