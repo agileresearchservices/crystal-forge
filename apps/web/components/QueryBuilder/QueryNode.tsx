@@ -98,7 +98,7 @@ export function QueryNodeComponent({ node, path, onRemove }: QueryNodeProps) {
     >
       {/* Field Selector */}
       <div className="flex-1 min-w-0">
-        <label className="block text-xs font-medium text-gray-500 mb-1">
+        <label className="block text-xs font-medium text-gray-700 mb-1">
           Field
         </label>
         <select
@@ -121,7 +121,7 @@ export function QueryNodeComponent({ node, path, onRemove }: QueryNodeProps) {
 
       {/* Operator Selector */}
       <div className="w-40">
-        <label className="block text-xs font-medium text-gray-500 mb-1">
+        <label className="block text-xs font-medium text-gray-700 mb-1">
           Operator
         </label>
         <OperatorSelector
@@ -133,7 +133,7 @@ export function QueryNodeComponent({ node, path, onRemove }: QueryNodeProps) {
 
       {/* Value Input */}
       <div className="flex-1 min-w-0">
-        <label className="block text-xs font-medium text-gray-500 mb-1">
+        <label className="block text-xs font-medium text-gray-700 mb-1">
           Value
         </label>
         <ValueInput

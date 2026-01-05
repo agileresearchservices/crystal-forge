@@ -147,7 +147,7 @@ export function AggregationsPanel() {
 
   if (!connectionState.connection.isConnected) {
     return (
-      <div className="text-sm text-gray-500">
+      <div className="text-sm text-gray-700">
         <p className="mb-2 font-medium">Field Explorer</p>
         <p>Connect to OpenSearch to explore field values.</p>
       </div>
@@ -156,10 +156,10 @@ export function AggregationsPanel() {
 
   if (aggregatableFields.length === 0) {
     return (
-      <div className="text-sm text-gray-500">
+      <div className="text-sm text-gray-700">
         <p className="mb-2 font-medium">Field Explorer</p>
         <p>No aggregatable fields available.</p>
-        <p className="mt-2 text-xs text-gray-400">
+        <p className="mt-2 text-xs text-gray-700">
           Aggregations require keyword, numeric, date, or boolean fields.
         </p>
       </div>
@@ -195,7 +195,7 @@ export function AggregationsPanel() {
 
       {/* Loading state */}
       {aggState.loading && (
-        <div className="flex items-center gap-2 text-sm text-gray-500">
+        <div className="flex items-center gap-2 text-sm text-gray-700">
           <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24" aria-hidden="true">
             <circle
               className="opacity-25"
@@ -211,7 +211,7 @@ export function AggregationsPanel() {
               d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
             />
           </svg>
-          Loading...
+          Loading field values...
         </div>
       )}
 
@@ -235,7 +235,7 @@ export function AggregationsPanel() {
 
       {/* Help text */}
       {!selectedField && !aggState.loading && (
-        <p className="text-xs text-gray-400">
+        <p className="text-xs text-gray-700">
           Click a value to add it as a filter to your query.
         </p>
       )}

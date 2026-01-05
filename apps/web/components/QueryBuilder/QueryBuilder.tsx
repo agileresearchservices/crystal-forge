@@ -139,7 +139,7 @@ interface EmptyStateProps {
 function EmptyState({ onAddBoolQuery, onAddSimpleQuery }: EmptyStateProps) {
   return (
     <div className="flex flex-col items-center justify-center h-64 text-center" role="status" aria-live="polite">
-      <div className="text-gray-600 dark:text-gray-400 mb-4">
+      <div className="text-gray-700 dark:text-gray-400 mb-4">
         <svg
           className="w-16 h-16 mx-auto mb-2 text-gray-400 dark:text-gray-600"
           fill="none"
@@ -155,7 +155,7 @@ function EmptyState({ onAddBoolQuery, onAddSimpleQuery }: EmptyStateProps) {
           />
         </svg>
         <p className="text-lg font-semibold text-gray-900 dark:text-white">No query defined</p>
-        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Start building your query by adding a clause</p>
+        <p className="text-sm text-gray-700 dark:text-gray-400 mt-1">Start building your query by adding a clause</p>
       </div>
       <div className="flex flex-col sm:flex-row gap-3 w-full max-w-sm">
         <Button

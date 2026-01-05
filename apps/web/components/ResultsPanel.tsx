@@ -31,7 +31,7 @@ export function ResultsPanel({ className }: ResultsPanelProps) {
       <div className="flex items-center justify-between p-3 border-b border-gray-200 dark:border-gray-800">
         <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Results</h3>
         {results && (
-          <span className="text-xs text-gray-600 dark:text-gray-400" aria-live="polite">
+          <span className="text-xs text-gray-700 dark:text-gray-400" aria-live="polite">
             {results.hits.total.value.toLocaleString()} hits
             {results.hits.total.relation === 'gte' && '+'}
           </span>
@@ -79,7 +79,7 @@ export function ResultsPanel({ className }: ResultsPanelProps) {
 
       {/* Empty state */}
       {!results && !isLoading && !error && (
-        <div className="flex-1 flex items-center justify-center text-gray-600 dark:text-gray-400" role="status">
+        <div className="flex-1 flex items-center justify-center text-gray-700 dark:text-gray-400" role="status">
           <div className="text-center">
             <svg
               className="w-12 h-12 mx-auto mb-3 text-gray-400 dark:text-gray-600"
@@ -96,7 +96,7 @@ export function ResultsPanel({ className }: ResultsPanelProps) {
               />
             </svg>
             <p className="text-sm font-medium text-gray-900 dark:text-white">No results yet</p>
-            <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">Execute a query to see results</p>
+            <p className="text-xs text-gray-700 dark:text-gray-400 mt-1">Execute a query to see results</p>
           </div>
         </div>
       )}

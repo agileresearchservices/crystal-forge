@@ -169,7 +169,7 @@ export function FieldList({ className }: FieldListProps) {
         </div>
 
         {/* Field count */}
-        <div className="mt-2 text-xs text-gray-600 dark:text-gray-400" aria-live="polite" aria-atomic="true">
+        <div className="mt-2 text-xs text-gray-700 dark:text-gray-400" aria-live="polite" aria-atomic="true">
           {filteredFields.length} field{filteredFields.length !== 1 ? 's' : ''}
           {fieldSearch && ` matching "${fieldSearch}"`}
         </div>
@@ -178,7 +178,7 @@ export function FieldList({ className }: FieldListProps) {
       {/* Field list */}
       <div className="flex-1 overflow-auto">
         {connectionState.fields.length === 0 ? (
-          <div className="p-4 text-center text-sm text-gray-600 dark:text-gray-400">
+          <div className="p-4 text-center text-sm text-gray-700 dark:text-gray-400">
             {connectionState.connection.isConnected
               ? connectionState.connection.index
                 ? 'Loading fields...'
@@ -186,7 +186,7 @@ export function FieldList({ className }: FieldListProps) {
               : 'Connect to OpenSearch to view fields'}
           </div>
         ) : filteredFields.length === 0 ? (
-          <div className="p-4 text-center text-sm text-gray-600 dark:text-gray-400" role="status">
+          <div className="p-4 text-center text-sm text-gray-700 dark:text-gray-400" role="status">
             No fields match your search
           </div>
         ) : showGrouped ? (
@@ -260,7 +260,7 @@ function GroupedFieldList({
               />
             </svg>
             <span className="flex-1 text-left truncate">{group}</span>
-            <span className="text-xs text-gray-500 dark:text-gray-400" aria-label={`${fields.length} fields`}>
+            <span className="text-xs text-gray-700 dark:text-gray-400" aria-label={`${fields.length} fields`}>
               {fields.length}
             </span>
           </button>
@@ -408,7 +408,7 @@ function FieldItem({ field, onAdd, typeBadgeColor }: FieldItemProps) {
       {/* Indicators */}
       {field.isNested && (
         <span
-          className="text-xs text-gray-500 dark:text-gray-400 font-medium flex-shrink-0"
+          className="text-xs text-gray-700 dark:text-gray-400 font-medium flex-shrink-0"
           aria-label="Nested field"
           title="Nested field"
         >
@@ -417,7 +417,7 @@ function FieldItem({ field, onAdd, typeBadgeColor }: FieldItemProps) {
       )}
       {field.isMultiField && (
         <span
-          className="text-xs text-gray-500 dark:text-gray-400 font-medium flex-shrink-0"
+          className="text-xs text-gray-700 dark:text-gray-400 font-medium flex-shrink-0"
           aria-label="Multi-field"
           title="Multi-field"
         >
