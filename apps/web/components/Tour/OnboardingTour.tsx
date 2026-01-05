@@ -16,53 +16,38 @@ export function useOnboardingTour() {
   const startTour = useCallback(() => {
     let driverObj: any = null;
 
+    // ESC key handler
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && driverObj) {
+        driverObj.destroy();
+      }
+    };
+
     const config = {
       showProgress: true,
       showButtons: ['next', 'previous', 'close'],
       steps: ONBOARDING_TOUR_STEPS,
+      onCloseClick: () => {
+        if (driverObj) {
+          driverObj.destroy();
+        }
+      },
       onDestroyStarted: () => {
         // Mark tour as completed in localStorage
         localStorage.setItem('crystal-forge:tour-completed', 'true');
       },
       onDestroy: () => {
-        // Clean up
-        console.log('Tour closed');
-      },
-      onStepChange: (element: any) => {
-        // Add handler for close button on final step
-        if (driverObj && driverObj.isLastStep && driverObj.isLastStep()) {
-          setTimeout(() => {
-            const closeBtn = document.querySelector(
-              '.driver-close-btn, button.driver-close, [aria-label="Close"]'
-            ) as HTMLButtonElement;
-            if (closeBtn && !closeBtn.dataset.tourHandled) {
-              closeBtn.dataset.tourHandled = 'true';
-              closeBtn.addEventListener('click', () => {
-                if (driverObj) driverObj.destroy();
-              });
-            }
-          }, 50);
-        }
+        // Clean up event listeners
+        document.removeEventListener('keydown', handleEsc);
       },
       allowClose: true,
       smoothScroll: true,
     };
 
     driverObj = driver(config);
-    driverObj.drive();
 
-    // Also ensure ESC key closes the tour
-    const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && driverObj) {
-        driverObj.destroy();
-      }
-    };
     document.addEventListener('keydown', handleEsc);
-
-    // Return cleanup function
-    return () => {
-      document.removeEventListener('keydown', handleEsc);
-    };
+    driverObj.drive();
   }, []);
 
   /**

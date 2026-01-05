@@ -120,24 +120,24 @@
 }
 
 /* Next button - Indigo (primary) */
-.driver-popover-buttons button:not(.driver-popover-btn-prev):not(.driver-popover-btn-close) {
+.driver-popover-buttons button:not(.driver-popover-prev-btn):not(.driver-popover-close-btn) {
   background-color: #6366f1;
   color: white;
 }
 
-.dark .driver-popover-buttons button:not(.driver-popover-btn-prev):not(.driver-popover-btn-close) {
+.dark .driver-popover-buttons button:not(.driver-popover-prev-btn):not(.driver-popover-close-btn) {
   background-color: #6366f1;
 }
 
 /* Previous and Close buttons */
-.driver-popover-buttons button.driver-popover-btn-prev,
-.driver-popover-buttons button.driver-popover-btn-close {
+.driver-popover-buttons button.driver-popover-prev-btn,
+.driver-popover-buttons button.driver-popover-close-btn {
   background-color: #e5e7eb;
   color: #374151;
 }
 
-.dark .driver-popover-buttons button.driver-popover-btn-prev,
-.dark .driver-popover-buttons button.driver-popover-btn-close {
+.dark .driver-popover-buttons button.driver-popover-prev-btn,
+.dark .driver-popover-buttons button.driver-popover-close-btn {
   background-color: #4b5563;
   color: #f3f4f6;
 }
