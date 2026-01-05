@@ -309,7 +309,7 @@ export function TemplateProvider({ children }: TemplateProviderProps) {
         }
 
         // Seed built-in templates (idempotent - only adds if not already present)
-        await seedTemplates();
+        await seedTemplates(saveTemplate, saveAggregationTemplate);
 
         // Load all templates and history
         const [templates, aggs, hist] = await Promise.all([
