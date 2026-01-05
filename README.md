@@ -6,11 +6,40 @@ A visual query builder UI for OpenSearch that enables users to construct complex
 
 ## Features
 
-- **Visual Query Builder** - Build bool queries with must/should/must_not/filter clauses
-- **Field Browser** - Browse index fields with type information
+### Core Query Building
+- **Visual Query Builder** - Build bool queries with must/should/must_not/filter clauses using intuitive UI
+- **Multiple Query Types** - Support for 26+ query types including match, term, range, prefix, wildcard, exists, nested, geo_distance, and more
+- **Smart Field Mapping** - Automatically selects appropriate query type based on field type (text→match, keyword→term, numeric→range)
+- **Field Browser** - Browse and search index fields with type information
+- **Drag-and-Drop** - Add fields to query clauses by dragging from the sidebar
+
+### Code Editor & Authoring
+- **Monaco Editor Integration** - Advanced code editor with syntax highlighting and IntelliSense
+- **Context-Aware Autocomplete** - Intelligent suggestions for query types, aggregation types, and properties
+- **JSON Schema Validation** - Real-time validation with visual error indicators
+- **Dev Tools Format Support** - Copy queries in OpenSearch Dashboards format (`GET {index}/_search`)
+- **Bidirectional Sync** - Edit in visual builder or JSON, changes sync automatically
+- **Dark Mode** - Full dark mode support with automatic theme detection
+
+### Query Patterns & Templates
+- **18 Built-in Templates** - Pre-configured query patterns for Common, E-commerce, and Advanced use cases
+- **Query History** - Automatic tracking of recent queries (up to 50 entries) with one-click reload
+- **Save as Template** - Save current query for reuse with categories and tags
+- **Search & Filter** - Find templates by name, category, or tags
+- **Duplicate Templates** - Clone existing templates to customize
+
+### Aggregations & Analysis
+- **Visual Aggregation Builder** - Build 11 types of aggregations without writing JSON
+- **Aggregation Types** - Terms, Stats, Extended Stats, Date Histogram, Histogram, Range, Cardinality, Avg, Sum, Min, Max, Value Count
+- **Type-Specific Parameters** - Dynamic forms for configuring aggregation-specific options
+- **Field Exploration** - Auto-generated aggregations to preview field values
+- **Aggregation Templates** - Reusable aggregation patterns for common scenarios
+
+### Execution & Results
 - **Live JSON Preview** - See the generated OpenSearch DSL in real-time
-- **Query Execution** - Run queries directly and view results
-- **Multiple Query Types** - Support for match, term, range, prefix, wildcard, exists, and more
+- **Query Execution** - Run queries directly and view results in a paginated table
+- **Result Inspection** - View detailed result data with syntax highlighting
+- **Responsive Panels** - Resizable panels for optimal workspace layout on any screen size
 
 ## Tech Stack
 
@@ -56,15 +85,28 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ```
 crystal-forge/
-├── apps/web/                     # Next.js frontend
+├── apps/web/                     # Next.js 15 frontend
 │   ├── app/                      # App router pages & API routes
-│   ├── components/               # React components
+│   ├── components/
+│   │   ├── QueryBuilder/         # Visual query builder
+│   │   ├── TemplateLibrary/      # Template library UI
+│   │   ├── AggregationsBuilder/  # Visual aggregation builder
+│   │   ├── AggregationsPanel/    # Explore & build aggregations
+│   │   ├── JSONPreview/          # Monaco editor with schema & completions
+│   │   └── ui/                   # shadcn/ui components
 │   ├── context/                  # React Context providers
+│   │   ├── QueryContext/         # Query state management
+│   │   ├── TemplateContext/      # Template & history state
+│   │   └── ConnectionContext/    # OpenSearch connection state
+│   ├── lib/                      # Utilities & config
+│   │   ├── opensearch-schema.ts  # OpenSearch DSL JSON schema
+│   │   └── monaco-completions.ts # Monaco autocomplete provider
 │   └── hooks/                    # Custom hooks
 ├── packages/
 │   ├── query-dsl/                # Query types & serialization
 │   ├── query-validator/          # Query validation
-│   └── opensearch-client/        # OpenSearch API client
+│   ├── opensearch-client/        # OpenSearch API client
+│   └── storage/                  # IndexedDB storage for templates
 ```
 
 ## Why Crystal Forge?
