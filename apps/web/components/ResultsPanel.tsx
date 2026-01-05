@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { useQuery } from '@/context/QueryContext';
 import type { SearchHit } from '@crystal-forge/opensearch-client';
 import { cn } from '@/lib/utils';
@@ -21,9 +21,26 @@ interface ResultsPanelProps {
  * Display query results with hits and metadata tabs
  */
 export function ResultsPanel({ className }: ResultsPanelProps) {
-  const { state } = useQuery();
+  const { state, setSuggest } = useQuery();
   const { results, isLoading, error } = state;
   const [activeTab, setActiveTab] = useState<ResultTab>('hits');
+
+  const handleApplySuggestion = useCallback(
+    (suggesterName: string, suggestedText: string) => {
+      // Update the suggester text in QueryContext
+      if (!state.query.suggest || !state.query.suggest[suggesterName]) return;
+
+      const updatedSuggest = {
+        ...state.query.suggest,
+        [suggesterName]: {
+          ...state.query.suggest[suggesterName],
+          text: suggestedText,
+        },
+      };
+      setSuggest(updatedSuggest);
+    },
+    [state.query.suggest, setSuggest]
+  );
 
   return (
     <div className={cn('flex flex-col h-full bg-white dark:bg-gray-900', className)}>
@@ -106,6 +123,38 @@ export function ResultsPanel({ className }: ResultsPanelProps) {
       {/* Results display */}
       {results && !isLoading && (
         <>
+          {/* "Did You Mean?" banner for zero results with suggestions */}
+          {results.hits.total.value === 0 && results.suggest && (
+            <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 border-b border-yellow-200 dark:border-yellow-800">
+              <h3 className="text-sm font-semibold text-yellow-800 dark:text-yellow-300 mb-2 flex items-center gap-1">
+                <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+                Did you mean:
+              </h3>
+              <div className="flex flex-wrap gap-2">
+                {Object.entries(results.suggest).map(([name, suggestionArray]) =>
+                  suggestionArray.flatMap((suggestion) =>
+                    suggestion.options.map((option, idx) => (
+                      <button
+                        key={`${name}-${idx}`}
+                        onClick={() => handleApplySuggestion(name, option.text)}
+                        className="px-3 py-1.5 text-sm rounded-md bg-yellow-100 dark:bg-yellow-900/40 text-yellow-900 dark:text-yellow-200 hover:bg-yellow-200 dark:hover:bg-yellow-800 transition-colors font-medium focus:outline-none focus:ring-2 focus:ring-inset focus:ring-yellow-600"
+                        title={`Score: ${option.score.toFixed(2)}${option.freq ? ` | Freq: ${option.freq}` : ''}`}
+                      >
+                        {option.highlighted ? (
+                          <span dangerouslySetInnerHTML={{ __html: option.highlighted }} />
+                        ) : (
+                          option.text
+                        )}
+                      </button>
+                    ))
+                  )
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Tabs */}
           <div
             className="flex border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900"
@@ -247,21 +296,27 @@ function HitsView({ hits }: HitsViewProps) {
 
               {/* Highlight */}
               {hit.highlight && Object.keys(hit.highlight).length > 0 && (
-                <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
-                  <div className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                <div className="mt-3 pt-3 border-t border-indigo-100 dark:border-indigo-900">
+                  <h4 className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 mb-2 flex items-center gap-1">
+                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                      <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+                    </svg>
                     Highlighted Fields
-                  </div>
+                  </h4>
                   {Object.entries(hit.highlight).map(([field, fragments]) => (
-                    <div key={field} className="mb-2">
-                      <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
-                        {field}:
-                      </span>
-                      <div
-                        className="text-xs text-gray-700 dark:text-gray-300 mt-1"
-                        dangerouslySetInnerHTML={{
-                          __html: (fragments as string[]).join(' ... '),
-                        }}
-                      />
+                    <div key={field} className="mb-2 pl-4 border-l-2 border-indigo-200 dark:border-indigo-800">
+                      <div className="text-xs font-medium text-indigo-600 dark:text-indigo-400 mb-0.5">
+                        {field}
+                      </div>
+                      <div className="text-xs text-gray-700 dark:text-gray-300 space-y-1">
+                        {(fragments as string[]).map((fragment, idx) => (
+                          <div
+                            key={idx}
+                            dangerouslySetInnerHTML={{ __html: fragment }}
+                            className="leading-relaxed"
+                          />
+                        ))}
+                      </div>
                     </div>
                   ))}
                 </div>

@@ -6,6 +6,8 @@ import { useQueryExecution } from '@/hooks/useQueryExecution';
 import { BooleanGroup } from './BooleanGroup';
 import { QueryNodeComponent } from './QueryNode';
 import { Button } from '@/components/ui/button';
+import { HighlightingPanel } from '@/components/HighlightingPanel/HighlightingPanel';
+import { SuggesterPanel } from '@/components/SuggesterPanel/SuggesterPanel';
 import type { BoolQueryNode, MatchQueryNode, QueryNode } from '@crystal-forge/query-dsl';
 import { cn } from '@/lib/utils';
 
@@ -105,6 +107,16 @@ export function QueryBuilder() {
 
       {/* Query Tree */}
       <div className="flex-1 overflow-auto p-4" role="main" aria-label="Query builder interface">
+        {/* Highlighting configuration panel */}
+        <div className="mb-4">
+          <HighlightingPanel />
+        </div>
+
+        {/* Suggester configuration panel */}
+        <div className="mb-4">
+          <SuggesterPanel />
+        </div>
+
         {rootNode ? (
           <div className="space-y-4">
             {rootNode.type === 'bool' ? (
