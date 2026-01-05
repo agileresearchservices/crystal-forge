@@ -1,0 +1,88 @@
+services:
+  # Crystal Forge UI
+  crystal-forge:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: crystal-forge
+    ports:
+      - "3000:3000"
+    environment:
+      # Map localhost to internal Docker network name for OpenSearch
+      - OPENSEARCH_DOCKER_HOST=http://opensearch:9200
+    depends_on:
+      opensearch:
+        condition: service_healthy
+    networks:
+      - crystal-forge-net
+    restart: unless-stopped
+
+  # OpenSearch single-node
+  opensearch:
+    image: opensearchproject/opensearch:2.17.1
+    container_name: opensearch
+    environment:
+      - discovery.type=single-node
+      - node.name=opensearch
+      - OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m
+      # Disable security for simplified demo setup
+      - DISABLE_SECURITY_PLUGIN=true
+    volumes:
+      - opensearch-data:/usr/share/opensearch/data
+    ports:
+      - "9200:9200"
+      - "9600:9600"
+    networks:
+      - crystal-forge-net
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
+  # OpenSearch Dashboards
+  opensearch-dashboards:
+    image: opensearchproject/opensearch-dashboards:2.17.1
+    container_name: opensearch-dashboards
+    environment:
+      - OPENSEARCH_HOSTS=["http://opensearch:9200"]
+      - DISABLE_SECURITY_DASHBOARDS_PLUGIN=true
+    ports:
+      - "5601:5601"
+    networks:
+      - crystal-forge-net
+    depends_on:
+      opensearch:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # Sample data loader (runs once on startup)
+  data-loader:
+    image: python:3.11-slim
+    container_name: data-loader
+    working_dir: /app
+    volumes:
+      - ./docker/scripts:/app
+    environment:
+      - OPENSEARCH_HOST=http://opensearch:9200
+    depends_on:
+      opensearch:
+        condition: service_healthy
+    networks:
+      - crystal-forge-net
+    command: >
+      sh -c "pip install opensearch-py==2.3.1 &&
+             python data_generator.py &&
+             python bulk_loader.py &&
+             echo 'Data loading complete!'"
+    restart: "no"
+
+networks:
+  crystal-forge-net:
+    driver: bridge
+
+volumes:
+  opensearch-data:
+    driver: local

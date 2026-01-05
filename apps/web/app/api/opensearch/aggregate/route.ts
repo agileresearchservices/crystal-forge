@@ -13,6 +13,7 @@ import type {
   QueryNode,
   AggregationType,
 } from '@crystal-forge/query-dsl';
+import { translateHostForDocker } from '@/lib/docker-host';
 
 /**
  * Request body interface for aggregation endpoint
@@ -188,8 +189,14 @@ export async function POST(request: NextRequest) {
       requestBody.query = serializeQuery(query);
     }
 
+    // Translate localhost to Docker network name if running in Docker
+    const translatedConfig = {
+      ...config,
+      host: translateHostForDocker(config.host),
+    };
+
     // Create client
-    const client = new OpenSearchClient(config);
+    const client = new OpenSearchClient(translatedConfig);
 
     // Verify connection
     try {

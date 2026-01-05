@@ -1,0 +1,218 @@
+{
+  "settings": {
+    "number_of_shards": 1,
+    "number_of_replicas": 0,
+    "analysis": {
+      "analyzer": {
+        "english_analyzer": {
+          "type": "standard",
+          "stopwords": "_english_",
+          "filter": ["lowercase", "stop", "porter_stem"]
+        },
+        "phrase_analyzer": {
+          "tokenizer": "edge_ngram_tokenizer",
+          "filter": ["lowercase"]
+        },
+        "synonym_analyzer": {
+          "type": "standard",
+          "stopwords": "_english_",
+          "filter": ["lowercase", "stop", "synonym_filter"]
+        }
+      },
+      "tokenizer": {
+        "edge_ngram_tokenizer": {
+          "type": "edge_ngram",
+          "min_gram": 2,
+          "max_gram": 20,
+          "token_chars": ["letter", "digit"]
+        }
+      },
+      "filter": {
+        "synonym_filter": {
+          "type": "synonym",
+          "synonyms": [
+            "quick,fast",
+            "bug,defect,issue",
+            "api,endpoint,service",
+            "laptop,notebook",
+            "phone,smartphone,mobile"
+          ]
+        }
+      }
+    }
+  },
+  "mappings": {
+    "properties": {
+      "id": {
+        "type": "keyword"
+      },
+      "domain": {
+        "type": "keyword"
+      },
+      "indexed_at": {
+        "type": "date"
+      },
+      "product_name": {
+        "type": "text",
+        "analyzer": "standard",
+        "fields": {
+          "raw": {
+            "type": "keyword"
+          },
+          "english": {
+            "type": "text",
+            "analyzer": "english_analyzer"
+          },
+          "phrase": {
+            "type": "text",
+            "analyzer": "phrase_analyzer"
+          }
+        }
+      },
+      "description": {
+        "type": "text",
+        "analyzer": "standard",
+        "fields": {
+          "raw": {
+            "type": "keyword"
+          },
+          "english": {
+            "type": "text",
+            "analyzer": "english_analyzer"
+          },
+          "phrase": {
+            "type": "text",
+            "analyzer": "phrase_analyzer"
+          }
+        }
+      },
+      "category": {
+        "type": "keyword"
+      },
+      "price": {
+        "type": "float"
+      },
+      "popularity_score": {
+        "type": "integer"
+      },
+      "in_stock": {
+        "type": "boolean"
+      },
+      "title": {
+        "type": "text",
+        "analyzer": "standard",
+        "fields": {
+          "raw": {
+            "type": "keyword"
+          },
+          "english": {
+            "type": "text",
+            "analyzer": "english_analyzer"
+          },
+          "phrase": {
+            "type": "text",
+            "analyzer": "phrase_analyzer"
+          }
+        }
+      },
+      "content": {
+        "type": "text",
+        "analyzer": "standard",
+        "fields": {
+          "raw": {
+            "type": "keyword"
+          },
+          "english": {
+            "type": "text",
+            "analyzer": "english_analyzer"
+          },
+          "phrase": {
+            "type": "text",
+            "analyzer": "phrase_analyzer"
+          }
+        }
+      },
+      "version": {
+        "type": "keyword"
+      },
+      "last_updated": {
+        "type": "date"
+      },
+      "difficulty_level": {
+        "type": "integer"
+      },
+      "headline": {
+        "type": "text",
+        "analyzer": "standard",
+        "fields": {
+          "raw": {
+            "type": "keyword"
+          },
+          "english": {
+            "type": "text",
+            "analyzer": "english_analyzer"
+          },
+          "phrase": {
+            "type": "text",
+            "analyzer": "phrase_analyzer"
+          }
+        }
+      },
+      "body_text": {
+        "type": "text",
+        "analyzer": "standard",
+        "fields": {
+          "raw": {
+            "type": "keyword"
+          },
+          "english": {
+            "type": "text",
+            "analyzer": "english_analyzer"
+          },
+          "phrase": {
+            "type": "text",
+            "analyzer": "phrase_analyzer"
+          }
+        }
+      },
+      "author": {
+        "type": "keyword"
+      },
+      "publish_date": {
+        "type": "date"
+      },
+      "read_count": {
+        "type": "integer"
+      },
+      "review_text": {
+        "type": "text",
+        "analyzer": "standard",
+        "fields": {
+          "raw": {
+            "type": "keyword"
+          },
+          "english": {
+            "type": "text",
+            "analyzer": "english_analyzer"
+          },
+          "phrase": {
+            "type": "text",
+            "analyzer": "phrase_analyzer"
+          }
+        }
+      },
+      "rating": {
+        "type": "integer"
+      },
+      "verified_purchase": {
+        "type": "boolean"
+      },
+      "sentiment_label": {
+        "type": "keyword"
+      },
+      "helpful_count": {
+        "type": "integer"
+      }
+    }
+  }
+}

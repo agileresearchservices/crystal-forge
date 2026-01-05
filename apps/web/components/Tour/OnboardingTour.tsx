@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect } from 'react';
-import { driver } from 'driver.js';
+import { driver, type AllowedButtons } from 'driver.js';
 import 'driver.js/dist/driver.css';
 import { ONBOARDING_TOUR_STEPS } from '@/constants/tour-steps';
 
@@ -25,7 +25,7 @@ export function useOnboardingTour() {
 
     const config = {
       showProgress: true,
-      showButtons: ['next', 'previous', 'close'],
+      showButtons: ['next', 'previous', 'close'] as AllowedButtons[],
       steps: ONBOARDING_TOUR_STEPS,
       onCloseClick: () => {
         if (driverObj) {

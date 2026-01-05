@@ -4,6 +4,7 @@ import {
   OpenSearchClientError,
 } from '@crystal-forge/opensearch-client';
 import type { ConnectionConfig, IndexInfo } from '@crystal-forge/opensearch-client';
+import { translateHostForDocker } from '@/lib/docker-host';
 
 /**
  * POST /api/opensearch/connect
@@ -22,8 +23,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Translate localhost to Docker network name if running in Docker
+    const translatedConfig = {
+      ...config,
+      host: translateHostForDocker(config.host),
+    };
+
     // Create client and attempt connection
-    const client = new OpenSearchClient(config);
+    const client = new OpenSearchClient(translatedConfig);
 
     try {
       await client.connect();

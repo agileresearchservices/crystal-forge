@@ -18,6 +18,9 @@
     "lint": "eslint src/",
     "test": "vitest"
   },
+  "dependencies": {
+    "@crystal-forge/query-dsl": "*"
+  },
   "devDependencies": {
     "tsup": "^8.3.5",
     "vitest": "^2.1.8"

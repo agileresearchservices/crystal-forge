@@ -5,6 +5,7 @@ import {
   parseMapping,
 } from '@crystal-forge/opensearch-client';
 import type { ConnectionConfig, AuthConfig } from '@crystal-forge/opensearch-client';
+import { translateHostForDocker } from '@/lib/docker-host';
 
 /**
  * GET /api/opensearch/schema
@@ -34,9 +35,12 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Translate localhost to Docker network name if running in Docker
+    const translatedHost = translateHostForDocker(host);
+
     // Build connection config
     const config: ConnectionConfig = {
-      host,
+      host: translatedHost,
       timeout: 30000,
     };
 
