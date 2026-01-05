@@ -18,7 +18,7 @@ Crystal Forge is a visual query builder UI for OpenSearch that enables users to 
 
 ## Monorepo Structure
 
-```
+```text
 crystal-forge/
 ├── apps/web/                     # Next.js 15 frontend
 ├── packages/
@@ -53,19 +53,25 @@ npm run format                    # Format with Prettier
 ## Package Details
 
 ### @crystal-forge/query-dsl
+
 Core types and serialization logic. Key exports:
+
 - **Types:** `QueryNode`, `QueryState`, `QueryType`, `BoolQueryNode`, `MatchQueryNode`, `RangeQueryNode`, etc.
 - **Serialization:** `serializeQuery()`, `serializeQueryState()`, `serializeToJson()`
 - **Deserialization:** `deserializeQuery()`, `deserializeQueryState()`
 - **Operators:** `getOperatorsForFieldType()`, `FIELD_TYPE_OPERATORS`
 
 ### @crystal-forge/query-validator
+
 Query validation. Key exports:
+
 - `validateQueryNode()`, `validateQueryState()`
 - `ValidationResult`, `ValidationError` types
 
 ### @crystal-forge/opensearch-client
+
 OpenSearch API wrapper. Key exports:
+
 - `OpenSearchClient` class (connect, getIndices, getMapping, search)
 - `parseMapping()` for schema parsing
 - Types: `ConnectionConfig`, `IndexInfo`, `SearchResponse`, `FieldInfo`
@@ -73,12 +79,14 @@ OpenSearch API wrapper. Key exports:
 ## Architecture
 
 ### Query State Flow
+
 1. User builds query visually → `QueryContext` state updates
 2. `serializeQueryState()` converts to OpenSearch DSL JSON
 3. API route `/api/opensearch/execute` sends to OpenSearch
 4. Results stored in `QueryContext`, displayed in `ResultsPanel`
 
 ### Key Files
+
 | Task | Files |
 |------|-------|
 | Add query type | `packages/query-dsl/src/types.ts`, `serializer.ts`, `deserializer.ts` |
@@ -89,7 +97,8 @@ OpenSearch API wrapper. Key exports:
 | Add shadcn component | `apps/web/components/ui/` |
 
 ### Component Hierarchy
-```
+
+```text
 page.tsx
 ├── ConnectionModal         # OpenSearch connection dialog
 ├── FieldList               # Sidebar with index fields (draggable)
@@ -103,23 +112,29 @@ page.tsx
 ```
 
 ### Drag-and-Drop Field Addition
+
 Fields can be added to the query builder in two ways:
+
 1. **Drag-and-drop**: Drag a field from the sidebar and drop anywhere on the query builder area
 2. **Click +**: Click the + button next to any field
 
 Both methods add the field to the **currently selected clause tab** (Must/Should/Must Not/Filter). Smart query type selection based on field type:
+
 - `text` → match query
 - `keyword` → term query
 - `numeric/date` → range query
 - `boolean` → term query (true)
 
 Key files:
+
 - `apps/web/context/ActiveClauseContext.tsx` - Tracks selected clause tab
 - `apps/web/utils/createQueryNodeFromField.ts` - Smart node creation
 - `apps/web/app/page.tsx` - DndContext and droppable wrapper
 
 ### Aggregations for Field Exploration
+
 The "Explore" tab (right panel) allows exploring field values before building queries:
+
 - Select a field → auto-runs appropriate aggregation
 - **Terms agg** for keyword/boolean fields (clickable buckets)
 - **Stats agg** for numeric fields (min/max/avg/sum)
@@ -128,30 +143,37 @@ The "Explore" tab (right panel) allows exploring field values before building qu
 - Auto-refreshes with 500ms debounce when query changes
 
 Key files:
+
 - `packages/query-dsl/src/types.ts` - Aggregation type definitions
 - `packages/query-dsl/src/serializer.ts` - `serializeAggregation()`, `serializeAggregations()`
 - `apps/web/app/api/opensearch/aggregate/route.ts` - Aggregation API endpoint
 - `apps/web/components/AggregationsPanel.tsx` - Aggregation UI
 
 ### Resizable Panels
+
 Users can resize the UI panels to customize their workflow:
+
 - **Horizontal resize** (Desktop only): Drag the divider between Query Builder and JSON/Explore panel to widen either section
 - **Vertical resize** (All devices): Drag the divider between top section and Results panel to expand either section
 - **Persistence**: Panel sizes are saved to localStorage and restored on page reload
 - **Responsive**: Resize handles are hidden on mobile (<768px) to prevent accidental resizing
 
 Technical implementation:
+
 - Uses `react-resizable-panels` v2.1.9 (via shadcn/ui)
 - Keyboard navigation: Arrow keys adjust panel size by 10%, Shift+Arrow for 25%
 - Accessibility: Full ARIA labels, focus indicators, screen reader support
 
 Key files:
+
 - `apps/web/hooks/useResizablePanels.ts` - Hook managing panel sizes and localStorage
 - `apps/web/components/ui/resizable.tsx` - Resizable panel components (shadcn/ui)
 - `apps/web/app/page.tsx` - Layout using ResizablePanelGroup and ResizablePanel
 
 ### Bidirectional JSON-Query Builder Sync
+
 The JSON editor now works both ways - build visually OR paste/edit JSON:
+
 - **Paste JSON**: Paste any OpenSearch query into the JSON editor and the query builder updates automatically
 - **Edit JSON**: Make manual edits to the JSON and see changes reflected in the builder in real-time
 - **Dev Tools Format**: Supports both plain JSON and OpenSearch Dev Tools format (`GET {index}/_search\n{...}`)
@@ -160,6 +182,7 @@ The JSON editor now works both ways - build visually OR paste/edit JSON:
 - **Sync Strategy**: Uses `isEditing` flag to prevent infinite loops between builder and JSON editor
 
 Technical implementation:
+
 - Editor is now editable (`readOnly: false`) with `onChange` handler
 - Debounced parsing with `lodash.debounce` (500ms delay)
 - `deserializeQueryState()` converts JSON back to QueryNode
@@ -168,6 +191,7 @@ Technical implementation:
 - Prevents re-serialization during editing by tracking `isEditing` state
 
 Key files:
+
 - `apps/web/components/JSONPreview.tsx` - Main bidirectional sync implementation
 - Uses `deserializeQueryState()` from `@crystal-forge/query-dsl`
 - `lodash.debounce` for debounced updates
@@ -175,7 +199,8 @@ Key files:
 ## Environment Setup
 
 Copy `.env.example` to `.env.local` in `apps/web/`:
-```
+
+```bash
 OPENSEARCH_HOST=https://localhost:9200
 OPENSEARCH_USERNAME=admin
 OPENSEARCH_PASSWORD=admin
@@ -217,6 +242,7 @@ Comprehensive personal skill for OpenSearch query design, optimization, data mod
 ```
 
 The OpenSearch Expert has deep knowledge of:
+
 - All OpenSearch Query DSL types and patterns (40+ query types, 30+ field types, 11+ aggregation types)
 - Data modeling and field mappings
 - Search relevancy and ranking (BM25, boosting)
@@ -246,6 +272,7 @@ Specialized personal skill for UI design, accessibility, responsive design, and 
 ```
 
 The Web Designer Expert has expertise in:
+
 - UI/Component design and layout patterns
 - Accessibility standards (WCAG 2.1 Levels A, AA, AAA)
 - Responsive design (mobile-first, Grid, Flexbox, Container Queries)
@@ -260,6 +287,7 @@ The Web Designer Expert has expertise in:
 Crystal Forge follows **WCAG 2.1 Level AA** standards for web accessibility.
 
 ### Keyboard Navigation
+
 - **Tab/Shift+Tab**: Navigate through all interactive elements
 - **Enter/Space**: Activate buttons, select options, and add fields to query
 - **Escape**: Close modal dialogs
@@ -267,47 +295,56 @@ Crystal Forge follows **WCAG 2.1 Level AA** standards for web accessibility.
 - All features are fully accessible without a mouse
 
 ### Screen Reader Support
+
 - **Live Regions**: Status changes announced automatically (connection status, JSON parsing, index selection)
 - **Semantic HTML**: Proper use of headings, buttons, and landmark roles
 - **ARIA Labels**: All interactive elements have descriptive labels
 - **Error Messages**: Accessibility-marked with `role="alert"` for important notifications
 
 ### Visual Accessibility
+
 - **Focus Indicators**: Clear indigo focus rings on all interactive elements
 - **Color Contrast**: All text meets WCAG AA standards (4.5:1 minimum for normal text)
 - **Dark Mode**: Full support with appropriate contrast adjustments
 - **Loading States**: Visual spinners with accompanying text announcements
 
 ### Field List (Drag-and-Drop)
+
 - Click entire field item to add to active clause tab
 - Use `+` button (always visible) for explicit field addition
 - Drag fields to specific bool clauses (mouse/touch only)
 - Search via keyboard: Type to filter, Escape to clear search
 
 ### Query Builder
+
 - Tab through bool clauses and query nodes
 - Press Enter/Space to remove clauses or execute queries
 - All node removals accessible via keyboard
 
 ### Connection Modal
+
 - Tab focuses the connection form fields
 - Escape key closes the modal
 - Focus returns to trigger button on close
 - Connection status announced to screen readers
 
 ### Copy-to-Clipboard
+
 - Copy button with visual feedback (changes color when clicked)
 - Full Dev Tools format copied (GET + JSON) ready for OpenSearch Dashboards
 - Timeout feedback: "Copied!" message appears for 2 seconds
 
 ### Color & Contrast
+
 - Primary focus color: Indigo-500 (#6366f1)
 - Error messages: Red with 7:1 contrast
 - Success messages: Green-600 (#16a34a) with 4.1:1 contrast
 - Status indicator: Green-600 animated pulse
 
 ### Testing for Accessibility
+
 Run automated checks with:
+
 ```bash
 # Lighthouse accessibility audit (Chrome DevTools)
 # Target: 100/100 score
@@ -317,6 +354,7 @@ Run automated checks with:
 ```
 
 Manual testing:
+
 - Tab through the entire app with keyboard only
 - Test with screen reader (VoiceOver on Mac, NVDA on Windows)
 - Verify focus indicators visible in all themes
@@ -422,18 +460,18 @@ Missing: percentiles, percentile_ranks, moving_average, derivative, cumulative_s
 
 ### Feature Impact Matrix
 
-| Feature              | Effort | Impact | User Type              |
-| -------------------- | ------ | ------ | ---------------------- |
-| Script Queries       | 5/10   | 9/10   | Power Users            |
-| Advanced Aggregations | 6/10   | 9/10   | Analysts, DevOps       |
-| Profile/Explain UI   | 5/10   | 8/10   | All Users              |
-| Query Templates      | 4/10   | 8/10   | All Users              |
-| Field Collapse       | 3/10   | 7/10   | E-commerce             |
-| Rescore Queries      | 3/10   | 7/10   | Performance-focused    |
-| More-like-this       | 2/10   | 6/10   | Content/Recommendation |
-| Percolator           | 3/10   | 6/10   | Alerts/Triggers        |
-| Query Versioning     | 2/10   | 6/10   | Teams                  |
-| Relevancy Tools      | 6/10   | 7/10   | Search Teams           |
+| Feature               | Effort | Impact | User Type               |
+| --------------------- | ------ | ------ | ----------------------- |
+| Script Queries        | 5/10   | 9/10   | Power Users             |
+| Advanced Aggregations | 6/10   | 9/10   | Analysts, DevOps        |
+| Profile/Explain UI    | 5/10   | 8/10   | All Users               |
+| Query Templates       | 4/10   | 8/10   | All Users               |
+| Field Collapse        | 3/10   | 7/10   | E-commerce              |
+| Rescore Queries       | 3/10   | 7/10   | Performance-focused     |
+| More-like-this        | 2/10   | 6/10   | Content/Recommendation  |
+| Percolator            | 3/10   | 6/10   | Alerts/Triggers         |
+| Query Versioning      | 2/10   | 6/10   | Teams                   |
+| Relevancy Tools       | 6/10   | 7/10   | Search Teams            |
 
 ## Missing OpenSearch Query DSL Features
 
