@@ -242,8 +242,75 @@ function HitsView({ hits }: HitsViewProps) {
 
   if (hits.length === 0) {
     return (
-      <div className="flex items-center justify-center h-full text-gray-600 dark:text-gray-400" role="status">
-        <p className="text-sm">No matching documents found</p>
+      <div className="p-6" role="status">
+        <div className="text-center mb-6">
+          <svg
+            className="w-16 h-16 mx-auto text-gray-300 dark:text-gray-700 mb-3"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={1.5}
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+            />
+          </svg>
+          <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-1">
+            No matching documents found
+          </h3>
+          <p className="text-sm text-gray-600 dark:text-gray-400">
+            Your query executed successfully but returned zero results.
+          </p>
+        </div>
+
+        {/* Common reasons for empty results - educational content */}
+        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+          <h4 className="text-sm font-semibold text-blue-800 dark:text-blue-300 mb-3 flex items-center gap-2">
+            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+            </svg>
+            Common reasons for empty results
+          </h4>
+          <ul className="space-y-2 text-sm text-blue-800 dark:text-blue-300">
+            <li className="flex items-start gap-2">
+              <span className="text-blue-500 dark:text-blue-400 mt-0.5" aria-hidden="true">1.</span>
+              <span>
+                <strong>Wrong query type:</strong> Using &quot;term&quot; on a text field? Try &quot;match&quot; instead.
+                Using &quot;match&quot; on a keyword field? Try &quot;term&quot;.
+              </span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-blue-500 dark:text-blue-400 mt-0.5" aria-hidden="true">2.</span>
+              <span>
+                <strong>Case sensitivity:</strong> &quot;term&quot; queries are case-sensitive.
+                &quot;Active&quot; won&apos;t match &quot;active&quot;.
+              </span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-blue-500 dark:text-blue-400 mt-0.5" aria-hidden="true">3.</span>
+              <span>
+                <strong>Date format:</strong> Use ISO 8601 format: <code className="bg-blue-100 dark:bg-blue-800 px-1 rounded">2024-01-15</code> or
+                date math: <code className="bg-blue-100 dark:bg-blue-800 px-1 rounded">now-7d</code>
+              </span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-blue-500 dark:text-blue-400 mt-0.5" aria-hidden="true">4.</span>
+              <span>
+                <strong>Field name:</strong> Check that the field exists in your index mapping.
+                Use the field list on the left to see available fields.
+              </span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-blue-500 dark:text-blue-400 mt-0.5" aria-hidden="true">5.</span>
+              <span>
+                <strong>Typos:</strong> Try using a &quot;fuzzy&quot; query to match similar terms.
+              </span>
+            </li>
+          </ul>
+        </div>
       </div>
     );
   }
