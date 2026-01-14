@@ -444,19 +444,27 @@ function FieldItem({ field, onAdd, typeBadgeColor }: FieldItemProps) {
 
       {/* Indicators */}
       {field.isNested && (
-        <span
-          className="text-xs text-gray-700 dark:text-gray-400 font-medium flex-shrink-0"
-          aria-label="Nested field"
-          title="Nested field"
+        <InfoTooltip
+          content={{
+            title: 'Nested Field',
+            description: 'This field contains nested objects. Use a nested query to search within this field\'s sub-fields.',
+          }}
+          side="right"
+          className="flex-shrink-0"
         >
-          N
-        </span>
+          <span
+            className="px-2 py-0.5 text-xs text-white dark:text-white font-semibold flex-shrink-0 rounded bg-red-600 dark:bg-red-700 cursor-help"
+            aria-label="Nested field - use nested query"
+          >
+            Nested
+          </span>
+        </InfoTooltip>
       )}
       {field.isMultiField && (
         <span
           className="text-xs text-gray-700 dark:text-gray-400 font-medium flex-shrink-0"
           aria-label="Multi-field"
-          title="Multi-field"
+          title="Multi-field with subfields (.keyword, .raw, etc.)"
         >
           M
         </span>

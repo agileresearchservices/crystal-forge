@@ -5,6 +5,7 @@ import { useQuery, generateNodeId } from '@/context/QueryContext';
 import { useConnection } from '@/context/ConnectionContext';
 import { OperatorSelector } from './OperatorSelector';
 import { BooleanGroup } from './BooleanGroup';
+import { FieldInspector } from '@/components/FieldInspector/FieldInspector';
 import type {
   QueryNode,
   BoolQueryNode,
@@ -230,6 +231,8 @@ export function QueryNodeComponent({ node, path, onRemove }: QueryNodeProps) {
               </option>
             ))}
           </select>
+          {/* Field Inspector - shows stats when field is selected */}
+          {nodeField && <FieldInspector fieldName={nodeField} fieldType={fieldType} />}
         </div>
 
         {/* Operator Selector */}

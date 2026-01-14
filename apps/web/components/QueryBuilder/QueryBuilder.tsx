@@ -6,12 +6,14 @@ import { useQueryExecution } from '@/hooks/useQueryExecution';
 import { useActiveClause, type BoolClause } from '@/context/ActiveClauseContext';
 import { BooleanGroup } from './BooleanGroup';
 import { QueryNodeComponent } from './QueryNode';
+import { QueryTemplatesMenu } from './QueryTemplatesMenu';
 import { Button } from '@/components/ui/button';
 import { HighlightingPanel } from '@/components/HighlightingPanel/HighlightingPanel';
 import { SuggesterPanel } from '@/components/SuggesterPanel/SuggesterPanel';
 import { InfoTooltip } from '@/components/ui/info-tooltip';
 import { CLAUSE_TOOLTIPS } from '@/constants/tooltips';
 import { EXAMPLE_QUERIES, type ExampleQuery } from '@/constants/example-queries';
+import { type QueryTemplate } from '@/constants/query-templates';
 import type { BoolQueryNode, MatchQueryNode, QueryNode } from '@crystal-forge/query-dsl';
 import { cn } from '@/lib/utils';
 
@@ -80,6 +82,16 @@ export function QueryBuilder() {
     [setQuery]
   );
 
+  /**
+   * Handle template selection
+   */
+  const handleSelectTemplate = useCallback(
+    (template: QueryTemplate) => {
+      setQuery(template.query);
+    },
+    [setQuery]
+  );
+
   return (
     <div className="flex flex-col h-full bg-white dark:bg-gray-900">
       {/* Toolbar */}
@@ -135,17 +147,17 @@ export function QueryBuilder() {
 
       {/* Query Tree */}
       <div className="flex-1 overflow-auto p-4" role="main" aria-label="Query builder interface">
-        {/* Highlighting configuration panel */}
-        <div className="mb-4">
-          <HighlightingPanel />
-        </div>
-
-        {/* Suggester configuration panel */}
-        <div className="mb-4">
-          <SuggesterPanel />
-        </div>
-
         {rootNode ? (
+          <>
+            {/* Highlighting configuration panel */}
+            <div className="mb-4">
+              <HighlightingPanel />
+            </div>
+
+            {/* Suggester configuration panel */}
+            <div className="mb-4">
+              <SuggesterPanel />
+            </div>
           <div className="space-y-4">
             {rootNode.type === 'bool' ? (
               <BooleanGroup node={rootNode as BoolQueryNode} path={[]} />
@@ -156,12 +168,14 @@ export function QueryBuilder() {
                 onRemove={() => setQuery(null)}
               />
             )}
-          </div>
+            </div>
+          </>
         ) : (
           <EmptyState
             onAddBoolQuery={handleAddBoolQuery}
             onAddSimpleQuery={handleAddSimpleQuery}
             onLoadExample={handleLoadExample}
+            onSelectTemplate={handleSelectTemplate}
           />
         )}
       </div>
@@ -176,49 +190,20 @@ interface EmptyStateProps {
   onAddBoolQuery: () => void;
   onAddSimpleQuery: () => void;
   onLoadExample: (example: ExampleQuery) => void;
+  onSelectTemplate: (template: QueryTemplate) => void;
 }
 
-function EmptyState({ onAddBoolQuery, onAddSimpleQuery, onLoadExample }: EmptyStateProps) {
+function EmptyState({ onAddBoolQuery, onAddSimpleQuery, onLoadExample, onSelectTemplate }: EmptyStateProps) {
   return (
-    <div className="flex flex-col items-center justify-center h-full min-h-64 text-center py-12 px-4" role="status" aria-live="polite">
-      <div className="flex flex-col items-center gap-4 max-w-md">
-        <svg
-          className="w-20 h-20 text-gray-300 dark:text-gray-700"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-          aria-hidden="true"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={1.5}
-            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-          />
-        </svg>
-        <div className="space-y-2">
-          <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">No query defined</h3>
-          <p className="text-xs sm:text-sm text-gray-700 dark:text-gray-400">Start building your search query by adding a clause. You can create a boolean query with multiple conditions or a simple single-field query.</p>
+    <div className="flex flex-col h-full py-8 px-4" role="status" aria-live="polite">
+      <div className="flex-1 flex flex-col items-center justify-start gap-6 max-w-3xl mx-auto w-full">
+        <div className="space-y-2 text-center pt-4">
+          <h3 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">Ready to build a query?</h3>
+          <p className="text-sm text-gray-600 dark:text-gray-400">Select a query type to get started</p>
         </div>
-        <div className="flex flex-col sm:flex-row gap-3 w-full pt-4">
-          <Button
-            onClick={onAddBoolQuery}
-            aria-label="Create a new boolean query with multiple clauses"
-            size="default"
-            className="flex-1"
-          >
-            Add Bool Query
-          </Button>
-          <Button
-            onClick={onAddSimpleQuery}
-            aria-label="Create a simple single field query"
-            variant="outline"
-            size="default"
-            className="flex-1"
-          >
-            Add Simple Query
-          </Button>
-        </div>
+
+        {/* Query Templates Menu - Now Primary */}
+        <QueryTemplatesMenu onSelectTemplate={onSelectTemplate} />
 
         {/* Example Queries */}
         <div className="w-full pt-8 border-t border-gray-200 dark:border-gray-800 mt-8 max-w-2xl">

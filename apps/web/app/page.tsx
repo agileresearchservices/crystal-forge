@@ -25,7 +25,9 @@ import { useConnection } from '@/context/ConnectionContext';
 import { useQuery, createEmptyBoolQuery } from '@/context/QueryContext';
 import { ActiveClauseProvider, useActiveClause, type BoolClause } from '@/context/ActiveClauseContext';
 import { useResizablePanels } from '@/hooks/useResizablePanels';
+import { useLayoutMode } from '@/hooks/useLayoutMode';
 import { createQueryNodeFromField } from '@/utils/createQueryNodeFromField';
+import { Code2, Wand2 } from 'lucide-react';
 import type { FieldInfo } from '@crystal-forge/opensearch-client';
 
 interface DragData {
@@ -51,6 +53,7 @@ function HomeContent() {
   const { state: queryState, addNode, setQuery } = useQuery();
   const { activeClause } = useActiveClause();
   const { sizes, handleLayoutChange } = useResizablePanels();
+  const { mode, toggleMode, isReady } = useLayoutMode();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [rightPanel, setRightPanel] = useState<'json' | 'explore'>('json');
   const [activeField, setActiveField] = useState<FieldInfo | null>(null);
@@ -156,6 +159,19 @@ function HomeContent() {
             <div id="tour-help-menu">
               <HelpMenu />
             </div>
+            {isReady && (
+              <button
+                onClick={toggleMode}
+                aria-label={`Switch to ${mode === 'visual' ? 'DSL' : 'Visual'} mode`}
+                title={`${mode === 'visual' ? 'DSL' : 'Visual'} Mode: ${mode === 'visual' ? 'JSON-first layout for experienced developers' : 'Visual query builder'}`}
+                className="px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:ring-offset-2 dark:focus:ring-offset-gray-900 transition-all duration-200 inline-flex items-center gap-2"
+              >
+                {mode === 'visual' ? <Code2 className="w-4 h-4" /> : <Wand2 className="w-4 h-4" />}
+                <span className="hidden sm:inline">
+                  {mode === 'visual' ? 'DSL Mode' : 'Visual Mode'}
+                </span>
+              </button>
+            )}
             <button
               id="tour-connect-button"
               onClick={() => setIsModalOpen(true)}
@@ -203,14 +219,29 @@ function HomeContent() {
                 className="h-full"
                 onLayout={(newSizes) => handleLayoutChange('horizontal', newSizes)}
               >
-                {/* Visual Query Builder */}
+                {/* Panel 1: Visual Builder (Visual Mode) or JSON (DSL Mode) */}
                 <ResizablePanel
-                  defaultSize={sizes.horizontal[0]}
+                  defaultSize={mode === 'dsl' ? 60 : sizes.horizontal[0]}
                   minSize={30}
                   id="tour-query-builder"
                   className="overflow-hidden"
                 >
-                  <DroppableQueryBuilder />
+                  {mode === 'dsl' ? (
+                    <div className="h-full overflow-hidden border-r border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-950 flex flex-col">
+                      <div className="flex border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
+                        <div className="flex-1 px-4 py-2 text-sm font-medium text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-600 dark:border-indigo-400 bg-white dark:bg-gray-900">
+                          Query DSL (JSON)
+                        </div>
+                      </div>
+                      <div className="flex-1 overflow-auto p-4">
+                        <div id="tour-json-panel" role="tabpanel">
+                          <JSONPreview />
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <DroppableQueryBuilder />
+                  )}
                 </ResizablePanel>
 
                 {/* Horizontal Resize Handle - Hidden on Mobile */}
@@ -220,61 +251,76 @@ function HomeContent() {
                   aria-label="Resize query builder and preview panel"
                 />
 
-                {/* Right Panel - Hidden on Mobile (Desktop Only) */}
+                {/* Panel 2: JSON (Visual Mode) or Visual Builder (DSL Mode) - Hidden on Mobile */}
                 <ResizablePanel
-                  defaultSize={sizes.horizontal[1]}
+                  defaultSize={mode === 'dsl' ? 40 : sizes.horizontal[1]}
                   minSize={25}
                   maxSize={50}
                   id="right-panel"
                   className="hidden md:block overflow-hidden"
                 >
                   <div className="h-full overflow-hidden border-l border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-950 flex flex-col">
-                    {/* Tab Bar */}
-                    <div
-                      className="flex border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900"
-                      role="tablist"
-                      aria-label="Query preview options"
-                    >
-                      <button
-                        onClick={() => setRightPanel('json')}
-                        role="tab"
-                        aria-selected={rightPanel === 'json'}
-                        aria-controls="json-panel"
-                        className={`flex-1 px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500 ${
-                          rightPanel === 'json'
-                            ? 'text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-600 dark:border-indigo-400 bg-white dark:bg-gray-900'
-                            : 'text-gray-700 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
-                        }`}
-                      >
-                        JSON
-                      </button>
-                      <button
-                        onClick={() => setRightPanel('explore')}
-                        role="tab"
-                        aria-selected={rightPanel === 'explore'}
-                        aria-controls="explore-panel"
-                        className={`flex-1 px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500 ${
-                          rightPanel === 'explore'
-                            ? 'text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-600 dark:border-indigo-400 bg-white dark:bg-gray-900'
-                            : 'text-gray-700 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
-                        }`}
-                      >
-                        Explore
-                      </button>
-                    </div>
+                    {mode === 'dsl' ? (
+                      <>
+                        <div className="flex border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
+                          <div className="flex-1 px-4 py-2 text-sm font-medium text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-600 dark:border-indigo-400 bg-white dark:bg-gray-900">
+                            Visual Query Builder
+                          </div>
+                        </div>
+                        <div className="flex-1 overflow-auto">
+                          <DroppableQueryBuilder />
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        {/* Tab Bar */}
+                        <div
+                          className="flex border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900"
+                          role="tablist"
+                          aria-label="Query preview options"
+                        >
+                          <button
+                            onClick={() => setRightPanel('json')}
+                            role="tab"
+                            aria-selected={rightPanel === 'json'}
+                            aria-controls="json-panel"
+                            className={`flex-1 px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500 ${
+                              rightPanel === 'json'
+                                ? 'text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-600 dark:border-indigo-400 bg-white dark:bg-gray-900'
+                                : 'text-gray-700 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
+                            }`}
+                          >
+                            JSON
+                          </button>
+                          <button
+                            onClick={() => setRightPanel('explore')}
+                            role="tab"
+                            aria-selected={rightPanel === 'explore'}
+                            aria-controls="explore-panel"
+                            className={`flex-1 px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500 ${
+                              rightPanel === 'explore'
+                                ? 'text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-600 dark:border-indigo-400 bg-white dark:bg-gray-900'
+                                : 'text-gray-700 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
+                            }`}
+                          >
+                            Explore
+                          </button>
+                        </div>
 
-                    {/* Panel Content */}
-                    <div className="flex-1 overflow-auto p-4">
-                      {rightPanel === 'json' ? (
-                        <div id="tour-json-panel" role="tabpanel">
-                          <JSONPreview />
+                        {/* Panel Content */}
+                        <div className="flex-1 overflow-auto p-4">
+                          {rightPanel === 'json' ? (
+                            <div id="tour-json-panel" role="tabpanel">
+                              <JSONPreview />
+                            </div>
+                          ) : (
+                            <div id="tour-explore-panel" role="tabpanel">
+                              <AggregationsPanel />
+                            </div>
+                          )}
                         </div>
-                      ) : (
-                        <div id="tour-explore-panel" role="tabpanel">
-                          <AggregationsPanel />
-                        </div>
-                      )}
-                    </div>
+                      </>
+                    )}
                   </div>
                 </ResizablePanel>
               </ResizablePanelGroup>
