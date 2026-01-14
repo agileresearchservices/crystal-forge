@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useQuery } from '@/context/QueryContext';
 import type { SearchHit } from '@crystal-forge/opensearch-client';
 import { cn } from '@/lib/utils';
@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils';
 /**
  * Tab types for results panel
  */
-type ResultTab = 'hits' | 'metadata';
+type ResultTab = 'documents' | 'aggregations' | 'metadata' | 'json';
 
 /**
  * Props for ResultsPanel
@@ -23,7 +23,22 @@ interface ResultsPanelProps {
 export function ResultsPanel({ className }: ResultsPanelProps) {
   const { state, setSuggest } = useQuery();
   const { results, isLoading, error } = state;
-  const [activeTab, setActiveTab] = useState<ResultTab>('hits');
+  const [activeTab, setActiveTabState] = useState<ResultTab>('documents');
+  const [isReady, setIsReady] = useState(false);
+
+  // Load and persist active tab from localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem('crystal-forge:results-tab');
+    if (saved === 'documents' || saved === 'aggregations' || saved === 'metadata' || saved === 'json') {
+      setActiveTabState(saved);
+    }
+    setIsReady(true);
+  }, []);
+
+  const setActiveTab = useCallback((tab: ResultTab) => {
+    setActiveTabState(tab);
+    localStorage.setItem('crystal-forge:results-tab', tab);
+  }, []);
 
   const handleApplySuggestion = useCallback(
     (suggesterName: string, suggestedText: string) => {
@@ -156,48 +171,86 @@ export function ResultsPanel({ className }: ResultsPanelProps) {
           )}
 
           {/* Tabs */}
-          <div
-            className="flex border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900"
-            role="tablist"
-            aria-label="Results view options"
-          >
-            <button
-              onClick={() => setActiveTab('hits')}
-              role="tab"
-              aria-selected={activeTab === 'hits'}
-              aria-controls="hits-panel"
-              className={cn(
-                'px-4 py-2 text-sm font-medium border-b-2 transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500',
-                activeTab === 'hits'
-                  ? 'border-indigo-600 dark:border-indigo-400 text-indigo-600 dark:text-indigo-400'
-                  : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-300'
-              )}
+          {isReady && (
+            <div
+              className="flex border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 overflow-x-auto"
+              role="tablist"
+              aria-label="Results view options"
             >
-              Hits ({results.hits.hits.length})
-            </button>
-            <button
-              onClick={() => setActiveTab('metadata')}
-              role="tab"
-              aria-selected={activeTab === 'metadata'}
-              aria-controls="metadata-panel"
-              className={cn(
-                'px-4 py-2 text-sm font-medium border-b-2 transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500',
-                activeTab === 'metadata'
-                  ? 'border-indigo-600 dark:border-indigo-400 text-indigo-600 dark:text-indigo-400'
-                  : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-300'
+              <button
+                onClick={() => setActiveTab('documents')}
+                role="tab"
+                aria-selected={activeTab === 'documents'}
+                aria-controls="documents-panel"
+                className={cn(
+                  'px-4 py-2 text-sm font-medium border-b-2 transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500 whitespace-nowrap',
+                  activeTab === 'documents'
+                    ? 'border-indigo-600 dark:border-indigo-400 text-indigo-600 dark:text-indigo-400'
+                    : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-300'
+                )}
+              >
+                Documents ({results.hits.hits.length})
+              </button>
+              {state.aggregations && state.aggregations.length > 0 && (
+                <button
+                  onClick={() => setActiveTab('aggregations')}
+                  role="tab"
+                  aria-selected={activeTab === 'aggregations'}
+                  aria-controls="aggregations-panel"
+                  className={cn(
+                    'px-4 py-2 text-sm font-medium border-b-2 transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500 whitespace-nowrap',
+                    activeTab === 'aggregations'
+                      ? 'border-indigo-600 dark:border-indigo-400 text-indigo-600 dark:text-indigo-400'
+                      : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-300'
+                  )}
+                >
+                  Aggregations ({state.aggregations.length})
+                </button>
               )}
-            >
-              Metadata
-            </button>
-          </div>
+              <button
+                onClick={() => setActiveTab('metadata')}
+                role="tab"
+                aria-selected={activeTab === 'metadata'}
+                aria-controls="metadata-panel"
+                className={cn(
+                  'px-4 py-2 text-sm font-medium border-b-2 transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500 whitespace-nowrap',
+                  activeTab === 'metadata'
+                    ? 'border-indigo-600 dark:border-indigo-400 text-indigo-600 dark:text-indigo-400'
+                    : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-300'
+                )}
+              >
+                Metadata
+              </button>
+              <button
+                onClick={() => setActiveTab('json')}
+                role="tab"
+                aria-selected={activeTab === 'json'}
+                aria-controls="json-panel"
+                className={cn(
+                  'px-4 py-2 text-sm font-medium border-b-2 transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500 whitespace-nowrap',
+                  activeTab === 'json'
+                    ? 'border-indigo-600 dark:border-indigo-400 text-indigo-600 dark:text-indigo-400'
+                    : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-300'
+                )}
+              >
+                JSON
+              </button>
+            </div>
+          )}
 
           {/* Tab content */}
           <div className="flex-1 overflow-auto">
-            {activeTab === 'hits' ? (
-              <div id="hits-panel" role="tabpanel">
+            {activeTab === 'documents' && (
+              <div id="documents-panel" role="tabpanel">
                 <HitsView hits={results.hits.hits} />
               </div>
-            ) : (
+            )}
+            {activeTab === 'aggregations' && (
+              <div id="aggregations-panel" role="tabpanel">
+                <AggregationsView aggregations={results.aggregations} />
+              </div>
+            )}
+            {activeTab === 'metadata' && (
               <div id="metadata-panel" role="tabpanel">
                 <MetadataView
                   took={results.took}
@@ -206,6 +259,11 @@ export function ResultsPanel({ className }: ResultsPanelProps) {
                   total={results.hits.total}
                   maxScore={results.hits.max_score}
                 />
+              </div>
+            )}
+            {activeTab === 'json' && (
+              <div id="json-panel" role="tabpanel" className="p-4">
+                <JSONResponseView response={results} />
               </div>
             )}
           </div>
@@ -490,6 +548,77 @@ function MetadataView({ took, timedOut, shards, total, maxScore }: MetadataViewP
             <div className="text-xs text-gray-600 dark:text-gray-400">Failed</div>
           </div>
         </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Aggregations view - placeholder for visualization
+ */
+interface AggregationsViewProps {
+  aggregations?: Record<string, unknown>;
+}
+
+function AggregationsView({ aggregations }: AggregationsViewProps) {
+  if (!aggregations || Object.keys(aggregations).length === 0) {
+    return (
+      <div className="p-6" role="status">
+        <div className="text-center space-y-3 max-w-sm mx-auto">
+          <svg
+            className="w-16 h-16 mx-auto text-gray-300 dark:text-gray-700"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={1.5}
+              d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+            />
+          </svg>
+          <div>
+            <p className="text-sm font-semibold text-gray-900 dark:text-white">No aggregation results</p>
+            <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+              Aggregation visualization will be rendered here
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-4">
+      <pre className="text-xs font-mono text-gray-700 dark:text-gray-300 whitespace-pre-wrap overflow-auto max-h-[500px] bg-gray-50 dark:bg-gray-800 p-3 rounded border border-gray-200 dark:border-gray-700">
+        {JSON.stringify(aggregations, null, 2)}
+      </pre>
+      <p className="text-xs text-gray-500 dark:text-gray-400 mt-3">
+        💡 Chart visualizations for aggregations will be displayed here in Phase 4
+      </p>
+    </div>
+  );
+}
+
+/**
+ * JSON response view
+ */
+interface JSONResponseViewProps {
+  response: unknown;
+}
+
+function JSONResponseView({ response }: JSONResponseViewProps) {
+  return (
+    <div className="space-y-3">
+      <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded p-3">
+        <p className="text-xs text-gray-600 dark:text-gray-400 mb-2 font-medium">
+          Raw OpenSearch API Response
+        </p>
+        <pre className="text-xs font-mono text-gray-700 dark:text-gray-300 whitespace-pre-wrap overflow-auto max-h-[500px] bg-white dark:bg-gray-900 p-3 rounded border border-gray-200 dark:border-gray-700">
+          {JSON.stringify(response, null, 2)}
+        </pre>
       </div>
     </div>
   );
