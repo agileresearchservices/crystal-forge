@@ -17,7 +17,7 @@ const JSONPreview = dynamic(() => import('@/components/JSONPreview').then((mod) 
 import { ResultsPanel } from '@/components/ResultsPanel';
 import { FieldList } from '@/components/FieldList';
 import { ConnectionModal } from '@/components/ConnectionModal';
-import { AggregationsPanel } from '@/components/AggregationsPanel';
+import { AggregationBuilderPanel } from '@/components/AggregationBuilderPanel/AggregationBuilderPanel';
 import { HelpMenu } from '@/components/HelpMenu/HelpMenu';
 import { AutoStartTour } from '@/components/Tour/AutoStartTour';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
@@ -55,7 +55,6 @@ function HomeContent() {
   const { sizes, handleLayoutChange } = useResizablePanels();
   const { mode, toggleMode, isReady } = useLayoutMode();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [rightPanel, setRightPanel] = useState<'json' | 'explore'>('json');
   const [activeField, setActiveField] = useState<FieldInfo | null>(null);
 
   // Configure drag sensors
@@ -192,36 +191,51 @@ function HomeContent() {
         )}
 
         {/* Main Content */}
-        <div className="flex-1 flex min-h-0">
-          {/* Sidebar - Field List */}
-          <aside
-            id="tour-field-list"
-            className="w-52 sm:w-64 flex-shrink-0 border-r border-gray-200 dark:border-gray-800 overflow-hidden flex flex-col bg-white dark:bg-gray-900"
-            aria-label="Available fields"
-          >
-            <FieldList />
-          </aside>
-
-          {/* Center - Query Builder + Results */}
+        <div className="flex-1 flex flex-col min-h-0">
+          {/* Outer Vertical Resizable Panel Group - handles top section vs results */}
           <ResizablePanelGroup
             direction="vertical"
             className="flex-1 min-h-0"
             onLayout={(newSizes) => handleLayoutChange('vertical', newSizes)}
           >
-            {/* Top Section - Query Builder + Right Panel */}
+            {/* Top Section - 3-Column Layout */}
             <ResizablePanel
               defaultSize={sizes.vertical[0]}
               minSize={40}
               id="top-section"
             >
+              {/* Inner Horizontal Panel Group - handles field list vs query vs aggregations */}
               <ResizablePanelGroup
                 direction="horizontal"
                 className="h-full"
                 onLayout={(newSizes) => handleLayoutChange('horizontal', newSizes)}
               >
-                {/* Panel 1: Visual Builder (Visual Mode) or JSON (DSL Mode) */}
+                {/* Panel 1: Field List */}
                 <ResizablePanel
-                  defaultSize={mode === 'dsl' ? 60 : sizes.horizontal[0]}
+                  defaultSize={sizes.horizontal[0] || 20}
+                  minSize={15}
+                  maxSize={40}
+                  id="tour-field-list"
+                  className="overflow-hidden"
+                >
+                  <aside
+                    className="h-full border-r border-gray-200 dark:border-gray-800 overflow-hidden flex flex-col bg-white dark:bg-gray-900"
+                    aria-label="Available fields"
+                  >
+                    <FieldList />
+                  </aside>
+                </ResizablePanel>
+
+                {/* Horizontal Handle 1 */}
+                <ResizableHandle
+                  withHandle
+                  className="bg-gray-200 dark:bg-gray-800 hover:bg-indigo-400 dark:hover:bg-indigo-600 transition-colors"
+                  aria-label="Resize field list and query builder"
+                />
+
+                {/* Panel 2: Query Builder */}
+                <ResizablePanel
+                  defaultSize={sizes.horizontal[1] || 40}
                   minSize={30}
                   id="tour-query-builder"
                   className="overflow-hidden"
@@ -244,83 +258,37 @@ function HomeContent() {
                   )}
                 </ResizablePanel>
 
-                {/* Horizontal Resize Handle - Hidden on Mobile */}
+                {/* Horizontal Handle 2 */}
                 <ResizableHandle
                   withHandle
-                  className="hidden md:flex bg-gray-200 dark:bg-gray-800 hover:bg-indigo-400 dark:hover:bg-indigo-600 transition-colors"
-                  aria-label="Resize query builder and preview panel"
+                  className="bg-gray-200 dark:bg-gray-800 hover:bg-purple-400 dark:hover:bg-purple-600 transition-colors"
+                  aria-label="Resize query builder and aggregations"
                 />
 
-                {/* Panel 2: JSON (Visual Mode) or Visual Builder (DSL Mode) - Hidden on Mobile */}
+                {/* Panel 3: Aggregation Builder */}
                 <ResizablePanel
-                  defaultSize={mode === 'dsl' ? 40 : sizes.horizontal[1]}
+                  defaultSize={sizes.horizontal[2] || 40}
                   minSize={25}
-                  maxSize={50}
-                  id="right-panel"
-                  className="hidden md:block overflow-hidden"
+                  id="aggregation-builder-panel"
+                  className="overflow-hidden"
                 >
                   <div className="h-full overflow-hidden border-l border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-950 flex flex-col">
-                    {mode === 'dsl' ? (
-                      <>
-                        <div className="flex border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
-                          <div className="flex-1 px-4 py-2 text-sm font-medium text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-600 dark:border-indigo-400 bg-white dark:bg-gray-900">
-                            Visual Query Builder
-                          </div>
+                    <div className="flex border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
+                      <div className="flex-1 px-4 py-2 text-sm font-medium text-purple-600 dark:text-purple-400 border-b-2 border-purple-600 dark:border-purple-400 bg-white dark:bg-gray-900">
+                        Aggregations
+                      </div>
+                    </div>
+                    <div className="flex-1 overflow-hidden">
+                      {mode === 'dsl' ? (
+                        <div className="h-full flex items-center justify-center p-4">
+                          <p className="text-sm text-gray-500 dark:text-gray-400 text-center">
+                            Aggregations builder available in Visual mode
+                          </p>
                         </div>
-                        <div className="flex-1 overflow-auto">
-                          <DroppableQueryBuilder />
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        {/* Tab Bar */}
-                        <div
-                          className="flex border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900"
-                          role="tablist"
-                          aria-label="Query preview options"
-                        >
-                          <button
-                            onClick={() => setRightPanel('json')}
-                            role="tab"
-                            aria-selected={rightPanel === 'json'}
-                            aria-controls="json-panel"
-                            className={`flex-1 px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500 ${
-                              rightPanel === 'json'
-                                ? 'text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-600 dark:border-indigo-400 bg-white dark:bg-gray-900'
-                                : 'text-gray-700 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
-                            }`}
-                          >
-                            JSON
-                          </button>
-                          <button
-                            onClick={() => setRightPanel('explore')}
-                            role="tab"
-                            aria-selected={rightPanel === 'explore'}
-                            aria-controls="explore-panel"
-                            className={`flex-1 px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500 ${
-                              rightPanel === 'explore'
-                                ? 'text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-600 dark:border-indigo-400 bg-white dark:bg-gray-900'
-                                : 'text-gray-700 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
-                            }`}
-                          >
-                            Explore
-                          </button>
-                        </div>
-
-                        {/* Panel Content */}
-                        <div className="flex-1 overflow-auto p-4">
-                          {rightPanel === 'json' ? (
-                            <div id="tour-json-panel" role="tabpanel">
-                              <JSONPreview />
-                            </div>
-                          ) : (
-                            <div id="tour-explore-panel" role="tabpanel">
-                              <AggregationsPanel />
-                            </div>
-                          )}
-                        </div>
-                      </>
-                    )}
+                      ) : (
+                        <AggregationBuilderPanel />
+                      )}
+                    </div>
                   </div>
                 </ResizablePanel>
               </ResizablePanelGroup>
@@ -330,7 +298,7 @@ function HomeContent() {
             <ResizableHandle
               withHandle
               className="bg-gray-200 dark:bg-gray-800 hover:bg-indigo-400 dark:hover:bg-indigo-600 transition-colors"
-              aria-label="Resize query builder and results panel"
+              aria-label="Resize top section and results panel"
             />
 
             {/* Bottom Section - Results Panel */}
@@ -346,56 +314,6 @@ function HomeContent() {
               </div>
             </ResizablePanel>
           </ResizablePanelGroup>
-
-          {/* Mobile: Right Panel Stacked Below (No Resize) */}
-          <div className="md:hidden w-full border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-950 flex flex-col overflow-hidden">
-            {/* Tab Bar */}
-            <div
-              className="flex border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900"
-              role="tablist"
-              aria-label="Query preview options"
-            >
-              <button
-                onClick={() => setRightPanel('json')}
-                role="tab"
-                aria-selected={rightPanel === 'json'}
-                aria-controls="json-panel-mobile"
-                className={`flex-1 px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500 ${
-                  rightPanel === 'json'
-                    ? 'text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-600 dark:border-indigo-400 bg-white dark:bg-gray-900'
-                    : 'text-gray-700 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
-                }`}
-              >
-                JSON
-              </button>
-              <button
-                onClick={() => setRightPanel('explore')}
-                role="tab"
-                aria-selected={rightPanel === 'explore'}
-                aria-controls="explore-panel-mobile"
-                className={`flex-1 px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500 ${
-                  rightPanel === 'explore'
-                    ? 'text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-600 dark:border-indigo-400 bg-white dark:bg-gray-900'
-                    : 'text-gray-700 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
-                }`}
-              >
-                Explore
-              </button>
-            </div>
-
-            {/* Panel Content */}
-            <div className="flex-1 overflow-auto p-4">
-              {rightPanel === 'json' ? (
-                <div id="json-panel-mobile" role="tabpanel">
-                  <JSONPreview />
-                </div>
-              ) : (
-                <div id="explore-panel-mobile" role="tabpanel">
-                  <AggregationsPanel />
-                </div>
-              )}
-            </div>
-          </div>
         </div>
       </main>
 
