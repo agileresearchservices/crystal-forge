@@ -80,7 +80,7 @@ The Docker setup provides a complete development/demo environment:
 
 **Services:**
 - **crystal-forge** (port 3000): Next.js production build
-- **opensearch** (port 9200): Single-node OpenSearch 2.17.1 (security disabled)
+- **opensearch** (port 9200): Single-node OpenSearch 3.4.0 (security disabled)
 - **opensearch-dashboards** (port 5601): OpenSearch Dashboards
 - **data-loader**: Python scripts that seed sample data on startup
 
