@@ -26,6 +26,7 @@ import { useQuery, createEmptyBoolQuery } from '@/context/QueryContext';
 import { ActiveClauseProvider, useActiveClause, type BoolClause } from '@/context/ActiveClauseContext';
 import { useResizablePanels } from '@/hooks/useResizablePanels';
 import { useLayoutMode } from '@/hooks/useLayoutMode';
+import { useQueryExecution } from '@/hooks/useQueryExecution';
 import { createQueryNodeFromField } from '@/utils/createQueryNodeFromField';
 import { Code2, Wand2 } from 'lucide-react';
 import type { FieldInfo } from '@crystal-forge/opensearch-client';
@@ -54,6 +55,7 @@ function HomeContent() {
   const { activeClause } = useActiveClause();
   const { sizes, handleLayoutChange } = useResizablePanels();
   const { mode, toggleMode, isReady } = useLayoutMode();
+  const { executeQuery, isLoading, canExecute } = useQueryExecution();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeField, setActiveField] = useState<FieldInfo | null>(null);
 
@@ -154,6 +156,39 @@ function HomeContent() {
                   {state.connection.index || 'Connected'}
                 </span>
               </div>
+            )}
+            {state.connection.isConnected && (
+              <button
+                onClick={executeQuery}
+                disabled={!canExecute || isLoading}
+                aria-label="Execute query and aggregations (Ctrl+Enter)"
+                title="Execute query and aggregations (Ctrl+Enter)"
+                className="px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold rounded-lg bg-gradient-to-r from-green-600 to-emerald-600 text-white hover:from-green-700 hover:to-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 dark:focus:ring-offset-gray-900 active:scale-95 shadow-lg hover:shadow-xl transition-all duration-200 inline-flex items-center gap-2"
+              >
+                {isLoading ? (
+                  <>
+                    <svg
+                      className="w-4 h-4 animate-spin"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      aria-hidden="true"
+                    >
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      />
+                    </svg>
+                    <span className="hidden sm:inline">Executing...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>▶</span>
+                    <span className="hidden sm:inline">Execute</span>
+                  </>
+                )}
+              </button>
             )}
             <div id="tour-help-menu">
               <HelpMenu />
