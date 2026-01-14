@@ -4,6 +4,7 @@ import React, { useCallback, useEffect } from 'react';
 import { useQuery, generateNodeId } from '@/context/QueryContext';
 import { useActiveClause, type BoolClause } from '@/context/ActiveClauseContext';
 import { QueryNodeComponent } from './QueryNode';
+import { BoolQueryTreeView } from './BoolQueryTreeView';
 import type {
   BoolQueryNode,
   QueryNode,
@@ -45,15 +46,41 @@ const CLAUSE_INFO: Record<BoolClause, { label: string; description: string; colo
 interface BooleanGroupProps {
   node: BoolQueryNode;
   path: string[];
+  viewMode?: 'tree' | 'tabbed';
+  collapsed?: Record<string, boolean>;
+  onToggleCollapse?: (clausePath: string) => void;
 }
 
 /**
  * Bool query container component
  * Renders sections for must/should/must_not/filter clauses
+ * Supports both tabbed (default) and tree view modes
  */
-export function BooleanGroup({ node, path }: BooleanGroupProps) {
+export function BooleanGroup({
+  node,
+  path,
+  viewMode = 'tabbed',
+  collapsed = {},
+  onToggleCollapse = () => {},
+}: BooleanGroupProps) {
   const { addNode, removeNode } = useQuery();
   const { activeClause: activeTab, setActiveClause: setActiveTab } = useActiveClause();
+
+  // Render tree view if requested
+  if (viewMode === 'tree') {
+    return (
+      <BoolQueryTreeView
+        node={node}
+        path={path}
+        depth={path.length / 3} // Approximate depth based on path length
+        collapsed={collapsed}
+        onToggleCollapse={onToggleCollapse}
+        viewMode={viewMode}
+      />
+    );
+  }
+
+  // Render tabbed view (default)
 
   /**
    * Add a new clause to a specific bool section

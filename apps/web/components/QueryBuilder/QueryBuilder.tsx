@@ -1,12 +1,13 @@
 'use client';
 
-import React, { useCallback } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import { useQuery, createEmptyBoolQuery, generateNodeId } from '@/context/QueryContext';
 import { useQueryExecution } from '@/hooks/useQueryExecution';
 import { useActiveClause, type BoolClause } from '@/context/ActiveClauseContext';
 import { BooleanGroup } from './BooleanGroup';
 import { QueryNodeComponent } from './QueryNode';
 import { QueryTemplatesMenu } from './QueryTemplatesMenu';
+import { TreeViewToggle } from './TreeViewToggle';
 import { Button } from '@/components/ui/button';
 import { HighlightingPanel } from '@/components/HighlightingPanel/HighlightingPanel';
 import { SuggesterPanel } from '@/components/SuggesterPanel/SuggesterPanel';
@@ -25,6 +26,38 @@ export function QueryBuilder() {
   const { state, addNode, setQuery, resetQuery } = useQuery();
   const { executeQuery, isLoading, canExecute } = useQueryExecution();
   const { activeClause } = useActiveClause();
+
+  // View mode state (tree or tabbed)
+  const [viewMode, setViewModeState] = useState<'tree' | 'tabbed'>('tabbed');
+  const [isReady, setIsReady] = useState(false);
+
+  // Collapsed clause state for tree view
+  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
+
+  // Load view mode preference from localStorage on mount
+  useEffect(() => {
+    const saved = localStorage.getItem('crystal-forge:query-view-mode');
+    if (saved === 'tree' || saved === 'tabbed') {
+      setViewModeState(saved);
+    }
+    setIsReady(true);
+  }, []);
+
+  // Handle view mode change and save to localStorage
+  const handleSetViewMode = useCallback((mode: 'tree' | 'tabbed') => {
+    setViewModeState(mode);
+    localStorage.setItem('crystal-forge:query-view-mode', mode);
+    // Reset collapsed state when switching modes
+    setCollapsed({});
+  }, []);
+
+  // Toggle clause collapse state
+  const handleToggleCollapse = useCallback((clausePath: string) => {
+    setCollapsed(prev => ({
+      ...prev,
+      [clausePath]: !prev[clausePath],
+    }));
+  }, []);
 
   const { query } = state;
   const rootNode = query.query;
@@ -109,6 +142,9 @@ export function QueryBuilder() {
           >
             Reset
           </Button>
+          {isReady && (
+            <TreeViewToggle mode={viewMode} onChange={handleSetViewMode} />
+          )}
           <Button
             onClick={handleExecute}
             disabled={!canExecute || isLoading}
@@ -160,11 +196,18 @@ export function QueryBuilder() {
             </div>
           <div className="space-y-4">
             {rootNode.type === 'bool' ? (
-              <BooleanGroup node={rootNode as BoolQueryNode} path={[]} />
+              <BooleanGroup
+                node={rootNode as BoolQueryNode}
+                path={[]}
+                viewMode={viewMode}
+                collapsed={collapsed}
+                onToggleCollapse={handleToggleCollapse}
+              />
             ) : (
               <QueryNodeComponent
                 node={rootNode}
                 path={[]}
+                viewMode={viewMode}
                 onRemove={() => setQuery(null)}
               />
             )}

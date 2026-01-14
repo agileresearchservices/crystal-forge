@@ -129,13 +129,23 @@ interface QueryNodeProps {
   node: QueryNode;
   path: string[];
   onRemove: () => void;
+  viewMode?: 'tree' | 'tabbed';
+  collapsed?: Record<string, boolean>;
+  onToggleCollapse?: (clausePath: string) => void;
 }
 
 /**
  * Individual query clause component
  * Renders different UI based on node type
  */
-export function QueryNodeComponent({ node, path, onRemove }: QueryNodeProps) {
+export function QueryNodeComponent({
+  node,
+  path,
+  onRemove,
+  viewMode = 'tabbed',
+  collapsed = {},
+  onToggleCollapse = () => {},
+}: QueryNodeProps) {
   const { updateNode } = useQuery();
   const { state: connectionState } = useConnection();
 
@@ -187,7 +197,15 @@ export function QueryNodeComponent({ node, path, onRemove }: QueryNodeProps) {
 
   // Render bool query as BooleanGroup
   if (node.type === 'bool') {
-    return <BooleanGroup node={node as BoolQueryNode} path={path} />;
+    return (
+      <BooleanGroup
+        node={node as BoolQueryNode}
+        path={path}
+        viewMode={viewMode}
+        collapsed={collapsed}
+        onToggleCollapse={onToggleCollapse}
+      />
+    );
   }
 
   // Get field for the node
