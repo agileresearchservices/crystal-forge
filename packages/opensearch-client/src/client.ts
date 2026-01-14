@@ -7,6 +7,7 @@ import type {
   OpenSearchError,
   AuthConfig,
 } from './types';
+import type { Aggregation } from '@crystal-forge/query-dsl';
 import { safeParseJSON } from './utils';
 
 /**
@@ -280,17 +281,38 @@ export class OpenSearchClient {
   /**
    * Execute a search query
    * @param index - Index name or pattern to search
-   * @param query - OpenSearch query DSL object
+   * @param query - OpenSearch query DSL object (can be null for aggregation-only requests)
+   * @param aggregations - Optional array of aggregations to include in the search
    */
   async search<T = Record<string, unknown>>(
     index: string,
-    query: object
+    query: object | null,
+    aggregations?: Aggregation[]
   ): Promise<SearchResponse<T>> {
+    // Build the request body
+    const body: Record<string, unknown> = {};
+
+    if (query) {
+      body.query = query;
+    }
+
+    if (aggregations && aggregations.length > 0) {
+      // Serialize aggregations to OpenSearch format
+      body.aggs = aggregations.reduce((acc, agg) => {
+        // Extract aggregation parameters (everything except name and type)
+        const { name, type, ...params } = agg as unknown as Record<string, unknown>;
+        acc[name as string] = {
+          [type as string]: params,
+        };
+        return acc;
+      }, {} as Record<string, unknown>);
+    }
+
     return this._request<SearchResponse<T>>(
       `/${encodeURIComponent(index)}/_search`,
       {
         method: 'POST',
-        body: query,
+        body,
       }
     );
   }
