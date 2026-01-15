@@ -68,9 +68,9 @@ export const EXAMPLE_QUERIES: ExampleQuery[] = [
   {
     id: 'bool-combined',
     title: 'Search + Filter',
-    description: 'Gaming laptops under $500',
+    description: 'Gaming electronics under $500',
     explanation:
-      'Combines a "match" query for full-text search with "range" filters for structured data. The "must" clause scores results based on relevance to "gaming", while the "filter" clause narrows down to laptops under $500. This is a common pattern: search for what you care about relevance for, filter for yes/no conditions.',
+      'Combines a "match" query for full-text search with categorical and range filters for structured data. The "must" clause scores results based on relevance to "gaming", while the "filter" clauses narrow down to electronics products under $500. This is a common pattern: search for what you care about relevance for, filter for categorical and yes/no conditions.',
     icon: 'Combine',
     query: {
       id: 'example-3',
@@ -89,8 +89,8 @@ export const EXAMPLE_QUERIES: ExampleQuery[] = [
         {
           id: 'example-3-filter-0',
           type: 'term',
-          field: 'product_type',
-          value: 'laptop',
+          field: 'category',
+          value: 'Electronics',
         },
         {
           id: 'example-3-filter-1',
