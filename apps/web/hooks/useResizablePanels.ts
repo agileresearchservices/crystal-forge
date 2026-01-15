@@ -11,12 +11,14 @@ const STORAGE_KEY = 'crystal-forge-panel-sizes'
 
 const DEFAULT_SIZES: PanelSizes = {
   vertical: [70, 30],
-  horizontal: [60, 40],
+  horizontal: [20, 40, 40], // Field List (20%), Query Builder (40%), Aggregations (40%)
 }
 
 /**
  * Hook for managing resizable panel sizes with localStorage persistence.
- * Stores and retrieves panel dimensions for vertical (top/bottom) and horizontal (builder/rightPanel) splits.
+ * Stores and retrieves panel dimensions for:
+ * - Vertical: top section (query/aggs) vs bottom section (results)
+ * - Horizontal: field list (20%) vs query builder (40%) vs aggregations (40%)
  */
 export function useResizablePanels() {
   // Initialize with DEFAULT_SIZES on both server and client to prevent hydration mismatch
@@ -35,7 +37,7 @@ export function useResizablePanels() {
           Array.isArray(parsed.vertical) &&
           Array.isArray(parsed.horizontal) &&
           parsed.vertical.length === 2 &&
-          parsed.horizontal.length === 2 &&
+          parsed.horizontal.length === 3 &&
           parsed.vertical.every((v) => typeof v === 'number' && v > 0 && v < 100) &&
           parsed.horizontal.every((h) => typeof h === 'number' && h > 0 && h < 100)
         ) {

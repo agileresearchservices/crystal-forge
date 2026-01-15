@@ -14,6 +14,7 @@ import type {
   BoolQueryNode,
   HighlightConfig,
   SuggesterConfig,
+  Aggregation,
 } from '@crystal-forge/query-dsl';
 import type { SearchResponse } from '@crystal-forge/opensearch-client';
 import { useQueryPersistence } from '@/hooks/useQueryPersistence';
@@ -28,6 +29,8 @@ import { useQueryPersistence } from '@/hooks/useQueryPersistence';
 export interface QueryBuilderState {
   /** Current query state */
   query: QueryState;
+  /** Aggregations to execute with query */
+  aggregations: Aggregation[];
   /** Search results if any */
   results: SearchResponse | null;
   /** Loading state */
@@ -56,7 +59,11 @@ type QueryAction =
   | { type: 'SET_QUERY'; payload: QueryNode | null }
   | { type: 'SET_PAGINATION'; payload: { size?: number; from?: number } }
   | { type: 'SET_HIGHLIGHT'; payload: HighlightConfig | undefined }
-  | { type: 'SET_SUGGEST'; payload: Record<string, SuggesterConfig> | undefined };
+  | { type: 'SET_SUGGEST'; payload: Record<string, SuggesterConfig> | undefined }
+  | { type: 'ADD_AGGREGATION'; payload: Aggregation }
+  | { type: 'REMOVE_AGGREGATION'; payload: string }
+  | { type: 'UPDATE_AGGREGATION'; payload: { index: number; aggregation: Aggregation } }
+  | { type: 'SET_AGGREGATIONS'; payload: Aggregation[] };
 
 // =============================================================================
 // Helper Functions
@@ -292,6 +299,7 @@ const initialState: QueryBuilderState = {
     size: 10,
     from: 0,
   },
+  aggregations: [],
   results: null,
   isLoading: false,
   error: null,
@@ -448,6 +456,32 @@ function queryReducer(
         },
       };
 
+    case 'ADD_AGGREGATION':
+      return {
+        ...state,
+        aggregations: [...state.aggregations, action.payload],
+      };
+
+    case 'REMOVE_AGGREGATION':
+      return {
+        ...state,
+        aggregations: state.aggregations.filter((agg) => agg.name !== action.payload),
+      };
+
+    case 'UPDATE_AGGREGATION':
+      return {
+        ...state,
+        aggregations: state.aggregations.map((agg, i) =>
+          i === action.payload.index ? action.payload.aggregation : agg
+        ),
+      };
+
+    case 'SET_AGGREGATIONS':
+      return {
+        ...state,
+        aggregations: action.payload,
+      };
+
     default:
       return state;
   }
@@ -471,6 +505,10 @@ interface QueryContextValue {
   setPagination: (pagination: { size?: number; from?: number }) => void;
   setHighlight: (highlight: HighlightConfig | undefined) => void;
   setSuggest: (suggest: Record<string, SuggesterConfig> | undefined) => void;
+  addAggregation: (aggregation: Aggregation) => void;
+  removeAggregation: (name: string) => void;
+  updateAggregation: (index: number, aggregation: Aggregation) => void;
+  setAggregations: (aggregations: Aggregation[]) => void;
 }
 
 const QueryContext = createContext<QueryContextValue | null>(null);
@@ -569,6 +607,22 @@ export function QueryProvider({ children }: QueryProviderProps) {
     []
   );
 
+  const addAggregation = useCallback((aggregation: Aggregation) => {
+    dispatch({ type: 'ADD_AGGREGATION', payload: aggregation });
+  }, []);
+
+  const removeAggregation = useCallback((name: string) => {
+    dispatch({ type: 'REMOVE_AGGREGATION', payload: name });
+  }, []);
+
+  const updateAggregation = useCallback((index: number, aggregation: Aggregation) => {
+    dispatch({ type: 'UPDATE_AGGREGATION', payload: { index, aggregation } });
+  }, []);
+
+  const setAggregations = useCallback((aggregations: Aggregation[]) => {
+    dispatch({ type: 'SET_AGGREGATIONS', payload: aggregations });
+  }, []);
+
   return (
     <QueryContext.Provider
       value={{
@@ -585,6 +639,10 @@ export function QueryProvider({ children }: QueryProviderProps) {
         setPagination,
         setHighlight,
         setSuggest,
+        addAggregation,
+        removeAggregation,
+        updateAggregation,
+        setAggregations,
       }}
     >
       {children}

@@ -4,6 +4,7 @@ import {
   OpenSearchClientError,
 } from '@crystal-forge/opensearch-client';
 import type { ConnectionConfig, SearchResponse } from '@crystal-forge/opensearch-client';
+import type { Aggregation } from '@crystal-forge/query-dsl';
 import { translateHostForDocker } from '@/lib/docker-host';
 
 /**
@@ -12,7 +13,8 @@ import { translateHostForDocker } from '@/lib/docker-host';
 interface ExecuteRequestBody {
   config: ConnectionConfig;
   index: string;
-  query: object;
+  query: object | null;
+  aggregations?: Aggregation[];
 }
 
 /**
@@ -22,7 +24,7 @@ interface ExecuteRequestBody {
 export async function POST(request: NextRequest) {
   try {
     const body = (await request.json()) as ExecuteRequestBody;
-    const { config, index, query } = body;
+    const { config, index, query, aggregations } = body;
 
     // Validate required fields
     if (!config?.host) {
@@ -39,9 +41,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!query || typeof query !== 'object') {
+    // Allow null query if aggregations exist, otherwise require query
+    if ((!query || typeof query !== 'object') && (!aggregations || aggregations.length === 0)) {
       return NextResponse.json(
-        { error: 'Query object is required' },
+        { error: 'Query object or aggregations are required' },
         { status: 400 }
       );
     }
@@ -71,10 +74,10 @@ export async function POST(request: NextRequest) {
       throw err;
     }
 
-    // Execute the query
+    // Execute the query with optional aggregations
     let results: SearchResponse;
     try {
-      results = await client.search(index, query);
+      results = await client.search(index, query, aggregations);
     } catch (err: unknown) {
       if (err instanceof OpenSearchClientError) {
         // Return more detailed error for query issues

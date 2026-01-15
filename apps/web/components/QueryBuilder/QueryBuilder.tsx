@@ -1,17 +1,19 @@
 'use client';
 
-import React, { useCallback } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import { useQuery, createEmptyBoolQuery, generateNodeId } from '@/context/QueryContext';
-import { useQueryExecution } from '@/hooks/useQueryExecution';
 import { useActiveClause, type BoolClause } from '@/context/ActiveClauseContext';
 import { BooleanGroup } from './BooleanGroup';
 import { QueryNodeComponent } from './QueryNode';
+import { QueryTemplatesMenu } from './QueryTemplatesMenu';
+import { TreeViewToggle } from './TreeViewToggle';
 import { Button } from '@/components/ui/button';
 import { HighlightingPanel } from '@/components/HighlightingPanel/HighlightingPanel';
 import { SuggesterPanel } from '@/components/SuggesterPanel/SuggesterPanel';
 import { InfoTooltip } from '@/components/ui/info-tooltip';
 import { CLAUSE_TOOLTIPS } from '@/constants/tooltips';
 import { EXAMPLE_QUERIES, type ExampleQuery } from '@/constants/example-queries';
+import { type QueryTemplate } from '@/constants/query-templates';
 import type { BoolQueryNode, MatchQueryNode, QueryNode } from '@crystal-forge/query-dsl';
 import { cn } from '@/lib/utils';
 
@@ -21,8 +23,39 @@ import { cn } from '@/lib/utils';
  */
 export function QueryBuilder() {
   const { state, addNode, setQuery, resetQuery } = useQuery();
-  const { executeQuery, isLoading, canExecute } = useQueryExecution();
   const { activeClause } = useActiveClause();
+
+  // View mode state (tree or tabbed)
+  const [viewMode, setViewModeState] = useState<'tree' | 'tabbed'>('tabbed');
+  const [isReady, setIsReady] = useState(false);
+
+  // Collapsed clause state for tree view
+  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
+
+  // Load view mode preference from localStorage on mount
+  useEffect(() => {
+    const saved = localStorage.getItem('crystal-forge:query-view-mode');
+    if (saved === 'tree' || saved === 'tabbed') {
+      setViewModeState(saved);
+    }
+    setIsReady(true);
+  }, []);
+
+  // Handle view mode change and save to localStorage
+  const handleSetViewMode = useCallback((mode: 'tree' | 'tabbed') => {
+    setViewModeState(mode);
+    localStorage.setItem('crystal-forge:query-view-mode', mode);
+    // Reset collapsed state when switching modes
+    setCollapsed({});
+  }, []);
+
+  // Toggle clause collapse state
+  const handleToggleCollapse = useCallback((clausePath: string) => {
+    setCollapsed(prev => ({
+      ...prev,
+      [clausePath]: !prev[clausePath],
+    }));
+  }, []);
 
   const { query } = state;
   const rootNode = query.query;
@@ -64,18 +97,21 @@ export function QueryBuilder() {
   }, [resetQuery]);
 
   /**
-   * Handle query execution
-   */
-  const handleExecute = useCallback(async () => {
-    await executeQuery();
-  }, [executeQuery]);
-
-  /**
    * Load an example query
    */
   const handleLoadExample = useCallback(
     (example: ExampleQuery) => {
       setQuery(example.query);
+    },
+    [setQuery]
+  );
+
+  /**
+   * Handle template selection
+   */
+  const handleSelectTemplate = useCallback(
+    (template: QueryTemplate) => {
+      setQuery(template.query);
     },
     [setQuery]
   );
@@ -97,26 +133,9 @@ export function QueryBuilder() {
           >
             Reset
           </Button>
-          <Button
-            onClick={handleExecute}
-            disabled={!canExecute || isLoading}
-            aria-label={isLoading ? 'Executing query' : 'Execute query against OpenSearch'}
-            aria-busy={isLoading}
-            size="default"
-            className="flex-1 sm:flex-none justify-center"
-          >
-            {isLoading && (
-              <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24" aria-hidden="true">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                />
-              </svg>
-            )}
-            {isLoading ? 'Executing...' : 'Execute Query'}
-          </Button>
+          {isReady && (
+            <TreeViewToggle mode={viewMode} onChange={handleSetViewMode} />
+          )}
         </div>
       </div>
 
@@ -135,33 +154,42 @@ export function QueryBuilder() {
 
       {/* Query Tree */}
       <div className="flex-1 overflow-auto p-4" role="main" aria-label="Query builder interface">
-        {/* Highlighting configuration panel */}
-        <div className="mb-4">
-          <HighlightingPanel />
-        </div>
-
-        {/* Suggester configuration panel */}
-        <div className="mb-4">
-          <SuggesterPanel />
-        </div>
-
         {rootNode ? (
+          <>
+            {/* Highlighting configuration panel */}
+            <div className="mb-4">
+              <HighlightingPanel />
+            </div>
+
+            {/* Suggester configuration panel */}
+            <div className="mb-4">
+              <SuggesterPanel />
+            </div>
           <div className="space-y-4">
             {rootNode.type === 'bool' ? (
-              <BooleanGroup node={rootNode as BoolQueryNode} path={[]} />
+              <BooleanGroup
+                node={rootNode as BoolQueryNode}
+                path={[]}
+                viewMode={viewMode}
+                collapsed={collapsed}
+                onToggleCollapse={handleToggleCollapse}
+              />
             ) : (
               <QueryNodeComponent
                 node={rootNode}
                 path={[]}
+                viewMode={viewMode}
                 onRemove={() => setQuery(null)}
               />
             )}
-          </div>
+            </div>
+          </>
         ) : (
           <EmptyState
             onAddBoolQuery={handleAddBoolQuery}
             onAddSimpleQuery={handleAddSimpleQuery}
             onLoadExample={handleLoadExample}
+            onSelectTemplate={handleSelectTemplate}
           />
         )}
       </div>
@@ -176,49 +204,20 @@ interface EmptyStateProps {
   onAddBoolQuery: () => void;
   onAddSimpleQuery: () => void;
   onLoadExample: (example: ExampleQuery) => void;
+  onSelectTemplate: (template: QueryTemplate) => void;
 }
 
-function EmptyState({ onAddBoolQuery, onAddSimpleQuery, onLoadExample }: EmptyStateProps) {
+function EmptyState({ onAddBoolQuery, onAddSimpleQuery, onLoadExample, onSelectTemplate }: EmptyStateProps) {
   return (
-    <div className="flex flex-col items-center justify-center h-full min-h-64 text-center py-12 px-4" role="status" aria-live="polite">
-      <div className="flex flex-col items-center gap-4 max-w-md">
-        <svg
-          className="w-20 h-20 text-gray-300 dark:text-gray-700"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-          aria-hidden="true"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={1.5}
-            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-          />
-        </svg>
-        <div className="space-y-2">
-          <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">No query defined</h3>
-          <p className="text-xs sm:text-sm text-gray-700 dark:text-gray-400">Start building your search query by adding a clause. You can create a boolean query with multiple conditions or a simple single-field query.</p>
+    <div className="flex flex-col h-full py-8 px-4" role="status" aria-live="polite">
+      <div className="flex-1 flex flex-col items-center justify-start gap-6 max-w-3xl mx-auto w-full">
+        <div className="space-y-2 text-center pt-4">
+          <h3 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">Ready to build a query?</h3>
+          <p className="text-sm text-gray-600 dark:text-gray-400">Select a query type to get started</p>
         </div>
-        <div className="flex flex-col sm:flex-row gap-3 w-full pt-4">
-          <Button
-            onClick={onAddBoolQuery}
-            aria-label="Create a new boolean query with multiple clauses"
-            size="default"
-            className="flex-1"
-          >
-            Add Bool Query
-          </Button>
-          <Button
-            onClick={onAddSimpleQuery}
-            aria-label="Create a simple single field query"
-            variant="outline"
-            size="default"
-            className="flex-1"
-          >
-            Add Simple Query
-          </Button>
-        </div>
+
+        {/* Query Templates Menu - Now Primary */}
+        <QueryTemplatesMenu onSelectTemplate={onSelectTemplate} />
 
         {/* Example Queries */}
         <div className="w-full pt-8 border-t border-gray-200 dark:border-gray-800 mt-8 max-w-2xl">

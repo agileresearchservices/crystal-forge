@@ -5,6 +5,7 @@ import { useQuery, generateNodeId } from '@/context/QueryContext';
 import { useConnection } from '@/context/ConnectionContext';
 import { OperatorSelector } from './OperatorSelector';
 import { BooleanGroup } from './BooleanGroup';
+import { FieldInspector } from '@/components/FieldInspector/FieldInspector';
 import type {
   QueryNode,
   BoolQueryNode,
@@ -128,13 +129,23 @@ interface QueryNodeProps {
   node: QueryNode;
   path: string[];
   onRemove: () => void;
+  viewMode?: 'tree' | 'tabbed';
+  collapsed?: Record<string, boolean>;
+  onToggleCollapse?: (clausePath: string) => void;
 }
 
 /**
  * Individual query clause component
  * Renders different UI based on node type
  */
-export function QueryNodeComponent({ node, path, onRemove }: QueryNodeProps) {
+export function QueryNodeComponent({
+  node,
+  path,
+  onRemove,
+  viewMode = 'tabbed',
+  collapsed = {},
+  onToggleCollapse = () => {},
+}: QueryNodeProps) {
   const { updateNode } = useQuery();
   const { state: connectionState } = useConnection();
 
@@ -186,7 +197,15 @@ export function QueryNodeComponent({ node, path, onRemove }: QueryNodeProps) {
 
   // Render bool query as BooleanGroup
   if (node.type === 'bool') {
-    return <BooleanGroup node={node as BoolQueryNode} path={path} />;
+    return (
+      <BooleanGroup
+        node={node as BoolQueryNode}
+        path={path}
+        viewMode={viewMode}
+        collapsed={collapsed}
+        onToggleCollapse={onToggleCollapse}
+      />
+    );
   }
 
   // Get field for the node
@@ -230,6 +249,8 @@ export function QueryNodeComponent({ node, path, onRemove }: QueryNodeProps) {
               </option>
             ))}
           </select>
+          {/* Field Inspector - shows stats when field is selected */}
+          {nodeField && <FieldInspector fieldName={nodeField} fieldType={fieldType} />}
         </div>
 
         {/* Operator Selector */}

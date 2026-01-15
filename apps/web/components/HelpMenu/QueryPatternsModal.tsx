@@ -84,6 +84,13 @@ const QUERY_PATTERNS = [
     example: 'Search results should be relevant to either language',
     tips: ['Use should clause', 'Higher relevance if multiple conditions match', 'Good for alternatives'],
   },
+  {
+    name: 'Nested Document Search',
+    description: 'Search within nested sub-objects',
+    useCase: 'Search product reviews, nested comments, structured sub-documents',
+    example: 'Find products with reviews that mention "quality" AND have rating > 4',
+    tips: ['Use nested query for nested fields', 'Preserves relationships between sub-fields', 'Required for proper nested matching', 'Look for "Nested" badge on fields'],
+  },
 ];
 
 export function QueryPatternsModal({ isOpen, onClose }: QueryPatternsModalProps) {

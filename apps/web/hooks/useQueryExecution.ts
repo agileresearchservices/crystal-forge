@@ -41,14 +41,22 @@ export function useQueryExecution() {
       return;
     }
 
+    // Validate that at least query or aggregations exist
+    if (!queryState.query && queryState.aggregations.length === 0) {
+      const error = 'No query or aggregations defined';
+      setError(error);
+      setLocalError(error);
+      return;
+    }
+
     setLoading(true);
     setLocalError(null);
 
     try {
       // Serialize the query state to OpenSearch format
-      const serializedQuery = serializeQueryState(queryState.query);
+      const serializedQuery = queryState.query ? serializeQueryState(queryState.query) : null;
 
-      // Execute the query via API
+      // Execute the query + aggregations via unified API
       const response = await fetch('/api/opensearch/execute', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -56,6 +64,7 @@ export function useQueryExecution() {
           config: connectionState.config,
           index: connectionState.connection.index,
           query: serializedQuery,
+          aggregations: queryState.aggregations,
         }),
       });
 
@@ -90,6 +99,7 @@ export function useQueryExecution() {
     connectionState.connection.index,
     connectionState.config,
     queryState.query,
+    queryState.aggregations,
     setResults,
     setLoading,
     setError,
@@ -101,6 +111,7 @@ export function useQueryExecution() {
     error: localError || queryState.error,
     canExecute:
       connectionState.connection.isConnected &&
-      !!connectionState.connection.index,
+      !!connectionState.connection.index &&
+      (!!queryState.query || queryState.aggregations.length > 0),
   };
 }
