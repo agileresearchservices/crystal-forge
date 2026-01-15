@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Crystal Forge Icon: Crystal + Hammer -->
+  <defs>
+    <linearGradient id="crystalGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#6366f1;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#4f46e5;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Crystal shape -->
+  <polygon points="16,2 22,12 16,14 10,12" fill="url(#crystalGradient)" />
+  <polygon points="10,12 16,14 12,22 6,20" fill="#6366f1" />
+  <polygon points="22,12 16,14 20,22 26,20" fill="#818cf8" />
+
+  <!-- Hammer accent (anvil-like base) -->
+  <rect x="10" y="23" width="12" height="2" fill="#4f46e5" rx="1" />
+  <polygon points="8,25 24,25 22,30 10,30" fill="#6366f1" />
+</svg>

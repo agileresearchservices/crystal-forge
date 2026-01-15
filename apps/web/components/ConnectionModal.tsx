@@ -8,6 +8,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
 import type { ConnectionConfig, AuthConfig } from '@crystal-forge/opensearch-client';
@@ -112,6 +113,11 @@ export function ConnectionModal({ isOpen, onClose }: ConnectionModalProps) {
           <DialogTitle>
             {connection.isConnected ? 'Connection Settings' : 'Connect to OpenSearch'}
           </DialogTitle>
+          <DialogDescription>
+            {connection.isConnected
+              ? 'Manage your OpenSearch connection and select an index'
+              : 'Connect to your OpenSearch cluster to start building queries'}
+          </DialogDescription>
         </DialogHeader>
 
         {/* Content */}

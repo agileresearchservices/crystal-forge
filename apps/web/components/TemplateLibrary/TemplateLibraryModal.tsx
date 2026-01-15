@@ -10,6 +10,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from '@/components/ui/dialog';
 import {
   Tabs,
@@ -159,6 +160,9 @@ export function TemplateLibraryModal({ isOpen, onClose }: TemplateLibraryModalPr
       <DialogContent className="w-full max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Query Template Library</DialogTitle>
+          <DialogDescription>
+            Browse, search, and load pre-built query templates or manage your query history
+          </DialogDescription>
         </DialogHeader>
 
         {/* Error Message */}

@@ -9,6 +9,9 @@ const inter = Inter({ subsets: ['latin'] });
 export const metadata: Metadata = {
   title: 'Crystal Forge - OpenSearch Query Builder',
   description: 'Visual query builder for OpenSearch',
+  icons: {
+    icon: '/favicon.svg',
+  },
 };
 
 export default function RootLayout({

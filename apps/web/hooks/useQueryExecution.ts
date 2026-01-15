@@ -3,7 +3,7 @@
 import { useCallback, useState } from 'react';
 import { useConnection } from '@/context/ConnectionContext';
 import { useQuery } from '@/context/QueryContext';
-import { serializeQueryState } from '@crystal-forge/query-dsl';
+import { serializeQuery } from '@crystal-forge/query-dsl';
 import type { SearchResponse } from '@crystal-forge/opensearch-client';
 
 /**
@@ -42,7 +42,7 @@ export function useQueryExecution() {
     }
 
     // Validate that at least query or aggregations exist
-    if (!queryState.query && queryState.aggregations.length === 0) {
+    if (!queryState.query.query && queryState.aggregations.length === 0) {
       const error = 'No query or aggregations defined';
       setError(error);
       setLocalError(error);
@@ -53,8 +53,8 @@ export function useQueryExecution() {
     setLocalError(null);
 
     try {
-      // Serialize the query state to OpenSearch format
-      const serializedQuery = queryState.query ? serializeQueryState(queryState.query) : null;
+      // Serialize the query node to OpenSearch format
+      const serializedQuery = queryState.query.query ? serializeQuery(queryState.query.query) : null;
 
       // Execute the query + aggregations via unified API
       const response = await fetch('/api/opensearch/execute', {
@@ -98,7 +98,7 @@ export function useQueryExecution() {
     connectionState.connection.isConnected,
     connectionState.connection.index,
     connectionState.config,
-    queryState.query,
+    queryState.query.query,
     queryState.aggregations,
     setResults,
     setLoading,
@@ -112,6 +112,6 @@ export function useQueryExecution() {
     canExecute:
       connectionState.connection.isConnected &&
       !!connectionState.connection.index &&
-      (!!queryState.query || queryState.aggregations.length > 0),
+      (!!queryState.query.query || queryState.aggregations.length > 0),
   };
 }
