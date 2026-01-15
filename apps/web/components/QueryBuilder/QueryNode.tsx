@@ -250,7 +250,8 @@ export function QueryNodeComponent({
             ))}
           </select>
           {/* Field Inspector - shows stats when field is selected */}
-          {nodeField && <FieldInspector fieldName={nodeField} fieldType={fieldType} />}
+          {/* Disabled due to CORS issues with direct OpenSearch requests from browser */}
+          {/* {nodeField && <FieldInspector fieldName={nodeField} fieldType={fieldType} />} */}
         </div>
 
         {/* Operator Selector */}
