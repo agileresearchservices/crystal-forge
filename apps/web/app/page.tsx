@@ -58,6 +58,7 @@ function HomeContent() {
   const { executeQuery, isLoading, canExecute } = useQueryExecution();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeField, setActiveField] = useState<FieldInfo | null>(null);
+  const [hasAttemptedAutoOpen, setHasAttemptedAutoOpen] = useState(false);
 
   // Configure drag sensors
   const sensors = useSensors(
@@ -67,6 +68,25 @@ function HomeContent() {
       },
     })
   );
+
+  // Auto-open modal when connected but no index selected
+  useEffect(() => {
+    if (
+      state.connection.isConnected &&
+      !state.connection.index &&
+      !hasAttemptedAutoOpen
+    ) {
+      setIsModalOpen(true);
+      setHasAttemptedAutoOpen(true);
+    }
+  }, [state.connection.isConnected, state.connection.index, hasAttemptedAutoOpen]);
+
+  // Reset auto-open flag when index is selected or connection is lost
+  useEffect(() => {
+    if (state.connection.index || !state.connection.isConnected) {
+      setHasAttemptedAutoOpen(false);
+    }
+  }, [state.connection.index, state.connection.isConnected]);
 
   // Add keyboard shortcut for executing query (Ctrl+Enter or Cmd+Enter)
   useEffect(() => {

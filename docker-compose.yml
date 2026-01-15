@@ -73,7 +73,7 @@ services:
     networks:
       - crystal-forge-net
     command: >
-      sh -c "pip install opensearch-py==3.4.0 &&
+      sh -c "pip install opensearch-py==3.1.0 &&
              python data_generator.py &&
              python bulk_loader.py &&
              echo 'Data loading complete!'"
