@@ -1,6 +1,7 @@
 # Stage 1: Base - Alpine Node.js with libc compatibility
 FROM node:22-alpine AS base
 RUN apk add --no-cache libc6-compat
+RUN npm install -g npm@11.7.0
 WORKDIR /app
 
 # Stage 2: Dependencies - Install all dependencies
