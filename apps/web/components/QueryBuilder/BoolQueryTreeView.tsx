@@ -95,7 +95,7 @@ export function BoolQueryTreeView({
   const renderClauseNodes = (clause: BoolClause, nodes: QueryNode[]) => {
     if (nodes.length === 0) {
       return (
-        <div className="text-xs text-gray-400 dark:text-gray-500 italic py-2 px-3">
+        <div className="text-xs text-gray-700 dark:text-gray-400 italic py-2 px-3">
           (empty)
         </div>
       );
@@ -107,7 +107,7 @@ export function BoolQueryTreeView({
           <div key={childNode.id} className="relative">
             {/* Connector line between nodes */}
             {index > 0 && (
-              <div className="absolute left-0 -top-1 text-xs text-gray-400 dark:text-gray-500 font-medium mb-1">
+              <div className="absolute left-0 -top-1 text-xs text-gray-700 dark:text-gray-400 font-medium mb-1">
                 {clause === 'should' ? 'OR' : clause === 'must_not' ? 'AND NOT' : 'AND'}
               </div>
             )}

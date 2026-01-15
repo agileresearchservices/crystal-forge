@@ -159,7 +159,7 @@ export function QueryNodeTreeItem({
         }}
         className={cn(
           'flex-shrink-0 p-0.5 rounded-md transition-colors',
-          'text-gray-400 dark:text-gray-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20'
+          'text-gray-700 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20'
         )}
         title="Remove clause"
         aria-label={`Remove ${getDisplayText()}`}

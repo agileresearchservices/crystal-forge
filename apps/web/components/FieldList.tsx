@@ -427,7 +427,7 @@ function FieldItem({ field, onAdd, typeBadgeColor }: FieldItemProps) {
         aria-label={`Add ${field.path} to active clause`}
         className={cn(
           'p-1 rounded transition-all flex-shrink-0',
-          'text-gray-400 dark:text-gray-500',
+          'text-gray-700 dark:text-gray-400',
           'hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20',
           'focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:text-indigo-600 dark:focus:text-indigo-400'
         )}
