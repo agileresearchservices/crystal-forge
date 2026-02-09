@@ -144,9 +144,6 @@ export function QueryNodeComponent({
   const { state: connectionState } = useConnection();
 
   const fields = connectionState.fields;
-  // Validation temporarily disabled - will be re-enabled in future update
-  const hasErrors = false;
-  const hasWarnings = false;
 
   /**
    * Get field type for the current node's field
