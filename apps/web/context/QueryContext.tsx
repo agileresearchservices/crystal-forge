@@ -523,27 +523,12 @@ interface QueryProviderProps {
 
 export function QueryProvider({ children }: QueryProviderProps) {
   const [state, dispatch] = useReducer(queryReducer, initialState);
-  const { loadQueryState, saveQueryState, clearQueryState } = useQueryPersistence();
+  const { saveQueryState, clearQueryState } = useQueryPersistence();
 
-  // Load persisted state on mount
+  // Clear any persisted query state on mount so the app always starts fresh
   useEffect(() => {
-    const persisted = loadQueryState();
-    if (persisted) {
-      // Restore query state
-      if (persisted.query) {
-        dispatch({ type: 'SET_QUERY', payload: persisted.query });
-      }
-      if (persisted.size !== undefined || persisted.from !== undefined) {
-        dispatch({ type: 'SET_PAGINATION', payload: { size: persisted.size, from: persisted.from } });
-      }
-      if (persisted.highlight) {
-        dispatch({ type: 'SET_HIGHLIGHT', payload: persisted.highlight });
-      }
-      if (persisted.suggest) {
-        dispatch({ type: 'SET_SUGGEST', payload: persisted.suggest });
-      }
-    }
-  }, [loadQueryState]);
+    clearQueryState();
+  }, [clearQueryState]);
 
   // Auto-save query state on changes (debounced)
   useEffect(() => {

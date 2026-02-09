@@ -212,6 +212,12 @@
       },
       "helpful_count": {
         "type": "integer"
+      },
+      "tags": {
+        "type": "keyword"
+      },
+      "status": {
+        "type": "keyword"
       }
     }
   }

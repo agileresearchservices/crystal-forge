@@ -198,13 +198,37 @@ export function QueryNodeComponent({
   // Render bool query as BooleanGroup
   if (node.type === 'bool') {
     return (
-      <BooleanGroup
-        node={node as BoolQueryNode}
-        path={path}
-        viewMode={viewMode}
-        collapsed={collapsed}
-        onToggleCollapse={onToggleCollapse}
-      />
+      <div className="relative">
+        {onRemove && (
+          <button
+            onClick={onRemove}
+            className={cn(
+              'absolute -top-2 -right-2 z-10 p-1 rounded-full',
+              'bg-white border border-gray-300 shadow-sm',
+              'text-gray-400 hover:text-red-500 hover:border-red-300 hover:bg-red-50',
+              'transition-colors'
+            )}
+            title="Remove nested bool query"
+            aria-label="Remove nested bool query"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        )}
+        <BooleanGroup
+          node={node as BoolQueryNode}
+          path={path}
+          viewMode={viewMode}
+          collapsed={collapsed}
+          onToggleCollapse={onToggleCollapse}
+        />
+      </div>
     );
   }
 
