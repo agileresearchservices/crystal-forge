@@ -1,0 +1,27 @@
+
+NOTE: Add these devDependencies to apps/web/package.json for testing and bundle analysis:
+
+{
+  "devDependencies": {
+    "@testing-library/react": "^14.1.2",
+    "@testing-library/jest-dom": "^6.1.5",
+    "@next/bundle-analyzer": "^15.5.9",
+    "vitest": "^1.2.0",
+    "@vitest/ui": "^1.2.0"
+  }
+}
+
+Then update package.json scripts:
+
+{
+  "scripts": {
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest --coverage",
+    "build:analyze": "ANALYZE=true npm run build"
+  }
+}
+
+Installation:
+cd apps/web
+npm install --save-dev @testing-library/react @testing-library/jest-dom @next/bundle-analyzer vitest @vitest/ui

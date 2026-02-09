@@ -210,7 +210,7 @@ export function JSONPreview({ className, height = '400px' }: JSONPreviewProps) {
         const errorMsg = error instanceof Error ? error.message : 'Invalid JSON';
         setParseError(errorMsg);
       }
-    }, 500);
+    }, 300);
 
     debouncedUpdateRef.current = debouncedFn;
 
