@@ -1,13 +1,8 @@
 'use client';
 
-import React, { useState, useMemo, useCallback } from 'react';
-import { useDraggable } from '@dnd-kit/core';
-import { CSS } from '@dnd-kit/utilities';
+import React, { useState, useCallback } from 'react';
 import { useConnection } from '@/context/ConnectionContext';
-import { useQuery, generateNodeId, createEmptyBoolQuery } from '@/context/QueryContext';
-import { useActiveClause } from '@/context/ActiveClauseContext';
 import { useFieldSelector } from '@/hooks/useFieldSelector';
-import { createQueryNodeFromField } from '@/utils/createQueryNodeFromField';
 import { Button } from '@/components/ui/button';
 import { InfoTooltip } from '@/components/ui/info-tooltip';
 import { FIELD_TYPE_TOOLTIPS } from '@/constants/tooltips';
@@ -27,8 +22,6 @@ interface FieldListProps {
  */
 export function FieldList({ className }: FieldListProps) {
   const { state: connectionState } = useConnection();
-  const { state: queryState, addNode, setQuery } = useQuery();
-  const { activeClause } = useActiveClause();
   const {
     filteredFields,
     groupedFields,
@@ -54,32 +47,6 @@ export function FieldList({ className }: FieldListProps) {
       return next;
     });
   }, []);
-
-  /**
-   * Add field to query using smart node creation and active clause
-   */
-  const handleAddToQuery = useCallback(
-    (field: FieldInfo) => {
-      const newNode = createQueryNodeFromField(field);
-
-      // If no query exists, create a bool query first
-      if (!queryState.query.query) {
-        const boolQuery = createEmptyBoolQuery();
-        boolQuery[activeClause].push(newNode);
-        setQuery(boolQuery);
-      } else if (queryState.query.query.type === 'bool') {
-        // Add to the active clause
-        addNode([activeClause], newNode);
-      } else {
-        // Non-bool query exists, wrap it in a bool query
-        const boolQuery = createEmptyBoolQuery();
-        boolQuery.must.push(queryState.query.query);
-        boolQuery[activeClause].push(newNode);
-        setQuery(boolQuery);
-      }
-    },
-    [addNode, setQuery, queryState.query.query, activeClause]
-  );
 
   /**
    * Get badge color for field type
@@ -219,13 +186,11 @@ export function FieldList({ className }: FieldListProps) {
             groupedFields={groupedFields}
             expandedGroups={expandedGroups}
             onToggleGroup={toggleGroup}
-            onAddToQuery={handleAddToQuery}
             getTypeBadgeColor={getTypeBadgeColor}
           />
         ) : (
           <FlatFieldList
             fields={filteredFields}
-            onAddToQuery={handleAddToQuery}
             getTypeBadgeColor={getTypeBadgeColor}
           />
         )}
@@ -241,7 +206,6 @@ interface GroupedFieldListProps {
   groupedFields: Record<string, FieldInfo[]>;
   expandedGroups: Set<string>;
   onToggleGroup: (group: string) => void;
-  onAddToQuery: (field: FieldInfo) => void;
   getTypeBadgeColor: (type: string) => string;
 }
 
@@ -249,7 +213,6 @@ function GroupedFieldList({
   groupedFields,
   expandedGroups,
   onToggleGroup,
-  onAddToQuery,
   getTypeBadgeColor,
 }: GroupedFieldListProps) {
   return (
@@ -297,7 +260,6 @@ function GroupedFieldList({
                 <FieldItem
                   key={field.path}
                   field={field}
-                  onAdd={() => onAddToQuery(field)}
                   typeBadgeColor={getTypeBadgeColor(field.type)}
                 />
               ))}
@@ -314,13 +276,11 @@ function GroupedFieldList({
  */
 interface FlatFieldListProps {
   fields: FieldInfo[];
-  onAddToQuery: (field: FieldInfo) => void;
   getTypeBadgeColor: (type: string) => string;
 }
 
 function FlatFieldList({
   fields,
-  onAddToQuery,
   getTypeBadgeColor,
 }: FlatFieldListProps) {
   return (
@@ -329,7 +289,6 @@ function FlatFieldList({
         <FieldItem
           key={field.path}
           field={field}
-          onAdd={() => onAddToQuery(field)}
           typeBadgeColor={getTypeBadgeColor(field.type)}
         />
       ))}
@@ -342,58 +301,19 @@ function FlatFieldList({
  */
 interface FieldItemProps {
   field: FieldInfo;
-  onAdd: () => void;
   typeBadgeColor: string;
 }
 
-function FieldItem({ field, onAdd, typeBadgeColor }: FieldItemProps) {
-  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
-    id: `field-${field.path}`,
-    data: {
-      type: 'field',
-      field,
-    },
-  });
-
-  const style = transform
-    ? {
-        transform: CSS.Transform.toString(transform),
-      }
-    : undefined;
-
-  const fieldDescription = [
-    field.type,
-    field.isNested && 'nested field',
-    field.isMultiField && 'multi-field',
-  ]
-    .filter(Boolean)
-    .join(', ');
-
+function FieldItem({ field, typeBadgeColor }: FieldItemProps) {
   return (
     <div
-      ref={setNodeRef}
-      style={style}
       className={cn(
-        'flex items-center gap-2 px-3 py-1.5 group',
-        'hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors',
-        'focus-within:ring-2 focus-within:ring-inset focus-within:ring-indigo-500 rounded',
-        isDragging && 'opacity-50'
+        'flex items-center gap-2 px-3 py-1.5',
+        'text-sm text-gray-700 dark:text-gray-300'
       )}
     >
-      {/* Clickable field name - semantic button for accessibility */}
-      <button
-        onClick={onAdd}
-        className={cn(
-          'flex items-center gap-2 flex-1 min-w-0 text-left',
-          'cursor-grab active:cursor-grabbing',
-          'focus:outline-none text-sm text-gray-700 dark:text-gray-300'
-        )}
-        aria-label={`Add ${field.path} (${field.type}) to active clause via click, or drag to specific clause`}
-        {...attributes}
-        {...listeners}
-      >
-        <span className="truncate">{field.path}</span>
-      </button>
+      {/* Field name */}
+      <span className="truncate flex-1 min-w-0">{field.path}</span>
 
       {/* Type badge with tooltip */}
       <div className="flex items-center gap-1">
@@ -417,30 +337,6 @@ function FieldItem({ field, onAdd, typeBadgeColor }: FieldItemProps) {
           />
         )}
       </div>
-
-      {/* Add button - ALWAYS VISIBLE */}
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          onAdd();
-        }}
-        aria-label={`Add ${field.path} to active clause`}
-        className={cn(
-          'p-1 rounded transition-all flex-shrink-0',
-          'text-gray-700 dark:text-gray-400',
-          'hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20',
-          'focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:text-indigo-600 dark:focus:text-indigo-400'
-        )}
-      >
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M12 4v16m8-8H4"
-          />
-        </svg>
-      </button>
 
       {/* Indicators */}
       {field.isNested && (

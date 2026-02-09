@@ -1,9 +1,21 @@
 import { renderHook, act } from '@testing-library/react'
 import { useResizablePanels } from '../useResizablePanels'
 
+// Mock localStorage
+const localStorageMock = (() => {
+  let store: Record<string, string> = {}
+  return {
+    getItem: (key: string) => store[key] ?? null,
+    setItem: (key: string, value: string) => { store[key] = value },
+    removeItem: (key: string) => { delete store[key] },
+    clear: () => { store = {} },
+  }
+})()
+
+Object.defineProperty(globalThis, 'localStorage', { value: localStorageMock })
+
 describe('useResizablePanels', () => {
   beforeEach(() => {
-    // Clear localStorage before each test
     localStorage.clear()
   })
 
@@ -11,20 +23,20 @@ describe('useResizablePanels', () => {
     const { result } = renderHook(() => useResizablePanels())
 
     expect(result.current.sizes.vertical).toEqual([70, 30])
-    expect(result.current.sizes.horizontal).toEqual([60, 40])
+    expect(result.current.sizes.horizontal).toEqual([20, 50, 30])
   })
 
   it('loads sizes from localStorage', () => {
     const customSizes = {
       vertical: [75, 25],
-      horizontal: [50, 50],
+      horizontal: [25, 45, 30],
     }
     localStorage.setItem('crystal-forge-panel-sizes', JSON.stringify(customSizes))
 
     const { result } = renderHook(() => useResizablePanels())
 
     expect(result.current.sizes.vertical).toEqual([75, 25])
-    expect(result.current.sizes.horizontal).toEqual([50, 50])
+    expect(result.current.sizes.horizontal).toEqual([25, 45, 30])
   })
 
   it('saves sizes to localStorage on change', () => {
@@ -43,7 +55,7 @@ describe('useResizablePanels', () => {
       'crystal-forge-panel-sizes',
       JSON.stringify({
         vertical: [90, 10],
-        horizontal: [30, 70],
+        horizontal: [30, 40, 30],
       })
     )
 
@@ -54,7 +66,7 @@ describe('useResizablePanels', () => {
     })
 
     expect(result.current.sizes.vertical).toEqual([70, 30])
-    expect(result.current.sizes.horizontal).toEqual([60, 40])
+    expect(result.current.sizes.horizontal).toEqual([20, 50, 30])
   })
 
   it('handles invalid localStorage data gracefully', () => {
@@ -63,13 +75,13 @@ describe('useResizablePanels', () => {
     const { result } = renderHook(() => useResizablePanels())
 
     expect(result.current.sizes.vertical).toEqual([70, 30])
-    expect(result.current.sizes.horizontal).toEqual([60, 40])
+    expect(result.current.sizes.horizontal).toEqual([20, 50, 30])
   })
 
   it('validates numeric ranges in stored data', () => {
     const invalidSizes = {
       vertical: [0, 100], // 0 is invalid
-      horizontal: [60, 40],
+      horizontal: [20, 50, 30],
     }
     localStorage.setItem('crystal-forge-panel-sizes', JSON.stringify(invalidSizes))
 

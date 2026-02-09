@@ -8,13 +8,11 @@ import { QueryNodeComponent } from './QueryNode';
 import { QueryTemplatesMenu } from './QueryTemplatesMenu';
 import { TreeViewToggle } from './TreeViewToggle';
 import { Button } from '@/components/ui/button';
-import { HighlightingPanel } from '@/components/HighlightingPanel/HighlightingPanel';
-import { SuggesterPanel } from '@/components/SuggesterPanel/SuggesterPanel';
 import { InfoTooltip } from '@/components/ui/info-tooltip';
 import { CLAUSE_TOOLTIPS } from '@/constants/tooltips';
 import { EXAMPLE_QUERIES, type ExampleQuery } from '@/constants/example-queries';
 import { type QueryTemplate } from '@/constants/query-templates';
-import type { BoolQueryNode, MatchQueryNode, QueryNode } from '@crystal-forge/query-dsl';
+import type { BoolQueryNode, MatchQueryNode } from '@crystal-forge/query-dsl';
 import { cn } from '@/lib/utils';
 
 /**
@@ -155,16 +153,6 @@ export function QueryBuilder() {
       {/* Query Tree */}
       <div className="flex-1 overflow-auto p-4" role="main" aria-label="Query builder interface">
         {rootNode ? (
-          <>
-            {/* Highlighting configuration panel */}
-            <div className="mb-4">
-              <HighlightingPanel />
-            </div>
-
-            {/* Suggester configuration panel */}
-            <div className="mb-4">
-              <SuggesterPanel />
-            </div>
           <div className="space-y-4">
             {rootNode.type === 'bool' ? (
               <BooleanGroup
@@ -182,8 +170,7 @@ export function QueryBuilder() {
                 onRemove={() => setQuery(null)}
               />
             )}
-            </div>
-          </>
+          </div>
         ) : (
           <EmptyState
             onAddBoolQuery={handleAddBoolQuery}

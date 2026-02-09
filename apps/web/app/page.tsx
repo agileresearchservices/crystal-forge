@@ -1,45 +1,23 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
-import { useState, useCallback, useEffect } from 'react';
-import {
-  DndContext,
-  DragOverlay,
-  useDroppable,
-  useSensor,
-  useSensors,
-  PointerSensor,
-  DragStartEvent,
-  DragEndEvent,
-} from '@dnd-kit/core';
-import { QueryBuilder } from '@/components/QueryBuilder/QueryBuilder';
-const JSONPreview = dynamic(() => import('@/components/JSONPreview').then((mod) => ({ default: mod.JSONPreview })), { ssr: false });
 import { ResultsPanel } from '@/components/ResultsPanel';
 import { FieldList } from '@/components/FieldList';
 import { ConnectionModal } from '@/components/ConnectionModal';
-import { AggregationBuilderPanel } from '@/components/AggregationBuilderPanel/AggregationBuilderPanel';
+import { CenterPanelTabs } from '@/components/CenterPanelTabs';
 import { HelpMenu } from '@/components/HelpMenu/HelpMenu';
+
+const JSONPreview = dynamic(
+  () => import('@/components/JSONPreview').then((mod) => ({ default: mod.JSONPreview })),
+  { ssr: false }
+);
 import { AutoStartTour } from '@/components/Tour/AutoStartTour';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
 import { useConnection } from '@/context/ConnectionContext';
-import { useQuery, createEmptyBoolQuery } from '@/context/QueryContext';
-import { ActiveClauseProvider, useActiveClause, type BoolClause } from '@/context/ActiveClauseContext';
+import { ActiveClauseProvider } from '@/context/ActiveClauseContext';
 import { useResizablePanels } from '@/hooks/useResizablePanels';
-import { useLayoutMode } from '@/hooks/useLayoutMode';
 import { useQueryExecution } from '@/hooks/useQueryExecution';
-import { createQueryNodeFromField } from '@/utils/createQueryNodeFromField';
-import { Code2, Wand2 } from 'lucide-react';
-import type { FieldInfo } from '@crystal-forge/opensearch-client';
-
-interface DragData {
-  type: 'field';
-  field: FieldInfo;
-}
-
-interface DropData {
-  type: 'query-builder';
-  activeClause: BoolClause;
-}
 
 export default function Home() {
   return (
@@ -51,23 +29,10 @@ export default function Home() {
 
 function HomeContent() {
   const { state } = useConnection();
-  const { state: queryState, addNode, setQuery } = useQuery();
-  const { activeClause } = useActiveClause();
   const { sizes, handleLayoutChange } = useResizablePanels();
-  const { mode, toggleMode, isReady } = useLayoutMode();
   const { executeQuery, isLoading, canExecute } = useQueryExecution();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [activeField, setActiveField] = useState<FieldInfo | null>(null);
   const [hasAttemptedAutoOpen, setHasAttemptedAutoOpen] = useState(false);
-
-  // Configure drag sensors
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8, // 8px movement before drag starts
-      },
-    })
-  );
 
   // Auto-open modal when connected but no index selected
   useEffect(() => {
@@ -103,57 +68,8 @@ function HomeContent() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [canExecute, executeQuery]);
 
-  const handleDragStart = useCallback((event: DragStartEvent) => {
-    const data = event.active.data.current as DragData | undefined;
-    if (data?.type === 'field') {
-      setActiveField(data.field);
-    }
-  }, []);
-
-  const handleDragEnd = useCallback(
-    (event: DragEndEvent) => {
-      setActiveField(null);
-
-      const { active, over } = event;
-      if (!over) return;
-
-      const dragData = active.data.current as DragData | undefined;
-      const dropData = over.data.current as DropData | undefined;
-
-      if (dragData?.type === 'field' && dropData?.type === 'query-builder') {
-        const newNode = createQueryNodeFromField(dragData.field);
-
-        // If no query exists, create a bool query first
-        if (!queryState.query.query) {
-          const boolQuery = createEmptyBoolQuery();
-          boolQuery[dropData.activeClause].push(newNode);
-          setQuery(boolQuery);
-        } else if (queryState.query.query.type === 'bool') {
-          // Add to the active clause
-          addNode([dropData.activeClause], newNode);
-        } else {
-          // Non-bool query exists, wrap it in a bool query
-          const boolQuery = createEmptyBoolQuery();
-          boolQuery.must.push(queryState.query.query);
-          boolQuery[dropData.activeClause].push(newNode);
-          setQuery(boolQuery);
-        }
-      }
-    },
-    [addNode, setQuery, queryState.query.query]
-  );
-
-  const handleDragCancel = useCallback(() => {
-    setActiveField(null);
-  }, []);
-
   return (
-    <DndContext
-      sensors={sensors}
-      onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
-      onDragCancel={handleDragCancel}
-    >
+    <>
       {/* Auto-start tour for first-time users */}
       <AutoStartTour />
 
@@ -228,19 +144,6 @@ function HomeContent() {
             <div id="tour-help-menu">
               <HelpMenu />
             </div>
-            {isReady && (
-              <button
-                onClick={toggleMode}
-                aria-label={`Switch to ${mode === 'visual' ? 'DSL' : 'Visual'} mode`}
-                title={`${mode === 'visual' ? 'DSL' : 'Visual'} Mode: ${mode === 'visual' ? 'JSON-first layout for experienced developers' : 'Visual query builder'}`}
-                className="px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:ring-offset-2 dark:focus:ring-offset-gray-900 transition-all duration-200 inline-flex items-center gap-2"
-              >
-                {mode === 'visual' ? <Code2 className="w-4 h-4" /> : <Wand2 className="w-4 h-4" />}
-                <span className="hidden sm:inline">
-                  {mode === 'visual' ? 'DSL Mode' : 'Visual Mode'}
-                </span>
-              </button>
-            )}
             <button
               id="tour-connect-button"
               onClick={() => setIsModalOpen(true)}
@@ -274,7 +177,7 @@ function HomeContent() {
               minSize={40}
               id="top-section"
             >
-              {/* Inner Horizontal Panel Group - handles field list vs query vs aggregations */}
+              {/* Inner Horizontal Panel Group - handles field list vs query builder vs right panel */}
               <ResizablePanelGroup
                 direction="horizontal"
                 className="h-full"
@@ -303,61 +206,38 @@ function HomeContent() {
                   aria-label="Resize field list and query builder"
                 />
 
-                {/* Panel 2: Query Builder */}
+                {/* Panel 2: Query Builder + Aggregations (tabbed) */}
                 <ResizablePanel
-                  defaultSize={sizes.horizontal[1] || 40}
+                  defaultSize={sizes.horizontal[1] || 50}
                   minSize={30}
                   id="tour-query-builder"
                   className="overflow-hidden"
                 >
-                  {mode === 'dsl' ? (
-                    <div className="h-full overflow-hidden border-r border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-950 flex flex-col">
-                      <div className="flex border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
-                        <div className="flex-1 px-4 py-2 text-sm font-medium text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-600 dark:border-indigo-400 bg-white dark:bg-gray-900">
-                          Query DSL (JSON)
-                        </div>
-                      </div>
-                      <div className="flex-1 overflow-auto p-4">
-                        <div id="tour-json-panel" role="tabpanel">
-                          <JSONPreview />
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <DroppableQueryBuilder />
-                  )}
+                  <CenterPanelTabs />
                 </ResizablePanel>
 
                 {/* Horizontal Handle 2 */}
                 <ResizableHandle
                   withHandle
                   className="bg-gray-200 dark:bg-gray-800 hover:bg-purple-400 dark:hover:bg-purple-600 transition-colors"
-                  aria-label="Resize query builder and aggregations"
+                  aria-label="Resize query builder and JSON panel"
                 />
 
-                {/* Panel 3: Aggregation Builder */}
+                {/* Panel 3: JSON Preview */}
                 <ResizablePanel
-                  defaultSize={sizes.horizontal[2] || 40}
-                  minSize={25}
-                  id="aggregation-builder-panel"
+                  defaultSize={sizes.horizontal[2] || 30}
+                  minSize={20}
+                  id="tour-json-panel"
                   className="overflow-hidden"
                 >
-                  <div className="h-full overflow-hidden border-l border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-950 flex flex-col">
-                    <div className="flex border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
-                      <div className="flex-1 px-4 py-2 text-sm font-medium text-purple-600 dark:text-purple-400 border-b-2 border-purple-600 dark:border-purple-400 bg-white dark:bg-gray-900">
-                        Aggregations
+                  <div className="h-full flex flex-col bg-gray-50 dark:bg-gray-950">
+                    <div className="flex-shrink-0 flex border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
+                      <div className="px-4 py-2 text-sm font-medium text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-600 dark:border-indigo-400">
+                        JSON
                       </div>
                     </div>
-                    <div className="flex-1 overflow-hidden">
-                      {mode === 'dsl' ? (
-                        <div className="h-full flex items-center justify-center p-4">
-                          <p className="text-sm text-gray-500 dark:text-gray-400 text-center">
-                            Aggregations builder available in Visual mode
-                          </p>
-                        </div>
-                      ) : (
-                        <AggregationBuilderPanel />
-                      )}
+                    <div className="flex-1 overflow-auto p-4">
+                      <JSONPreview />
                     </div>
                   </div>
                 </ResizablePanel>
@@ -386,47 +266,6 @@ function HomeContent() {
           </ResizablePanelGroup>
         </div>
       </main>
-
-      {/* Drag Overlay - shows field being dragged */}
-      <DragOverlay>
-        {activeField && (
-          <div
-            className="px-3 py-2 bg-white dark:bg-gray-800 rounded-md shadow-lg border-2 border-indigo-500 text-sm font-medium text-gray-900 dark:text-white"
-            aria-live="polite"
-            aria-label={`Dragging field: ${activeField.name}`}
-          >
-            {activeField.name}
-            <span className="ml-2 text-xs text-gray-700 dark:text-gray-400">{activeField.type}</span>
-          </div>
-        )}
-      </DragOverlay>
-    </DndContext>
-  );
-}
-
-/**
- * Droppable wrapper for QueryBuilder
- * Allows fields to be dropped onto the query builder area
- */
-function DroppableQueryBuilder() {
-  const { activeClause } = useActiveClause();
-
-  const { setNodeRef, isOver } = useDroppable({
-    id: 'query-builder-drop-zone',
-    data: {
-      type: 'query-builder',
-      activeClause,
-    },
-  });
-
-  return (
-    <div
-      ref={setNodeRef}
-      className={`h-full flex flex-col p-4 border-r overflow-hidden min-w-0 transition-colors ${
-        isOver ? 'bg-blue-50 ring-2 ring-inset ring-blue-300' : ''
-      }`}
-    >
-      <QueryBuilder />
-    </div>
+    </>
   );
 }
