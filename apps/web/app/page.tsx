@@ -1,12 +1,14 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import dynamic from 'next/dynamic';
 import { ResultsPanel } from '@/components/ResultsPanel';
 import { FieldList } from '@/components/FieldList';
 import { ConnectionModal } from '@/components/ConnectionModal';
 import { QueryBuilder } from '@/components/QueryBuilder/QueryBuilder';
 import { HelpMenu } from '@/components/HelpMenu/HelpMenu';
+import { ThemeToggle } from '@/components/ThemeToggle';
+import { ClientOnly } from '@/components/ClientOnly';
 
 const JSONPreview = dynamic(
   () => import('@/components/JSONPreview').then((mod) => ({ default: mod.JSONPreview })),
@@ -144,6 +146,9 @@ function HomeContent() {
             <div id="tour-help-menu">
               <HelpMenu />
             </div>
+            <ClientOnly>
+              <ThemeToggle />
+            </ClientOnly>
             <button
               id="tour-connect-button"
               onClick={() => setIsModalOpen(true)}
