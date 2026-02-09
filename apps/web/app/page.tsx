@@ -5,7 +5,7 @@ import dynamic from 'next/dynamic';
 import { ResultsPanel } from '@/components/ResultsPanel';
 import { FieldList } from '@/components/FieldList';
 import { ConnectionModal } from '@/components/ConnectionModal';
-import { CenterPanelTabs } from '@/components/CenterPanelTabs';
+import { QueryBuilder } from '@/components/QueryBuilder/QueryBuilder';
 import { HelpMenu } from '@/components/HelpMenu/HelpMenu';
 
 const JSONPreview = dynamic(
@@ -213,7 +213,7 @@ function HomeContent() {
                   id="tour-query-builder"
                   className="overflow-hidden"
                 >
-                  <CenterPanelTabs />
+                  <QueryBuilder />
                 </ResizablePanel>
 
                 {/* Horizontal Handle 2 */}

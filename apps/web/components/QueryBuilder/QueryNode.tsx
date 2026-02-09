@@ -129,9 +129,6 @@ interface QueryNodeProps {
   node: QueryNode;
   path: string[];
   onRemove: () => void;
-  viewMode?: 'tree' | 'tabbed';
-  collapsed?: Record<string, boolean>;
-  onToggleCollapse?: (clausePath: string) => void;
 }
 
 /**
@@ -142,9 +139,6 @@ export function QueryNodeComponent({
   node,
   path,
   onRemove,
-  viewMode = 'tabbed',
-  collapsed = {},
-  onToggleCollapse = () => {},
 }: QueryNodeProps) {
   const { updateNode } = useQuery();
   const { state: connectionState } = useConnection();
@@ -224,9 +218,6 @@ export function QueryNodeComponent({
         <BooleanGroup
           node={node as BoolQueryNode}
           path={path}
-          viewMode={viewMode}
-          collapsed={collapsed}
-          onToggleCollapse={onToggleCollapse}
         />
       </div>
     );

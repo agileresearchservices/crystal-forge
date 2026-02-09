@@ -80,7 +80,7 @@ export const EXAMPLE_QUERIES: ExampleQuery[] = [
           id: 'example-3-must-0',
           type: 'match',
           field: 'description',
-          value: 'gaming',
+          value: 'electronics',
         },
       ],
       should: [],
