@@ -51,7 +51,7 @@ export function QueryBuilder() {
   return (
     <div className="flex flex-col h-full bg-white dark:bg-gray-900">
       {/* Toolbar */}
-      <div className="flex-shrink-0 flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border-b border-gray-200 dark:border-gray-800 gap-3 sm:gap-2">
+      <div className="flex-shrink-0 flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 gap-3 sm:gap-2">
         <div className="flex items-center gap-2">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Query Builder</h2>
         </div>
@@ -69,9 +69,9 @@ export function QueryBuilder() {
       </div>
 
       {/* Active Clause Indicator */}
-      <div className="flex-shrink-0 px-4 py-2 bg-indigo-50 dark:bg-indigo-900/20 border-b border-indigo-200 dark:border-indigo-800 flex items-center gap-3" aria-live="polite" aria-atomic="true">
+      <div className="flex-shrink-0 px-4 py-2 bg-indigo-50 dark:bg-indigo-900/30 border-b border-indigo-200 dark:border-indigo-800 flex items-center gap-3" aria-live="polite" aria-atomic="true">
         <span className="text-xs font-medium text-gray-700 dark:text-gray-300">Adding fields to:</span>
-        <span className="px-3 py-1 rounded-full bg-indigo-100 dark:bg-indigo-800 text-indigo-700 dark:text-indigo-200 font-semibold text-sm">
+        <span className="px-3 py-1 rounded-full bg-indigo-100 dark:bg-indigo-800 text-indigo-700 dark:text-indigo-300 font-semibold text-sm">
           {activeClause.toUpperCase()}
         </span>
         <InfoTooltip
@@ -125,7 +125,7 @@ function EmptyState({ onAddBoolQuery, onLoadExample }: EmptyStateProps) {
       <div className="flex-1 flex flex-col items-center justify-start gap-6 max-w-3xl mx-auto w-full">
         <div className="space-y-2 text-center pt-4">
           <h3 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">Ready to build a query?</h3>
-          <p className="text-sm text-gray-600 dark:text-gray-400">Start from scratch or try an example</p>
+          <p className="text-sm text-gray-600 dark:text-gray-300">Start from scratch or try an example</p>
         </div>
 
         {/* New Empty Query Button */}
@@ -139,7 +139,7 @@ function EmptyState({ onAddBoolQuery, onLoadExample }: EmptyStateProps) {
         </Button>
 
         {/* Example Queries */}
-        <div className="w-full pt-8 border-t border-gray-200 dark:border-gray-800 mt-2 max-w-2xl">
+        <div className="w-full pt-8 border-t border-gray-200 dark:border-gray-700 mt-2 max-w-2xl">
           <p className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-3">
             Or try an example to get started:
           </p>
@@ -159,10 +159,10 @@ function EmptyState({ onAddBoolQuery, onLoadExample }: EmptyStateProps) {
                 <h4 className="font-semibold text-sm text-gray-900 dark:text-white">
                   {example.title}
                 </h4>
-                <p className="text-xs text-gray-600 dark:text-gray-400">
+                <p className="text-xs text-gray-600 dark:text-gray-300">
                   {example.description}
                 </p>
-                <div className="mt-1 text-xs text-gray-500 dark:text-gray-500 line-clamp-2">
+                <div className="mt-1 text-xs text-gray-500 dark:text-gray-400 line-clamp-2">
                   {example.explanation}
                 </div>
               </button>

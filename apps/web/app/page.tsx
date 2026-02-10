@@ -235,7 +235,7 @@ function HomeContent() {
                   id="tour-json-panel"
                   className="overflow-hidden"
                 >
-                  <div className="h-full flex flex-col bg-gray-50 dark:bg-gray-950">
+                  <div className="h-full flex flex-col bg-white dark:bg-gray-900">
                     <div className="flex-shrink-0 flex border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
                       <div className="px-4 py-2 text-sm font-medium text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-600 dark:border-indigo-400">
                         JSON

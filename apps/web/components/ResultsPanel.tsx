@@ -414,26 +414,26 @@ function HitsView({ hits }: HitsViewProps) {
 
           {/* Expanded content */}
           {expandedRows.has(hit._id) && (
-            <div className="mt-2 p-3 bg-gray-50 dark:bg-gray-800 rounded-md" id={`hit-content-${hit._id}`}>
-              <pre className="text-xs font-mono text-gray-700 dark:text-gray-300 whitespace-pre-wrap overflow-auto max-h-64 bg-white dark:bg-gray-900 p-2 rounded border border-gray-200 dark:border-gray-700">
+            <div className="mt-2 p-3 bg-gray-100 dark:bg-gray-800 rounded-md" id={`hit-content-${hit._id}`}>
+              <pre className="text-xs font-mono text-gray-700 dark:text-gray-200 whitespace-pre-wrap overflow-auto max-h-64 bg-white dark:bg-gray-900 p-2 rounded border border-gray-200 dark:border-gray-700">
                 {JSON.stringify(hit._source, null, 2)}
               </pre>
 
               {/* Highlight */}
               {hit.highlight && Object.keys(hit.highlight).length > 0 && (
-                <div className="mt-3 pt-3 border-t border-indigo-100 dark:border-indigo-900">
-                  <h4 className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 mb-2 flex items-center gap-1">
+                <div className="mt-3 pt-3 border-t border-indigo-200 dark:border-indigo-800">
+                  <h4 className="text-xs font-semibold text-indigo-700 dark:text-indigo-400 mb-2 flex items-center gap-1">
                     <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
                       <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
                     </svg>
                     Highlighted Fields
                   </h4>
                   {Object.entries(hit.highlight).map(([field, fragments]) => (
-                    <div key={field} className="mb-2 pl-4 border-l-2 border-indigo-200 dark:border-indigo-800">
-                      <div className="text-xs font-medium text-indigo-600 dark:text-indigo-400 mb-0.5">
+                    <div key={field} className="mb-2 pl-4 border-l-2 border-indigo-300 dark:border-indigo-700">
+                      <div className="text-xs font-medium text-indigo-700 dark:text-indigo-300 mb-0.5">
                         {field}
                       </div>
-                      <div className="text-xs text-gray-700 dark:text-gray-300 space-y-1">
+                      <div className="text-xs text-gray-700 dark:text-gray-200 space-y-1">
                         {(fragments as string[]).map((fragment, idx) => (
                           <div
                             key={idx}
@@ -478,12 +478,12 @@ function MetadataView({ took, timedOut, shards, total, maxScore }: MetadataViewP
     <div className="p-4 space-y-4">
       {/* Timing */}
       <div className="grid grid-cols-2 gap-4">
-        <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700">
-          <div className="text-xs text-gray-600 dark:text-gray-400 mb-1 font-medium">Query Time</div>
+        <div className="p-3 bg-white dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700">
+          <div className="text-xs text-gray-600 dark:text-gray-300 mb-1 font-medium">Query Time</div>
           <div className="text-lg font-semibold text-gray-900 dark:text-white">{took}ms</div>
         </div>
-        <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700">
-          <div className="text-xs text-gray-600 dark:text-gray-400 mb-1 font-medium">Timed Out</div>
+        <div className="p-3 bg-white dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700">
+          <div className="text-xs text-gray-600 dark:text-gray-300 mb-1 font-medium">Timed Out</div>
           <div className={cn(
             'text-lg font-semibold',
             timedOut ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'
@@ -494,12 +494,12 @@ function MetadataView({ took, timedOut, shards, total, maxScore }: MetadataViewP
       </div>
 
       {/* Total hits */}
-      <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700">
-        <div className="text-xs text-gray-600 dark:text-gray-400 mb-1 font-medium">Total Hits</div>
+      <div className="p-3 bg-white dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700">
+        <div className="text-xs text-gray-600 dark:text-gray-300 mb-1 font-medium">Total Hits</div>
         <div className="text-lg font-semibold text-gray-900 dark:text-white">
           {total.value.toLocaleString()}
           {total.relation === 'gte' && (
-            <span className="text-sm text-gray-600 dark:text-gray-400 font-normal ml-1">
+            <span className="text-sm text-gray-600 dark:text-gray-300 font-normal ml-1">
               or more
             </span>
           )}
@@ -508,8 +508,8 @@ function MetadataView({ took, timedOut, shards, total, maxScore }: MetadataViewP
 
       {/* Max score */}
       {maxScore !== null && (
-        <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700">
-          <div className="text-xs text-gray-600 dark:text-gray-400 mb-1 font-medium">Max Score</div>
+        <div className="p-3 bg-white dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700">
+          <div className="text-xs text-gray-600 dark:text-gray-300 mb-1 font-medium">Max Score</div>
           <div className="text-lg font-semibold text-gray-900 dark:text-white">
             {maxScore.toFixed(4)}
           </div>
@@ -517,35 +517,35 @@ function MetadataView({ took, timedOut, shards, total, maxScore }: MetadataViewP
       )}
 
       {/* Shard info */}
-      <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700">
-        <div className="text-xs text-gray-600 dark:text-gray-400 mb-2 font-medium">Shards</div>
+      <div className="p-3 bg-white dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700">
+        <div className="text-xs text-gray-600 dark:text-gray-300 mb-2 font-medium">Shards</div>
         <div className="grid grid-cols-4 gap-2 text-center">
           <div>
             <div className="text-sm font-semibold text-gray-900 dark:text-white">
               {shards.total}
             </div>
-            <div className="text-xs text-gray-600 dark:text-gray-400">Total</div>
+            <div className="text-xs text-gray-600 dark:text-gray-300">Total</div>
           </div>
           <div>
-            <div className="text-sm font-semibold text-green-600 dark:text-green-400">
+            <div className="text-sm font-semibold text-green-600 dark:text-emerald-400">
               {shards.successful}
             </div>
-            <div className="text-xs text-gray-600 dark:text-gray-400">Successful</div>
+            <div className="text-xs text-gray-600 dark:text-gray-300">Successful</div>
           </div>
           <div>
-            <div className="text-sm font-semibold text-gray-600 dark:text-gray-400">
+            <div className="text-sm font-semibold text-gray-600 dark:text-gray-300">
               {shards.skipped}
             </div>
-            <div className="text-xs text-gray-600 dark:text-gray-400">Skipped</div>
+            <div className="text-xs text-gray-600 dark:text-gray-300">Skipped</div>
           </div>
           <div>
             <div className={cn(
               'text-sm font-semibold',
-              shards.failed > 0 ? 'text-red-600 dark:text-red-400' : 'text-gray-600 dark:text-gray-400'
+              shards.failed > 0 ? 'text-red-600 dark:text-red-400' : 'text-gray-600 dark:text-gray-300'
             )}>
               {shards.failed}
             </div>
-            <div className="text-xs text-gray-600 dark:text-gray-400">Failed</div>
+            <div className="text-xs text-gray-600 dark:text-gray-300">Failed</div>
           </div>
         </div>
       </div>
@@ -612,11 +612,11 @@ interface JSONResponseViewProps {
 function JSONResponseView({ response }: JSONResponseViewProps) {
   return (
     <div className="space-y-3">
-      <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded p-3">
-        <p className="text-xs text-gray-600 dark:text-gray-400 mb-2 font-medium">
+      <div className="bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded p-3">
+        <p className="text-xs text-gray-600 dark:text-gray-300 mb-2 font-medium">
           Raw OpenSearch API Response
         </p>
-        <pre className="text-xs font-mono text-gray-700 dark:text-gray-300 whitespace-pre-wrap overflow-auto max-h-[500px] bg-white dark:bg-gray-900 p-3 rounded border border-gray-200 dark:border-gray-700">
+        <pre className="text-xs font-mono text-gray-700 dark:text-gray-200 whitespace-pre-wrap overflow-auto max-h-[500px] bg-white dark:bg-gray-900 p-3 rounded border border-gray-200 dark:border-gray-700">
           {JSON.stringify(response, null, 2)}
         </pre>
       </div>

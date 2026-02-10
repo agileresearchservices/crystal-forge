@@ -251,14 +251,14 @@ export function JSONPreview({ className, height = '400px' }: JSONPreviewProps) {
   return (
     <div className={cn('flex flex-col h-full', className)}>
       {/* Header */}
-      <div className="flex items-center justify-between p-3 border-b bg-gray-50 dark:bg-gray-900">
+      <div className="flex items-center justify-between p-3 border-b bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
         <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">Dev Tools Format</h3>
         <Button
           onClick={handleCopy}
           variant="outline"
           size="sm"
           className={cn(
-            copied && 'text-green-600 dark:text-green-400 border-green-300 dark:border-green-600'
+            copied && 'text-green-600 dark:text-emerald-400 border-green-300 dark:border-emerald-600'
           )}
         >
           {copied ? (
@@ -330,13 +330,13 @@ export function JSONPreview({ className, height = '400px' }: JSONPreviewProps) {
             <AlertCircle className="h-4 w-4 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-red-800 dark:text-red-300">JSON Parse Error</p>
-              <p className="text-sm text-red-700 dark:text-red-400 mt-1 break-words">{parseError}</p>
+              <p className="text-sm text-red-700 dark:text-red-300 mt-1 break-words">{parseError}</p>
             </div>
           </div>
         </div>
       ) : isEditing ? (
         <div className="p-3 bg-amber-50 dark:bg-amber-900/20 border-t border-amber-200 dark:border-amber-800">
-          <p className="text-sm text-amber-700 dark:text-amber-400">Parsing JSON... (wait for update)</p>
+          <p className="text-sm text-amber-700 dark:text-amber-300">Parsing JSON... (wait for update)</p>
         </div>
       ) : null}
     </div>
@@ -382,20 +382,20 @@ export function SimpleJSONPreview({ className }: SimpleJSONPreviewProps) {
 
   return (
     <div className={cn('flex flex-col h-full', className)}>
-      <div className="flex items-center justify-between p-3 border-b bg-gray-50">
-        <h3 className="text-sm font-medium text-gray-700">Dev Tools Format</h3>
+      <div className="flex items-center justify-between p-3 border-b bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+        <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">Dev Tools Format</h3>
         <Button
           onClick={handleCopy}
           variant="outline"
           size="sm"
           className={cn(
-            copied && 'text-green-600 border-green-300'
+            copied && 'text-green-600 dark:text-emerald-400 border-green-300 dark:border-emerald-600'
           )}
         >
           {copied ? 'Copied!' : 'Copy'}
         </Button>
       </div>
-      <div className="flex-1 overflow-auto p-4 bg-gray-900">
+      <div className="flex-1 overflow-auto p-4 bg-gray-900 dark:bg-gray-900">
         <pre className="text-sm text-green-400 font-mono whitespace-pre-wrap">
           {devToolsContent}
         </pre>

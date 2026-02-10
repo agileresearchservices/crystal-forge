@@ -54,26 +54,26 @@ export function FieldList({ className }: FieldListProps) {
   const getTypeBadgeColor = (type: string): string => {
     switch (type) {
       case 'text':
-        return 'bg-blue-100 text-blue-700';
+        return 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300';
       case 'keyword':
-        return 'bg-green-100 text-green-700';
+        return 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300';
       case 'long':
       case 'integer':
       case 'short':
       case 'byte':
       case 'double':
       case 'float':
-        return 'bg-purple-100 text-purple-700';
+        return 'bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300';
       case 'date':
-        return 'bg-orange-100 text-orange-700';
+        return 'bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300';
       case 'boolean':
-        return 'bg-yellow-100 text-yellow-700';
+        return 'bg-yellow-100 dark:bg-yellow-900/40 text-yellow-700 dark:text-yellow-300';
       case 'nested':
-        return 'bg-red-100 text-red-700';
+        return 'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300';
       case 'object':
-        return 'bg-gray-100 text-gray-700';
+        return 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300';
       default:
-        return 'bg-gray-100 text-gray-700';
+        return 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300';
     }
   };
 
@@ -83,8 +83,8 @@ export function FieldList({ className }: FieldListProps) {
   return (
     <div className={cn('flex flex-col h-full bg-white dark:bg-gray-900', className)}>
       {/* Header */}
-      <div className="p-3 border-b border-gray-200 dark:border-gray-800">
-        <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">Fields</h2>
+      <div className="p-3 border-b border-gray-200 dark:border-gray-700">
+        <h2 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">Fields</h2>
 
         {/* Search input */}
         <div className="relative">
@@ -139,7 +139,7 @@ export function FieldList({ className }: FieldListProps) {
         </div>
 
         {/* Field count */}
-        <div className="mt-2 text-xs text-gray-700 dark:text-gray-400" aria-live="polite" aria-atomic="true">
+        <div className="mt-2 text-xs text-gray-700 dark:text-gray-300" aria-live="polite" aria-atomic="true">
           {filteredFields.length} field{filteredFields.length !== 1 ? 's' : ''}
           {fieldSearch && ` matching "${fieldSearch}"`}
         </div>
@@ -150,7 +150,7 @@ export function FieldList({ className }: FieldListProps) {
         {connectionState.fields.length === 0 ? (
           <div className="flex-1 flex items-center justify-center p-6 text-center">
             <div className="space-y-3 max-w-xs">
-              <svg className="w-16 h-16 mx-auto text-gray-300 dark:text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <svg className="w-16 h-16 mx-auto text-gray-300 dark:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
               <div>
@@ -161,7 +161,7 @@ export function FieldList({ className }: FieldListProps) {
                       : 'Select an index'
                     : 'Connect to OpenSearch'}
                 </p>
-                <p className="text-xs sm:text-sm text-gray-700 dark:text-gray-400 mt-1">
+                <p className="text-xs sm:text-sm text-gray-700 dark:text-gray-300 mt-1">
                   {connectionState.connection.isConnected
                     ? connectionState.connection.index
                       ? 'Retrieving field information from your index'
@@ -174,11 +174,11 @@ export function FieldList({ className }: FieldListProps) {
         ) : filteredFields.length === 0 ? (
           <div className="flex-1 flex items-center justify-center p-6 text-center" role="status">
             <div className="space-y-2 max-w-xs">
-              <svg className="w-12 h-12 mx-auto text-gray-300 dark:text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <svg className="w-12 h-12 mx-auto text-gray-300 dark:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v6m3-3H9m9 0a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               <p className="text-sm font-medium text-gray-900 dark:text-white">No fields match</p>
-              <p className="text-xs text-gray-700 dark:text-gray-400">Try adjusting your search term</p>
+              <p className="text-xs text-gray-700 dark:text-gray-300">Try adjusting your search term</p>
             </div>
           </div>
         ) : showGrouped ? (
@@ -226,7 +226,7 @@ function GroupedFieldList({
             className={cn(
               'w-full flex items-center gap-2 px-3 py-2',
               'text-sm font-medium text-gray-700 dark:text-gray-300',
-              'hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors',
+              'hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors',
               'focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500'
             )}
           >
@@ -248,7 +248,7 @@ function GroupedFieldList({
               />
             </svg>
             <span className="flex-1 text-left truncate">{group}</span>
-            <span className="text-xs text-gray-700 dark:text-gray-400" aria-label={`${fields.length} fields`}>
+            <span className="text-xs text-gray-700 dark:text-gray-300" aria-label={`${fields.length} fields`}>
               {fields.length}
             </span>
           </button>
@@ -358,7 +358,7 @@ function FieldItem({ field, typeBadgeColor }: FieldItemProps) {
       )}
       {field.isMultiField && (
         <span
-          className="text-xs text-gray-700 dark:text-gray-400 font-medium flex-shrink-0"
+          className="text-xs text-gray-700 dark:text-gray-300 font-medium flex-shrink-0"
           aria-label="Multi-field"
           title="Multi-field with subfields (.keyword, .raw, etc.)"
         >
