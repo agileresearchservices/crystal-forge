@@ -35,8 +35,8 @@ export const ONBOARDING_TOUR_STEPS: DriveStep[] = [
   {
     element: '#tour-field-list',
     popover: {
-      title: 'Step 2: Choose an Index',
-      description: `After connecting, select an index from the modal. All available fields from your index will appear here, organized by type and grouped logically.`,
+      title: 'Step 2: Available Fields',
+      description: `Once you've selected an index, all its fields appear here organized by type and grouped logically. Click any field to add it to your query, or drag it to a specific clause.`,
       side: 'right',
       align: 'start',
     },
