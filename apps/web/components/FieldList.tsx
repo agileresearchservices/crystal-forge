@@ -106,7 +106,7 @@ export function FieldList({ className }: FieldListProps) {
             />
           </svg>
           <input
-            id="field-search"
+            id="tour-field-search"
             type="text"
             value={fieldSearch}
             onChange={(e) => setFieldSearch(e.target.value)}

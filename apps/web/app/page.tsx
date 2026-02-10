@@ -112,6 +112,7 @@ function HomeContent() {
             )}
             {state.connection.isConnected && (
               <button
+                id="tour-execute-button"
                 onClick={executeQuery}
                 disabled={!canExecute || isLoading}
                 aria-label="Execute query and aggregations (Ctrl+Enter)"
@@ -146,9 +147,11 @@ function HomeContent() {
             <div id="tour-help-menu">
               <HelpMenu />
             </div>
-            <ClientOnly>
-              <ThemeToggle />
-            </ClientOnly>
+            <div id="tour-dark-mode">
+              <ClientOnly>
+                <ThemeToggle />
+              </ClientOnly>
+            </div>
             <button
               id="tour-connect-button"
               onClick={() => setIsModalOpen(true)}
@@ -206,6 +209,7 @@ function HomeContent() {
 
                 {/* Horizontal Handle 1 */}
                 <ResizableHandle
+                  id="tour-panel-resize"
                   withHandle
                   className="bg-gray-200 dark:bg-gray-800 hover:bg-indigo-400 dark:hover:bg-indigo-600 transition-colors"
                   aria-label="Resize field list and query builder"

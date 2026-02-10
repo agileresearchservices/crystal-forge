@@ -122,7 +122,7 @@ export function BooleanGroup({
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b border-gray-200 dark:border-gray-700">
+      <div id="tour-bool-clauses" className="flex border-b border-gray-200 dark:border-gray-700">
         {(Object.keys(CLAUSE_INFO) as BoolClause[]).map((clause) => {
           const info = CLAUSE_INFO[clause];
           const count = node[clause].length;

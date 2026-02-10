@@ -69,7 +69,7 @@ export function QueryBuilder() {
       </div>
 
       {/* Active Clause Indicator */}
-      <div className="flex-shrink-0 px-4 py-2 bg-indigo-50 dark:bg-indigo-900/30 border-b border-indigo-200 dark:border-indigo-800 flex items-center gap-3" aria-live="polite" aria-atomic="true">
+      <div id="tour-active-clause" className="flex-shrink-0 px-4 py-2 bg-indigo-50 dark:bg-indigo-900/30 border-b border-indigo-200 dark:border-indigo-800 flex items-center gap-3" aria-live="polite" aria-atomic="true">
         <span className="text-xs font-medium text-gray-700 dark:text-gray-300">Adding fields to:</span>
         <span className="px-3 py-1 rounded-full bg-indigo-100 dark:bg-indigo-800 text-indigo-700 dark:text-indigo-300 font-semibold text-sm">
           {activeClause.toUpperCase()}
