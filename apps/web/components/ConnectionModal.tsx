@@ -124,7 +124,7 @@ export function ConnectionModal({ isOpen, onClose }: ConnectionModalProps) {
         <div className="space-y-4">
           {/* Error display */}
           {error && (
-            <div className="p-3 text-sm text-red-600 bg-red-50 rounded-md border border-red-200">
+            <div className="p-3 text-sm text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-900/20 rounded-md border border-red-200 dark:border-red-800">
               {error}
             </div>
           )}
@@ -135,7 +135,7 @@ export function ConnectionModal({ isOpen, onClose }: ConnectionModalProps) {
               role="status"
               aria-live="polite"
               aria-atomic="true"
-              className="p-3 text-sm text-green-600 bg-green-50 rounded-md border border-green-200 flex items-center gap-2"
+              className="p-3 text-sm text-green-700 dark:text-green-300 bg-green-50 dark:bg-green-900/20 rounded-md border border-green-200 dark:border-green-800 flex items-center gap-2"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -149,7 +149,7 @@ export function ConnectionModal({ isOpen, onClose }: ConnectionModalProps) {
             <>
               {/* Host URL */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Host URL
                 </label>
                 <input
@@ -159,15 +159,17 @@ export function ConnectionModal({ isOpen, onClose }: ConnectionModalProps) {
                   placeholder="http://localhost:9200"
                   className={cn(
                     'w-full px-3 py-2 rounded-md',
-                    'border border-gray-300',
-                    'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent'
+                    'border border-gray-300 dark:border-gray-600',
+                    'bg-white dark:bg-gray-800 text-gray-900 dark:text-white',
+                    'placeholder-gray-500 dark:placeholder-gray-400',
+                    'focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent'
                   )}
                 />
               </div>
 
               {/* Auth type selector */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Authentication
                 </label>
                 <select
@@ -175,8 +177,9 @@ export function ConnectionModal({ isOpen, onClose }: ConnectionModalProps) {
                   onChange={(e) => setAuthType(e.target.value as AuthType)}
                   className={cn(
                     'w-full px-3 py-2 rounded-md',
-                    'border border-gray-300',
-                    'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent'
+                    'border border-gray-300 dark:border-gray-600',
+                    'bg-white dark:bg-gray-800 text-gray-900 dark:text-white',
+                    'focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent'
                   )}
                 >
                   <option value="none">No Authentication</option>
@@ -190,7 +193,7 @@ export function ConnectionModal({ isOpen, onClose }: ConnectionModalProps) {
               {authType === 'basic' && (
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Username
                     </label>
                     <input
@@ -199,13 +202,14 @@ export function ConnectionModal({ isOpen, onClose }: ConnectionModalProps) {
                       onChange={(e) => setUsername(e.target.value)}
                       className={cn(
                         'w-full px-3 py-2 rounded-md',
-                        'border border-gray-300',
-                        'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent'
+                        'border border-gray-300 dark:border-gray-600',
+                        'bg-white dark:bg-gray-800 text-gray-900 dark:text-white',
+                        'focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent'
                       )}
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Password
                     </label>
                     <input
@@ -214,8 +218,9 @@ export function ConnectionModal({ isOpen, onClose }: ConnectionModalProps) {
                       onChange={(e) => setPassword(e.target.value)}
                       className={cn(
                         'w-full px-3 py-2 rounded-md',
-                        'border border-gray-300',
-                        'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent'
+                        'border border-gray-300 dark:border-gray-600',
+                        'bg-white dark:bg-gray-800 text-gray-900 dark:text-white',
+                        'focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent'
                       )}
                     />
                   </div>
@@ -225,7 +230,7 @@ export function ConnectionModal({ isOpen, onClose }: ConnectionModalProps) {
               {/* API key field */}
               {authType === 'apiKey' && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     API Key
                   </label>
                   <input
@@ -234,8 +239,9 @@ export function ConnectionModal({ isOpen, onClose }: ConnectionModalProps) {
                     onChange={(e) => setApiKey(e.target.value)}
                     className={cn(
                       'w-full px-3 py-2 rounded-md',
-                      'border border-gray-300',
-                      'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent'
+                      'border border-gray-300 dark:border-gray-600',
+                      'bg-white dark:bg-gray-800 text-gray-900 dark:text-white',
+                      'focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent'
                     )}
                   />
                 </div>
@@ -244,7 +250,7 @@ export function ConnectionModal({ isOpen, onClose }: ConnectionModalProps) {
               {/* AWS SigV4 fields */}
               {authType === 'awsSigV4' && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     AWS Region
                   </label>
                   <input
@@ -254,11 +260,13 @@ export function ConnectionModal({ isOpen, onClose }: ConnectionModalProps) {
                     placeholder="us-east-1"
                     className={cn(
                       'w-full px-3 py-2 rounded-md',
-                      'border border-gray-300',
-                      'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent'
+                      'border border-gray-300 dark:border-gray-600',
+                      'bg-white dark:bg-gray-800 text-gray-900 dark:text-white',
+                      'placeholder-gray-500 dark:placeholder-gray-400',
+                      'focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent'
                     )}
                   />
-                  <p className="mt-1 text-xs text-gray-500">
+                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                     AWS credentials will be loaded from environment
                   </p>
                 </div>
@@ -269,8 +277,8 @@ export function ConnectionModal({ isOpen, onClose }: ConnectionModalProps) {
           {/* Index selector (shown after connection) */}
           {connection.isConnected && indices.length > 0 && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Select Index <span className="text-red-500" aria-label="required">*</span>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Select Index <span className="text-red-500 dark:text-red-400" aria-label="required">*</span>
               </label>
               <select
                 value={connection.index || ''}
@@ -278,8 +286,9 @@ export function ConnectionModal({ isOpen, onClose }: ConnectionModalProps) {
                 disabled={isLoading}
                 className={cn(
                   'w-full px-3 py-2 rounded-md',
-                  'border border-gray-300',
-                  'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent',
+                  'border border-gray-300 dark:border-gray-600',
+                  'bg-white dark:bg-gray-800 text-gray-900 dark:text-white',
+                  'focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent',
                   'disabled:opacity-50'
                 )}
                 aria-required="true"
