@@ -11,7 +11,7 @@ const STORAGE_KEY = 'crystal-forge-panel-sizes'
 
 const DEFAULT_SIZES: PanelSizes = {
   vertical: [70, 30],
-  horizontal: [20, 50, 30], // Field List (20%), Query Builder (50%), Right Panel (30%)
+  horizontal: [16, 54, 30], // Field List (16%), Query Builder (54%), Right Panel (30%)
 }
 
 /**
