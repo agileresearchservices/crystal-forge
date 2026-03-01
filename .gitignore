@@ -142,5 +142,9 @@ vite.config.ts.timestamp-*
 .turbo
 
 # Claude Code
-.claude/
+.claude/*
+!.claude/agents/
+!.claude/agents/**
+!.claude/knowledge/
+!.claude/knowledge/**
 docker/scripts/generated_documents.json
