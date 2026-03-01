@@ -23,7 +23,7 @@ describe('useResizablePanels', () => {
     const { result } = renderHook(() => useResizablePanels())
 
     expect(result.current.sizes.vertical).toEqual([70, 30])
-    expect(result.current.sizes.horizontal).toEqual([20, 50, 30])
+    expect(result.current.sizes.horizontal).toEqual([16, 54, 30])
   })
 
   it('loads sizes from localStorage', () => {
@@ -66,7 +66,7 @@ describe('useResizablePanels', () => {
     })
 
     expect(result.current.sizes.vertical).toEqual([70, 30])
-    expect(result.current.sizes.horizontal).toEqual([20, 50, 30])
+    expect(result.current.sizes.horizontal).toEqual([16, 54, 30])
   })
 
   it('handles invalid localStorage data gracefully', () => {
@@ -75,7 +75,7 @@ describe('useResizablePanels', () => {
     const { result } = renderHook(() => useResizablePanels())
 
     expect(result.current.sizes.vertical).toEqual([70, 30])
-    expect(result.current.sizes.horizontal).toEqual([20, 50, 30])
+    expect(result.current.sizes.horizontal).toEqual([16, 54, 30])
   })
 
   it('validates numeric ranges in stored data', () => {
